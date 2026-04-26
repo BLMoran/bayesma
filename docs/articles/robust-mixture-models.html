@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>RoBMA • bayesma</title>
+<title>RE mixture models for heterogeneity • bayesma</title>
 <!-- favicons --><link rel="icon" type="image/png" sizes="96x96" href="../favicon-96x96.png">
 <link rel="icon" type="”image/svg+xml”" href="../favicon.svg">
 <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
@@ -20,7 +20,7 @@
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><script src="robust-mixture-models_files/libs/quarto-html/popper.min.js"></script><script src="robust-mixture-models_files/libs/quarto-html/tippy.umd.min.js"></script><link href="robust-mixture-models_files/libs/quarto-html/tippy.css" rel="stylesheet">
 <link href="robust-mixture-models_files/libs/quarto-html/light-border.css" rel="stylesheet">
-<!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="RoBMA">
+<!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="RE mixture models for heterogeneity">
 <meta property="og:image" content="https://blmoran.github.io/bayesma/logo.png">
 </head>
 <body>
@@ -40,12 +40,11 @@
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
-<li class="nav-item"><a class="nav-link" href="../articles/index.html">Getting Started</a></li>
 <li class="nav-item dropdown">
-  <button class="nav-link dropdown-toggle" type="button" id="dropdown-model-basics" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Model Basics</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-model-basics">
-<li><a class="dropdown-item" href="../articles/one-stage-two-stage-binary-jackson.html">One-Stage vs Two-Stage Models</a></li>
-    <li><hr class="dropdown-divider"></li>
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-models" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Models</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-models">
+<li><h6 class="dropdown-header" data-toc-skip>Model Basics</h6></li>
+    <li><a class="dropdown-item" href="../articles/one-stage-two-stage-binary-jackson.html">One-Stage vs Two-Stage Models</a></li>
     <li><a class="dropdown-item" href="../articles/common-effect-model.html">Common-Effect Model</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Random-Effects Models</h6></li>
@@ -54,19 +53,13 @@
     <li><a class="dropdown-item" href="../articles/re-distribution-assessment.html">Assessment of RE Distributions</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><a class="dropdown-item" href="../articles/small-sample-adjustments.html">Small-Sample Adjustments</a></li>
-    <li><hr class="dropdown-divider"></li>
     <li><a class="dropdown-item" href="../articles/multiarm-models.html">Multiarm Models</a></li>
-    <li><hr class="dropdown-divider"></li>
     <li><a class="dropdown-item" href="../articles/model-comparison-diagnostics.html">Model Comparison &amp; Diagnostics</a></li>
-  </ul>
-</li>
-<li class="nav-item dropdown">
-  <button class="nav-link dropdown-toggle" type="button" id="dropdown-advanced-models" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Advanced Models</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-advanced-models">
-<li><a class="dropdown-item" href="../articles/multivariate-meta-analysis.html">Multivariate Meta-Analysis</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Advanced Models</h6></li>
+    <li><a class="dropdown-item" href="../articles/multivariate-meta-analysis.html">Multivariate Meta-Analysis</a></li>
     <li><a class="dropdown-item" href="../articles/longitudinal-meta-analysis.html">Longitudinal Meta-Analysis</a></li>
     <li><a class="dropdown-item" href="../articles/meta-regression.html">Meta-Regression</a></li>
-    <li><hr class="dropdown-divider"></li>
     <li><a class="dropdown-item" href="../articles/custom-models.html">Custom Models</a></li>
   </ul>
 </li>
@@ -168,7 +161,7 @@
 </nav><div class="container template-quarto">
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
-      <img src="../logo.png" class="logo" alt=""><h1>RoBMA</h1>
+      <img src="../logo.png" class="logo" alt=""><h1>RE mixture models for heterogeneity</h1>
 
 
 
@@ -184,10 +177,89 @@
 
     <section class="level2"><h2 id="introduction">Introduction<a class="anchor" aria-label="anchor" href="#introduction"></a>
 </h2>
-<p>RoBMA (Robust Bayesian Meta-Analysis) performs model averaging across multiple bias-adjusted meta-analysis models.</p>
-<p>Instead of choosing a single model, RoBMA averages posterior distributions weighted by model probabilities.</p>
-<p>[ p(|y) = _k p(|y, M_k) p(M_k|y) ]</p>
-<p>This approach integrates uncertainty about publication bias and model specification.</p>
+<p>The standard Gaussian random-effects model assumes that true study effects follow a single normal distribution. This assumption breaks down when the effect distribution is bimodal — for example, when two qualitatively distinct subpopulations of studies exist (e.g., patient subgroups, different operationalisations of the intervention) — or when a small number of studies produce effects so discrepant that they distort the pooled estimate.</p>
+<p><strong>bayesma</strong> provides two random-effects mixture models to handle these situations:</p>
+<ol type="1">
+<li>
+<strong>Two-component Gaussian mixture</strong>: models the random-effects distribution as a mixture of two normal components with different means and variances.</li>
+<li>
+<strong>Robust outlier mixture</strong>: identifies individual outlier studies without requiring them to belong to a separate substantive subpopulation. See <a href="robma.html">Robust Outlier Mixture (Cruz)</a>.</li>
+</ol>
+<p>This vignette covers the two-component mixture. For the outlier variant see <a href="robma.html">Robust Outlier Mixture (Cruz)</a>.</p>
+</section><section class="level2"><h2 id="two-component-gaussian-mixture-model">Two-component Gaussian mixture model<a class="anchor" aria-label="anchor" href="#two-component-gaussian-mixture-model"></a>
+</h2>
+<section class="level3"><h3 id="model-specification">Model specification<a class="anchor" aria-label="anchor" href="#model-specification"></a>
+</h3>
+<p>The true-effect distribution is a mixture of two Gaussians:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>θ</mi><mi>i</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mi>π</mi><mo>⋅</mo><mi>𝒩</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>θ</mi><mi>i</mi></msub><mo>∣</mo><msub><mi>μ</mi><mn>1</mn></msub><mo>,</mo><mspace width="0.278em"></mspace><msubsup><mi>τ</mi><mn>1</mn><mn>2</mn></msubsup><mo stretchy="true" form="postfix">)</mo></mrow><mo>+</mo><mrow><mo stretchy="true" form="prefix">(</mo><mn>1</mn><mo>−</mo><mi>π</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>⋅</mo><mi>𝒩</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>θ</mi><mi>i</mi></msub><mo>∣</mo><msub><mi>μ</mi><mn>2</mn></msub><mo>,</mo><mspace width="0.278em"></mspace><msubsup><mi>τ</mi><mn>2</mn><mn>2</mn></msubsup><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">
+p(\theta_i) = \pi \cdot \mathcal{N}(\theta_i \mid \mu_1,\; \tau_1^2) + (1-\pi) \cdot \mathcal{N}(\theta_i \mid \mu_2,\; \tau_2^2)
+</annotation></semantics></math></p>
+<p>Marginalising over <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>θ</mi><mi>i</mi></msub><annotation encoding="application/x-tex">\theta_i</annotation></semantics></math> gives the integrated observation-level likelihood:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>y</mi><mi>i</mi></msub><mo>∣</mo><msub><mi>μ</mi><mn>1</mn></msub><mo>,</mo><msub><mi>μ</mi><mn>2</mn></msub><mo>,</mo><msub><mi>τ</mi><mn>1</mn></msub><mo>,</mo><msub><mi>τ</mi><mn>2</mn></msub><mo>,</mo><mi>π</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mi>π</mi><mo>⋅</mo><mi>𝒩</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>y</mi><mi>i</mi></msub><mo>∣</mo><msub><mi>μ</mi><mn>1</mn></msub><mo>,</mo><mspace width="0.278em"></mspace><msubsup><mi>τ</mi><mn>1</mn><mn>2</mn></msubsup><mo>+</mo><msubsup><mi>s</mi><mi>i</mi><mn>2</mn></msubsup><mo stretchy="true" form="postfix">)</mo></mrow><mo>+</mo><mrow><mo stretchy="true" form="prefix">(</mo><mn>1</mn><mo>−</mo><mi>π</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>⋅</mo><mi>𝒩</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>y</mi><mi>i</mi></msub><mo>∣</mo><msub><mi>μ</mi><mn>2</mn></msub><mo>,</mo><mspace width="0.278em"></mspace><msubsup><mi>τ</mi><mn>2</mn><mn>2</mn></msubsup><mo>+</mo><msubsup><mi>s</mi><mi>i</mi><mn>2</mn></msubsup><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">
+p(y_i \mid \mu_1, \mu_2, \tau_1, \tau_2, \pi) = \pi \cdot \mathcal{N}(y_i \mid \mu_1,\; \tau_1^2 + s_i^2) + (1-\pi) \cdot \mathcal{N}(y_i \mid \mu_2,\; \tau_2^2 + s_i^2)
+</annotation></semantics></math></p>
+<p>The two components have means <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>μ</mi><mn>1</mn></msub><mo>&lt;</mo><msub><mi>μ</mi><mn>2</mn></msub></mrow><annotation encoding="application/x-tex">\mu_1 &lt; \mu_2</annotation></semantics></math> (an ordering constraint resolves label switching) and heterogeneities <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>τ</mi><mn>1</mn></msub><annotation encoding="application/x-tex">\tau_1</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>τ</mi><mn>2</mn></msub><annotation encoding="application/x-tex">\tau_2</annotation></semantics></math>.</p>
+</section><section class="level3"><h3 id="priors">Priors<a class="anchor" aria-label="anchor" href="#priors"></a>
+</h3>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>π</mi><mo>∼</mo><mtext mathvariant="normal">Beta</mtext><mrow><mo stretchy="true" form="prefix">(</mo><mn>2</mn><mo>,</mo><mspace width="0.278em"></mspace><mn>2</mn><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">
+\pi \sim \text{Beta}(2,\; 2)
+</annotation></semantics></math></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>μ</mi><mn>1</mn></msub><mo>,</mo><msub><mi>μ</mi><mn>2</mn></msub><mo>∼</mo><mi>𝒩</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>0</mn><mo>,</mo><mspace width="0.278em"></mspace><mn>1</mn><mo stretchy="true" form="postfix">)</mo></mrow><mspace width="1.0em"></mspace><mrow><mtext mathvariant="normal">with constraint </mtext><mspace width="0.333em"></mspace></mrow><msub><mi>μ</mi><mn>1</mn></msub><mo>≤</mo><msub><mi>μ</mi><mn>2</mn></msub></mrow><annotation encoding="application/x-tex">
+\mu_1, \mu_2 \sim \mathcal{N}(0,\; 1) \quad \text{with constraint } \mu_1 \leq \mu_2
+</annotation></semantics></math></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>τ</mi><mn>1</mn></msub><mo>,</mo><msub><mi>τ</mi><mn>2</mn></msub><mo>∼</mo><mtext mathvariant="normal">Half-Cauchy</mtext><mrow><mo stretchy="true" form="prefix">(</mo><mn>0</mn><mo>,</mo><mspace width="0.278em"></mspace><mn>0.5</mn><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">
+\tau_1, \tau_2 \sim \text{Half-Cauchy}(0,\; 0.5)
+</annotation></semantics></math></p>
+<p>The Beta(2, 2) prior on the mixing proportion favours balanced mixtures slightly over degenerate ones (all mass in one component), while still allowing unequal mixtures.</p>
+</section></section><section class="level2"><h2 id="fitting-the-model">Fitting the model<a class="anchor" aria-label="anchor" href="#fitting-the-model"></a>
+</h2>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co">#| eval: false</span></span>
+<span><span class="va">fit_mix</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/bayesma.html">bayesma</a></span><span class="op">(</span><span class="va">data</span>, model <span class="op">=</span> <span class="st">"re_mixture"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit_mix</span><span class="op">)</span></span></code></pre></div>
+<p><code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> reports posteriors for <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>μ</mi><mn>1</mn></msub><annotation encoding="application/x-tex">\mu_1</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>μ</mi><mn>2</mn></msub><annotation encoding="application/x-tex">\mu_2</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>τ</mi><mn>1</mn></msub><annotation encoding="application/x-tex">\tau_1</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>τ</mi><mn>2</mn></msub><annotation encoding="application/x-tex">\tau_2</annotation></semantics></math>, and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>π</mi><annotation encoding="application/x-tex">\pi</annotation></semantics></math>.</p>
+</section><section class="level2"><h2 id="key-estimands">Key estimands<a class="anchor" aria-label="anchor" href="#key-estimands"></a>
+</h2>
+<section class="level3"><h3 id="component-means-mu_1-and-mu_2">Component means <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>μ</mi><mn>1</mn></msub><annotation encoding="application/x-tex">\mu_1</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>μ</mi><mn>2</mn></msub><annotation encoding="application/x-tex">\mu_2</annotation></semantics></math><a class="anchor" aria-label="anchor" href="#component-means-mu_1-and-mu_2"></a>
+</h3>
+<p>The two means characterise the two subpopulations of studies. If the posteriors for <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>μ</mi><mn>1</mn></msub><annotation encoding="application/x-tex">\mu_1</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>μ</mi><mn>2</mn></msub><annotation encoding="application/x-tex">\mu_2</annotation></semantics></math> substantially overlap, the data do not support a bimodal structure.</p>
+</section><section class="level3"><h3 id="mixing-proportion-pi">Mixing proportion <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>π</mi><annotation encoding="application/x-tex">\pi</annotation></semantics></math><a class="anchor" aria-label="anchor" href="#mixing-proportion-pi"></a>
+</h3>
+<p><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>π</mi><annotation encoding="application/x-tex">\pi</annotation></semantics></math> is the estimated fraction of studies in the first (lower-effect) component. A posterior for <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>π</mi><annotation encoding="application/x-tex">\pi</annotation></semantics></math> concentrated near 0 or 1 indicates near-degenerate mixing — the data are consistent with a single Gaussian. Intermediate values (e.g., 0.2–0.8) suggest genuine bimodality.</p>
+</section><section class="level3"><h3 id="weighted-pooled-effect">Weighted pooled effect<a class="anchor" aria-label="anchor" href="#weighted-pooled-effect"></a>
+</h3>
+<p>The model-averaged pooled effect is</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi>μ</mi><mo accent="true">‾</mo></mover><mo>=</mo><mi>π</mi><msub><mi>μ</mi><mn>1</mn></msub><mo>+</mo><mrow><mo stretchy="true" form="prefix">(</mo><mn>1</mn><mo>−</mo><mi>π</mi><mo stretchy="true" form="postfix">)</mo></mrow><msub><mi>μ</mi><mn>2</mn></msub></mrow><annotation encoding="application/x-tex">
+\bar{\mu} = \pi \mu_1 + (1-\pi)\mu_2
+</annotation></semantics></math></p>
+<p>This is reported as <code>b_Intercept</code> in the output and serves as the overall summary when reporting a single number is required.</p>
+</section></section><section class="level2"><h2 id="assessing-whether-the-mixture-is-supported">Assessing whether the mixture is supported<a class="anchor" aria-label="anchor" href="#assessing-whether-the-mixture-is-supported"></a>
+</h2>
+<p>Compare the mixture model against the standard Gaussian RE model using WAIC or LOO:</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co">#| eval: false</span></span>
+<span><span class="va">fit_re</span>  <span class="op">&lt;-</span> <span class="fu"><a href="../reference/bayesma.html">bayesma</a></span><span class="op">(</span><span class="va">data</span><span class="op">)</span></span>
+<span><span class="va">fit_mix</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/bayesma.html">bayesma</a></span><span class="op">(</span><span class="va">data</span>, model <span class="op">=</span> <span class="st">"re_mixture"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="../reference/compare_models.html">compare_models</a></span><span class="op">(</span><span class="va">fit_re</span>, <span class="va">fit_mix</span>, labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Gaussian RE"</span>, <span class="st">"RE mixture"</span><span class="op">)</span>,</span>
+<span>               criterion <span class="op">=</span> <span class="st">"loo"</span><span class="op">)</span></span></code></pre></div>
+<p>A substantially lower LOO for the mixture model indicates that the two-component structure fits meaningfully better. If the improvement is small, the standard RE model is adequate and more parsimonious.</p>
+</section><section class="level2"><h2 id="interpreting-a-well-separated-mixture">Interpreting a well-separated mixture<a class="anchor" aria-label="anchor" href="#interpreting-a-well-separated-mixture"></a>
+</h2>
+<p>When <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>μ</mi><mn>1</mn></msub><annotation encoding="application/x-tex">\mu_1</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>μ</mi><mn>2</mn></msub><annotation encoding="application/x-tex">\mu_2</annotation></semantics></math> are well-separated (credible intervals non-overlapping), investigate moderators that distinguish the two study clusters. The mixture model can then motivate a meta-regression with the suspected moderator:</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co">#| eval: false</span></span>
+<span><span class="va">fit_reg</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/meta_reg.html">meta_reg</a></span><span class="op">(</span><span class="va">data</span>, moderators <span class="op">=</span> <span class="op">~</span> <span class="va">patient_type</span><span class="op">)</span></span></code></pre></div>
+<p>See <a href="meta-regression.html">Meta-Regression</a>.</p>
+</section><section class="level2"><h2 id="limitations">Limitations<a class="anchor" aria-label="anchor" href="#limitations"></a>
+</h2>
+<ul>
+<li>Label switching: despite the <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>μ</mi><mn>1</mn></msub><mo>≤</mo><msub><mi>μ</mi><mn>2</mn></msub></mrow><annotation encoding="application/x-tex">\mu_1 \leq \mu_2</annotation></semantics></math> constraint, MCMC chains can occasionally swap component labels for extreme values of <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>π</mi><annotation encoding="application/x-tex">\pi</annotation></semantics></math>. Check trace plots for both components.</li>
+<li>Identifiability degrades with small <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>: the mixture adds three extra parameters (<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>μ</mi><mn>2</mn></msub><annotation encoding="application/x-tex">\mu_2</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>τ</mi><mn>2</mn></msub><annotation encoding="application/x-tex">\tau_2</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>π</mi><annotation encoding="application/x-tex">\pi</annotation></semantics></math>) and requires enough studies for both components to be adequately informed.</li>
+<li>The two-component model cannot capture more complex multimodal structures. Three-component mixtures are available but rarely warranted in practice.</li>
+</ul>
+<p>For the Stan code underlying this model, see <a href="stan-re-mixture-model.html">Stan Code — RE Mixture Model</a>.</p>
 </section><script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
       var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
@@ -271,7 +343,8 @@
       }
     }
   });
-  </script></main>
+  </script></main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
+    </nav></aside>
 </div>
 
 

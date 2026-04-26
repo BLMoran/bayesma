@@ -238,7 +238,7 @@ bayesma builds upon the excellent work of the
 [tidybayes](https://mjskay.github.io/tidybayes/index.html) and the
 [tidyverse](https://www.tidyverse.org) suite of packages. Without the
 work of the Stan and R community and their contributions, bayesma would
-not be possible.
+not be possible. \# bayesma
 
 # Package index
 

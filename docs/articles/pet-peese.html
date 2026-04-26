@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>PET-PEESE model • bayesma</title>
+<title>PET-PEESE • bayesma</title>
 <!-- favicons --><link rel="icon" type="image/png" sizes="96x96" href="../favicon-96x96.png">
 <link rel="icon" type="”image/svg+xml”" href="../favicon.svg">
 <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
@@ -20,7 +20,7 @@
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><script src="pet-peese_files/libs/quarto-html/popper.min.js"></script><script src="pet-peese_files/libs/quarto-html/tippy.umd.min.js"></script><link href="pet-peese_files/libs/quarto-html/tippy.css" rel="stylesheet">
 <link href="pet-peese_files/libs/quarto-html/light-border.css" rel="stylesheet">
-<!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="PET-PEESE model">
+<!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="PET-PEESE">
 <meta property="og:image" content="https://blmoran.github.io/bayesma/logo.png">
 </head>
 <body>
@@ -40,12 +40,11 @@
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
-<li class="nav-item"><a class="nav-link" href="../articles/index.html">Getting Started</a></li>
 <li class="nav-item dropdown">
-  <button class="nav-link dropdown-toggle" type="button" id="dropdown-model-basics" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Model Basics</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-model-basics">
-<li><a class="dropdown-item" href="../articles/one-stage-two-stage-binary-jackson.html">One-Stage vs Two-Stage Models</a></li>
-    <li><hr class="dropdown-divider"></li>
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-models" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Models</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-models">
+<li><h6 class="dropdown-header" data-toc-skip>Model Basics</h6></li>
+    <li><a class="dropdown-item" href="../articles/one-stage-two-stage-binary-jackson.html">One-Stage vs Two-Stage Models</a></li>
     <li><a class="dropdown-item" href="../articles/common-effect-model.html">Common-Effect Model</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Random-Effects Models</h6></li>
@@ -54,19 +53,13 @@
     <li><a class="dropdown-item" href="../articles/re-distribution-assessment.html">Assessment of RE Distributions</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><a class="dropdown-item" href="../articles/small-sample-adjustments.html">Small-Sample Adjustments</a></li>
-    <li><hr class="dropdown-divider"></li>
     <li><a class="dropdown-item" href="../articles/multiarm-models.html">Multiarm Models</a></li>
-    <li><hr class="dropdown-divider"></li>
     <li><a class="dropdown-item" href="../articles/model-comparison-diagnostics.html">Model Comparison &amp; Diagnostics</a></li>
-  </ul>
-</li>
-<li class="nav-item dropdown">
-  <button class="nav-link dropdown-toggle" type="button" id="dropdown-advanced-models" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Advanced Models</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-advanced-models">
-<li><a class="dropdown-item" href="../articles/multivariate-meta-analysis.html">Multivariate Meta-Analysis</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Advanced Models</h6></li>
+    <li><a class="dropdown-item" href="../articles/multivariate-meta-analysis.html">Multivariate Meta-Analysis</a></li>
     <li><a class="dropdown-item" href="../articles/longitudinal-meta-analysis.html">Longitudinal Meta-Analysis</a></li>
     <li><a class="dropdown-item" href="../articles/meta-regression.html">Meta-Regression</a></li>
-    <li><hr class="dropdown-divider"></li>
     <li><a class="dropdown-item" href="../articles/custom-models.html">Custom Models</a></li>
   </ul>
 </li>
@@ -168,7 +161,7 @@
 </nav><div class="container template-quarto">
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
-      <img src="../logo.png" class="logo" alt=""><h1>PET-PEESE model</h1>
+      <img src="../logo.png" class="logo" alt=""><h1>PET-PEESE</h1>
 
 
 
@@ -184,19 +177,105 @@
 
     <section class="level2"><h2 id="introduction">Introduction<a class="anchor" aria-label="anchor" href="#introduction"></a>
 </h2>
-<p>PET-PEESE is a regression-based method for correcting small-study effects.</p>
-</section><section class="level2"><h2 id="pet">PET<a class="anchor" aria-label="anchor" href="#pet"></a>
+<p>PET-PEESE (Stanley &amp; Doucouliagos, 2014) is a regression-based method for detecting and correcting small-study effects — the tendency for smaller, less precise studies to report larger effects, a pattern consistent with publication bias or inflated estimates in underpowered research.</p>
+<p>The key insight is that under publication bias, small-sample studies survive the publication filter only if they produce large effects. This creates a correlation between standard error and effect size. PET and PEESE use regression to estimate the effect that would be reported if a study were infinitely large (i.e., <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mi>E</mi><mo>→</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">SE \to 0</annotation></semantics></math>).</p>
+<p><strong>bayesma</strong> implements a fully Bayesian version of PET-PEESE via <code><a href="../reference/bayesma.html">bayesma()</a></code> with <code>model = "pet_peese"</code>.</p>
+</section><section class="level2"><h2 id="pet-precision-effect-test">PET — Precision Effect Test<a class="anchor" aria-label="anchor" href="#pet-precision-effect-test"></a>
 </h2>
-<p>Regression of test statistics on precision:</p>
-<p>[ t_i = + + u_i ]</p>
-</section><section class="level2"><h2 id="peese">PEESE<a class="anchor" aria-label="anchor" href="#peese"></a>
+<p>PET regresses the effect estimate on its standard error:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>y</mi><mi>i</mi></msub><mo>=</mo><mi>α</mi><mo>+</mo><mi>β</mi><mo>⋅</mo><mi>S</mi><msub><mi>E</mi><mi>i</mi></msub><mo>+</mo><msub><mi>ε</mi><mi>i</mi></msub></mrow><annotation encoding="application/x-tex">
+y_i = \alpha + \beta \cdot SE_i + \varepsilon_i
+</annotation></semantics></math></p>
+<p>The intercept <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>α</mi><annotation encoding="application/x-tex">\alpha</annotation></semantics></math> estimates the true effect at infinite precision (<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><msub><mi>E</mi><mi>i</mi></msub><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">SE_i = 0</annotation></semantics></math>). The slope <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math> captures the association between standard error and effect size: a positive <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math> indicates that less precise studies report larger effects.</p>
+<p>The error term allows for residual heterogeneity:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>ε</mi><mi>i</mi></msub><mo>∼</mo><mi>𝒩</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>0</mn><mo>,</mo><mspace width="0.278em"></mspace><msubsup><mi>s</mi><mi>i</mi><mn>2</mn></msubsup><mo>+</mo><msup><mi>τ</mi><mn>2</mn></msup><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">
+\varepsilon_i \sim \mathcal{N}(0,\; s_i^2 + \tau^2)
+</annotation></semantics></math></p>
+<p><strong>When to use PET</strong>: PET is the correct specification when the true effect is zero. Its intercept estimate is unbiased in that case. If the true effect is non-zero, the <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><msub><mi>E</mi><mi>i</mi></msub></mrow><annotation encoding="application/x-tex">SE_i</annotation></semantics></math> term in the regression absorbs some of the real effect, biasing <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mover><mi>α</mi><mo accent="true">̂</mo></mover><annotation encoding="application/x-tex">\hat{\alpha}</annotation></semantics></math> downward.</p>
+</section><section class="level2"><h2 id="peese-precision-effect-estimate-with-standard-error">PEESE — Precision Effect Estimate with Standard Error<a class="anchor" aria-label="anchor" href="#peese-precision-effect-estimate-with-standard-error"></a>
 </h2>
-<p>Regression of effect size on squared standard error:</p>
-<p>[ y_i = + SE_i^2 + u_i ]</p>
-<section class="level3"><h3 id="interpretation">Interpretation<a class="anchor" aria-label="anchor" href="#interpretation"></a>
-</h3>
-<p>The intercept estimates the effect as precision approaches infinity.</p>
-</section></section><script id="quarto-html-after-body" type="application/javascript">
+<p>PEESE replaces the linear <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><msub><mi>E</mi><mi>i</mi></msub></mrow><annotation encoding="application/x-tex">SE_i</annotation></semantics></math> term with <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><msubsup><mi>E</mi><mi>i</mi><mn>2</mn></msubsup></mrow><annotation encoding="application/x-tex">SE_i^2</annotation></semantics></math>:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>y</mi><mi>i</mi></msub><mo>=</mo><mi>α</mi><mo>+</mo><mi>β</mi><mo>⋅</mo><mi>S</mi><msubsup><mi>E</mi><mi>i</mi><mn>2</mn></msubsup><mo>+</mo><msub><mi>ε</mi><mi>i</mi></msub></mrow><annotation encoding="application/x-tex">
+y_i = \alpha + \beta \cdot SE_i^2 + \varepsilon_i
+</annotation></semantics></math></p>
+<p>The quadratic specification is better calibrated when the true effect is non-zero: the <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><msubsup><mi>E</mi><mi>i</mi><mn>2</mn></msubsup></mrow><annotation encoding="application/x-tex">SE_i^2</annotation></semantics></math> term changes more slowly for imprecise studies, leaving more of the true effect in the intercept. PEESE is therefore preferred as the primary bias-correction model when prior evidence suggests a non-zero effect.</p>
+</section><section class="level2"><h2 id="priors">Priors<a class="anchor" aria-label="anchor" href="#priors"></a>
+</h2>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>α</mi><mo>∼</mo><mi>𝒩</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>0</mn><mo>,</mo><mspace width="0.278em"></mspace><mn>1</mn><mo stretchy="true" form="postfix">)</mo></mrow><mo>,</mo><mspace width="2.0em"></mspace><mi>β</mi><mo>∼</mo><mi>𝒩</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>0</mn><mo>,</mo><mspace width="0.278em"></mspace><mn>1</mn><mo stretchy="true" form="postfix">)</mo></mrow><mo>,</mo><mspace width="2.0em"></mspace><mi>τ</mi><mo>∼</mo><mtext mathvariant="normal">Half-Cauchy</mtext><mrow><mo stretchy="true" form="prefix">(</mo><mn>0</mn><mo>,</mo><mspace width="0.278em"></mspace><mn>0.5</mn><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">
+\alpha \sim \mathcal{N}(0,\; 1), \qquad \beta \sim \mathcal{N}(0,\; 1), \qquad \tau \sim \text{Half-Cauchy}(0,\; 0.5)
+</annotation></semantics></math></p>
+<p>These are the defaults. The prior on <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math> is weakly informative and symmetric — it does not enforce the direction of small-study effects.</p>
+</section><section class="level2"><h2 id="fitting-pet-peese-in-bayesma">Fitting PET-PEESE in bayesma<a class="anchor" aria-label="anchor" href="#fitting-pet-peese-in-bayesma"></a>
+</h2>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co">#| eval: false</span></span>
+<span><span class="va">fit_pet</span>   <span class="op">&lt;-</span> <span class="fu"><a href="../reference/bayesma.html">bayesma</a></span><span class="op">(</span><span class="va">data</span>, model <span class="op">=</span> <span class="st">"pet"</span><span class="op">)</span></span>
+<span><span class="va">fit_peese</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/bayesma.html">bayesma</a></span><span class="op">(</span><span class="va">data</span>, model <span class="op">=</span> <span class="st">"peese"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit_peese</span><span class="op">)</span></span></code></pre></div>
+<p><code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> reports the posterior for <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>α</mi><annotation encoding="application/x-tex">\alpha</annotation></semantics></math> (bias-corrected effect), <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math> (small-study effect slope), and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>τ</mi><annotation encoding="application/x-tex">\tau</annotation></semantics></math> (residual heterogeneity).</p>
+</section><section class="level2"><h2 id="the-conditional-pet-peese-rule">The conditional PET-PEESE rule<a class="anchor" aria-label="anchor" href="#the-conditional-pet-peese-rule"></a>
+</h2>
+<p>Stanley &amp; Doucouliagos (2014) proposed a two-step decision rule:</p>
+<ol type="1">
+<li>Fit PET. If the PET intercept <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>α</mi><annotation encoding="application/x-tex">\alpha</annotation></semantics></math> is clearly different from zero (95% CI excludes 0), proceed to PEESE.</li>
+<li>Report the PEESE intercept as the bias-corrected effect estimate.</li>
+</ol>
+<p>The Bayesian version of this rule uses the posterior probability that <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>α</mi><mtext mathvariant="normal">PET</mtext></msub><mo>≠</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\alpha_\text{PET} \neq 0</annotation></semantics></math>:</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co">#| eval: false</span></span>
+<span><span class="co"># Fit both</span></span>
+<span><span class="va">fit_pet</span>   <span class="op">&lt;-</span> <span class="fu"><a href="../reference/bayesma.html">bayesma</a></span><span class="op">(</span><span class="va">data</span>, model <span class="op">=</span> <span class="st">"pet"</span><span class="op">)</span></span>
+<span><span class="va">fit_peese</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/bayesma.html">bayesma</a></span><span class="op">(</span><span class="va">data</span>, model <span class="op">=</span> <span class="st">"peese"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Posterior probability of non-zero effect (PET intercept)</span></span>
+<span><span class="fu"><a href="../reference/interpret.html">interpret</a></span><span class="op">(</span><span class="va">fit_pet</span>, parameter <span class="op">=</span> <span class="st">"alpha"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Report PEESE if PET provides clear evidence of non-zero effect</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit_peese</span><span class="op">)</span></span></code></pre></div>
+<p>In <strong>bayesma</strong>, Bayes factors for <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>α</mi><annotation encoding="application/x-tex">\alpha</annotation></semantics></math> are computed using the Savage-Dickey density ratio, providing a continuous measure of evidence for vs. against a non-zero effect.</p>
+</section><section class="level2"><h2 id="interpreting-the-output">Interpreting the output<a class="anchor" aria-label="anchor" href="#interpreting-the-output"></a>
+</h2>
+<table class="table caption-top">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead><tr class="header">
+<th>Parameter</th>
+<th>Interpretation</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><code>alpha</code></td>
+<td>Bias-corrected pooled effect (<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mi>E</mi><mo>→</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">SE \to 0</annotation></semantics></math>)</td>
+</tr>
+<tr class="even">
+<td><code>beta</code></td>
+<td>Small-study effect coefficient</td>
+</tr>
+<tr class="odd">
+<td><code>tau</code></td>
+<td>Residual between-study heterogeneity</td>
+</tr>
+<tr class="even">
+<td><code>BF_alpha</code></td>
+<td>Bayes factor for <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>H</mi><mn>1</mn></msub><mo>:</mo><mi>α</mi><mo>≠</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">H_1: \alpha \neq 0</annotation></semantics></math> vs <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>H</mi><mn>0</mn></msub><mo>:</mo><mi>α</mi><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">H_0: \alpha = 0</annotation></semantics></math>
+</td>
+</tr>
+</tbody>
+</table></section><section class="level2"><h2 id="limitations">Limitations<a class="anchor" aria-label="anchor" href="#limitations"></a>
+</h2>
+<ul>
+<li>PET-PEESE assumes that small-study effects are the <em>only</em> source of funnel asymmetry. Genuine small-study effects (e.g., smaller studies targeting different populations) can mimic publication bias.</li>
+<li>The method has low power when <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>k</mi><mo>&lt;</mo><mn>20</mn></mrow><annotation encoding="application/x-tex">k &lt; 20</annotation></semantics></math> and performs poorly when heterogeneity is large relative to the precision range of the included studies.</li>
+<li>If true heterogeneity and publication bias both exist, PET-PEESE may overcorrect.</li>
+</ul>
+<p>For a more comprehensive approach that models multiple sources of bias simultaneously, see <a href="robma.html">Robust Bayesian Meta-Analysis (RoBMA)</a>, which averages over PET-PEESE and selection model assumptions.</p>
+</section><section class="level2"><h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
+</h2>
+<p>Stanley TD, Doucouliagos H (2014). Meta-regression approximations to reduce publication selection bias. <em>Research Synthesis Methods</em>, 5(1), 60–78.</p>
+</section><script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
       var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
       var mailtoRegex = new RegExp(/^mailto:/);

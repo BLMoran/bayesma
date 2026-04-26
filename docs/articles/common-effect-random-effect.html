@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>Common-effect and random-effects models • bayesma</title>
+<title>Gaussian random-effects model • bayesma</title>
 <!-- favicons --><link rel="icon" type="image/png" sizes="96x96" href="../favicon-96x96.png">
 <link rel="icon" type="”image/svg+xml”" href="../favicon.svg">
 <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
@@ -20,7 +20,7 @@
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><script src="common-effect-random-effect_files/libs/quarto-html/popper.min.js"></script><script src="common-effect-random-effect_files/libs/quarto-html/tippy.umd.min.js"></script><link href="common-effect-random-effect_files/libs/quarto-html/tippy.css" rel="stylesheet">
 <link href="common-effect-random-effect_files/libs/quarto-html/light-border.css" rel="stylesheet">
-<!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Common-effect and random-effects models">
+<!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Gaussian random-effects model">
 <meta property="og:image" content="https://blmoran.github.io/bayesma/logo.png">
 </head>
 <body>
@@ -40,12 +40,11 @@
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
-<li class="nav-item"><a class="nav-link" href="../articles/index.html">Getting Started</a></li>
 <li class="active nav-item dropdown">
-  <button class="nav-link dropdown-toggle" type="button" id="dropdown-model-basics" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Model Basics</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-model-basics">
-<li><a class="dropdown-item" href="../articles/one-stage-two-stage-binary-jackson.html">One-Stage vs Two-Stage Models</a></li>
-    <li><hr class="dropdown-divider"></li>
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-models" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Models</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-models">
+<li><h6 class="dropdown-header" data-toc-skip>Model Basics</h6></li>
+    <li><a class="dropdown-item" href="../articles/one-stage-two-stage-binary-jackson.html">One-Stage vs Two-Stage Models</a></li>
     <li><a class="dropdown-item" href="../articles/common-effect-model.html">Common-Effect Model</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Random-Effects Models</h6></li>
@@ -54,19 +53,13 @@
     <li><a class="dropdown-item" href="../articles/re-distribution-assessment.html">Assessment of RE Distributions</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><a class="dropdown-item" href="../articles/small-sample-adjustments.html">Small-Sample Adjustments</a></li>
-    <li><hr class="dropdown-divider"></li>
     <li><a class="dropdown-item" href="../articles/multiarm-models.html">Multiarm Models</a></li>
-    <li><hr class="dropdown-divider"></li>
     <li><a class="dropdown-item" href="../articles/model-comparison-diagnostics.html">Model Comparison &amp; Diagnostics</a></li>
-  </ul>
-</li>
-<li class="nav-item dropdown">
-  <button class="nav-link dropdown-toggle" type="button" id="dropdown-advanced-models" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Advanced Models</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-advanced-models">
-<li><a class="dropdown-item" href="../articles/multivariate-meta-analysis.html">Multivariate Meta-Analysis</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Advanced Models</h6></li>
+    <li><a class="dropdown-item" href="../articles/multivariate-meta-analysis.html">Multivariate Meta-Analysis</a></li>
     <li><a class="dropdown-item" href="../articles/longitudinal-meta-analysis.html">Longitudinal Meta-Analysis</a></li>
     <li><a class="dropdown-item" href="../articles/meta-regression.html">Meta-Regression</a></li>
-    <li><hr class="dropdown-divider"></li>
     <li><a class="dropdown-item" href="../articles/custom-models.html">Custom Models</a></li>
   </ul>
 </li>
@@ -168,7 +161,7 @@
 </nav><div class="container template-quarto">
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
-      <img src="../logo.png" class="logo" alt=""><h1>Common-effect and random-effects models</h1>
+      <img src="../logo.png" class="logo" alt=""><h1>Gaussian random-effects model</h1>
 
 
 
@@ -184,41 +177,94 @@
 
     <section class="level2"><h2 id="introduction">Introduction<a class="anchor" aria-label="anchor" href="#introduction"></a>
 </h2>
-<p>The most widely used meta-analysis models are the <strong>common-effect</strong> and <strong>random-effects</strong> models.</p>
-<p>The common-effect model assumes all studies estimate the same true effect, while the random-effects model allows the true effect to vary across studies.</p>
-<p>These models form the foundation for most extensions implemented in <strong>bayesma</strong>.</p>
-</section><section class="level2"><h2 id="common-effect-model">Common-effect model<a class="anchor" aria-label="anchor" href="#common-effect-model"></a>
+<p>The Gaussian random-effects model is the default meta-analysis model in <strong>bayesma</strong>. It assumes that the true effects across studies are exchangeable draws from a normal distribution, with between-study variability governed by a heterogeneity parameter <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>τ</mi><annotation encoding="application/x-tex">\tau</annotation></semantics></math>. This is the correct starting point when there is no strong reason to assume that every study estimates an identical effect.</p>
+<p>The common-effect model (all studies share one <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math>) is a limiting case at <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>τ</mi><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\tau = 0</annotation></semantics></math>. See <a href="common-effect-model.html">Common-Effect Model</a> for when it is preferable.</p>
+</section><section class="level2"><h2 id="model-specification">Model specification<a class="anchor" aria-label="anchor" href="#model-specification"></a>
 </h2>
-<p>Let</p>
-<ul>
-<li>(y_i) = effect estimate from study (i)</li>
-<li>(s_i) = standard error of the estimate</li>
-</ul>
-<p>The sampling model is</p>
-<p>[ y_i (, s_i^2) ]</p>
-<p>where () is the shared effect.</p>
-<p>A prior is placed on the effect:</p>
-<p>[ (0, _^2) ]</p>
-<section class="level3"><h3 id="interpretation">Interpretation<a class="anchor" aria-label="anchor" href="#interpretation"></a>
-</h3>
-<p>All studies are assumed to estimate the same underlying effect.</p>
-</section></section><section class="level2"><h2 id="random-effects-model">Random-effects model<a class="anchor" aria-label="anchor" href="#random-effects-model"></a>
+<p>Let <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>y</mi><mi>i</mi></msub><annotation encoding="application/x-tex">y_i</annotation></semantics></math> be the effect estimate and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>s</mi><mi>i</mi></msub><annotation encoding="application/x-tex">s_i</annotation></semantics></math> the known standard error from study <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>i</mi><mo>=</mo><mn>1</mn><mo>,</mo><mi>…</mi><mo>,</mo><mi>k</mi></mrow><annotation encoding="application/x-tex">i = 1, \ldots, k</annotation></semantics></math>. The two-level hierarchy is:</p>
+<p><strong>Likelihood:</strong> <math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>y</mi><mi>i</mi></msub><mo>∣</mo><msub><mi>θ</mi><mi>i</mi></msub><mo>∼</mo><mi>𝒩</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>θ</mi><mi>i</mi></msub><mo>,</mo><mspace width="0.278em"></mspace><msubsup><mi>s</mi><mi>i</mi><mn>2</mn></msubsup><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">
+y_i \mid \theta_i \sim \mathcal{N}(\theta_i,\; s_i^2)
+</annotation></semantics></math></p>
+<p><strong>Random-effects distribution:</strong> <math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>θ</mi><mi>i</mi></msub><mo>∣</mo><mi>μ</mi><mo>,</mo><mi>τ</mi><mo>∼</mo><mi>𝒩</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>μ</mi><mo>,</mo><mspace width="0.278em"></mspace><msup><mi>τ</mi><mn>2</mn></msup><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">
+\theta_i \mid \mu, \tau \sim \mathcal{N}(\mu,\; \tau^2)
+</annotation></semantics></math></p>
+<p>Marginalising over the study-specific effects <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>θ</mi><mi>i</mi></msub><annotation encoding="application/x-tex">\theta_i</annotation></semantics></math> gives the integrated likelihood used for inference:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>y</mi><mi>i</mi></msub><mo>∣</mo><mi>μ</mi><mo>,</mo><mi>τ</mi><mo>∼</mo><mi>𝒩</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>μ</mi><mo>,</mo><mspace width="0.278em"></mspace><msubsup><mi>s</mi><mi>i</mi><mn>2</mn></msubsup><mo>+</mo><msup><mi>τ</mi><mn>2</mn></msup><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">
+y_i \mid \mu, \tau \sim \mathcal{N}(\mu,\; s_i^2 + \tau^2)
+</annotation></semantics></math></p>
+<p>Studies with smaller <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>s</mi><mi>i</mi></msub><annotation encoding="application/x-tex">s_i</annotation></semantics></math> still receive more weight, but the weight differential narrows as <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>τ</mi><annotation encoding="application/x-tex">\tau</annotation></semantics></math> grows.</p>
+</section><section class="level2"><h2 id="priors">Priors<a class="anchor" aria-label="anchor" href="#priors"></a>
 </h2>
-<p>The random-effects model introduces heterogeneity between studies.</p>
-<p>[ y_i (_i, s_i^2) ]</p>
-<p>[ _i (, ^2) ]</p>
-<p>where</p>
-<ul>
-<li>() = overall effect</li>
-<li>() = between-study heterogeneity</li>
-</ul>
-<section class="level3"><h3 id="assumptions">Assumptions<a class="anchor" aria-label="anchor" href="#assumptions"></a>
+<p><strong>bayesma</strong> defaults:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>μ</mi><mo>∼</mo><mi>𝒩</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>0</mn><mo>,</mo><mspace width="0.278em"></mspace><mn>1</mn><mo stretchy="true" form="postfix">)</mo></mrow><mo>,</mo><mspace width="2.0em"></mspace><mi>τ</mi><mo>∼</mo><mtext mathvariant="normal">Half-Cauchy</mtext><mrow><mo stretchy="true" form="prefix">(</mo><mn>0</mn><mo>,</mo><mspace width="0.278em"></mspace><mn>0.5</mn><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">
+\mu \sim \mathcal{N}(0,\; 1), \qquad \tau \sim \text{Half-Cauchy}(0,\; 0.5)
+</annotation></semantics></math></p>
+<p>The Half-Cauchy(0, 0.5) prior on <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>τ</mi><annotation encoding="application/x-tex">\tau</annotation></semantics></math> is weakly informative: it assigns most prior mass to small heterogeneity while keeping moderate-to-large values within the plausible range. For effect sizes on standardised scales (log-OR, SMD), heterogeneity above <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>τ</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">\tau = 1</annotation></semantics></math> is already very large.</p>
+<p>Priors can be overridden via the <code>prior_mu</code> and <code>prior_tau</code> arguments:</p>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co">#| eval: false</span></span>
+<span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/bayesma.html">bayesma</a></span><span class="op">(</span></span>
+<span>  <span class="va">data</span>,</span>
+<span>  prior_mu  <span class="op">=</span> <span class="fu"><a href="../reference/priors.html">normal</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0.5</span><span class="op">)</span>,</span>
+<span>  prior_tau <span class="op">=</span> <span class="fu"><a href="../reference/priors.html">half_normal</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0.5</span><span class="op">)</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p>See <a href="prior-predictive-checks.html">Prior Predictive Checks</a> and <a href="sensitivity-analysis.html">Sensitivity Analysis</a> for guidance.</p>
+</section><section class="level2"><h2 id="fitting-the-model">Fitting the model<a class="anchor" aria-label="anchor" href="#fitting-the-model"></a>
+</h2>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co">#| eval: false</span></span>
+<span><span class="va">fit_re</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/bayesma.html">bayesma</a></span><span class="op">(</span><span class="va">data</span><span class="op">)</span>  <span class="co"># Gaussian RE is the default</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit_re</span><span class="op">)</span></span></code></pre></div>
+<p>The <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> output reports the posterior median and 95% credible interval for <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>μ</mi><annotation encoding="application/x-tex">\mu</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>τ</mi><annotation encoding="application/x-tex">\tau</annotation></semantics></math>, and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>I</mi><mn>2</mn></msup><annotation encoding="application/x-tex">I^2</annotation></semantics></math>, along with convergence diagnostics.</p>
+</section><section class="level2"><h2 id="key-estimands">Key estimands<a class="anchor" aria-label="anchor" href="#key-estimands"></a>
+</h2>
+<section class="level3"><h3 id="overall-effect-mu">Overall effect <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>μ</mi><annotation encoding="application/x-tex">\mu</annotation></semantics></math><a class="anchor" aria-label="anchor" href="#overall-effect-mu"></a>
 </h3>
-<ul>
-<li>study effects are exchangeable</li>
-<li>heterogeneity follows a normal distribution</li>
-<li>sampling errors are known</li>
-</ul></section></section><script id="quarto-html-after-body" type="application/javascript">
+<p>The posterior for <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>μ</mi><annotation encoding="application/x-tex">\mu</annotation></semantics></math> quantifies the mean of the distribution of true effects. This is the best estimate of what a new, exchangeable study would find on average.</p>
+</section><section class="level3"><h3 id="between-study-heterogeneity-tau">Between-study heterogeneity <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>τ</mi><annotation encoding="application/x-tex">\tau</annotation></semantics></math><a class="anchor" aria-label="anchor" href="#between-study-heterogeneity-tau"></a>
+</h3>
+<p><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>τ</mi><annotation encoding="application/x-tex">\tau</annotation></semantics></math> is the standard deviation of the true-effect distribution. Larger <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>τ</mi><annotation encoding="application/x-tex">\tau</annotation></semantics></math> means more variation in true effects across studies. The posterior for <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>τ</mi><annotation encoding="application/x-tex">\tau</annotation></semantics></math> should be examined directly — if it has substantial mass near zero, the data are consistent with negligible heterogeneity.</p>
+</section><section class="level3"><h3 id="i2">
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>I</mi><mn>2</mn></msup><annotation encoding="application/x-tex">I^2</annotation></semantics></math><a class="anchor" aria-label="anchor" href="#i2"></a>
+</h3>
+<p><strong>bayesma</strong> reports the posterior distribution of <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>I</mi><mn>2</mn></msup><annotation encoding="application/x-tex">I^2</annotation></semantics></math>, defined as:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>I</mi><mn>2</mn></msup><mo>=</mo><mfrac><msup><mi>τ</mi><mn>2</mn></msup><mrow><msup><mi>τ</mi><mn>2</mn></msup><mo>+</mo><msup><mover><mi>s</mi><mo accent="true">̃</mo></mover><mn>2</mn></msup></mrow></mfrac></mrow><annotation encoding="application/x-tex">
+I^2 = \frac{\tau^2}{\tau^2 + \tilde{s}^2}
+</annotation></semantics></math></p>
+<p>where <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mover><mi>s</mi><mo accent="true">̃</mo></mover><mn>2</mn></msup><annotation encoding="application/x-tex">\tilde{s}^2</annotation></semantics></math> is the typical within-study variance. <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>I</mi><mn>2</mn></msup><annotation encoding="application/x-tex">I^2</annotation></semantics></math> is a relative measure: the proportion of total observed variance attributable to between-study heterogeneity. It depends on both <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>τ</mi><annotation encoding="application/x-tex">\tau</annotation></semantics></math><em>and</em> the precision of the primary studies, so it should be interpreted alongside <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>τ</mi><annotation encoding="application/x-tex">\tau</annotation></semantics></math> rather than in isolation.</p>
+</section><section class="level3"><h3 id="prediction-interval">Prediction interval<a class="anchor" aria-label="anchor" href="#prediction-interval"></a>
+</h3>
+<p>The 95% prediction interval for a new study’s true effect is</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>μ</mi><mo>±</mo><mn>1.96</mn><mspace width="0.167em"></mspace><mi>τ</mi></mrow><annotation encoding="application/x-tex">
+\mu \pm 1.96\,\tau
+</annotation></semantics></math></p>
+<p>This is wider than the credible interval for <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>μ</mi><annotation encoding="application/x-tex">\mu</annotation></semantics></math> and is reported by <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> when <code>prediction_interval = TRUE</code>.</p>
+</section></section><section class="level2"><h2 id="assumptions">Assumptions<a class="anchor" aria-label="anchor" href="#assumptions"></a>
+</h2>
+<p>The Gaussian random-effects model assumes:</p>
+<ol type="1">
+<li>
+<strong>Exchangeability</strong>: the true effects <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>θ</mi><mi>i</mi></msub><annotation encoding="application/x-tex">\theta_i</annotation></semantics></math> are drawn from the same distribution. This requires that the studies are sufficiently similar in population, intervention, comparator, and outcome to justify pooling.</li>
+<li>
+<strong>Normal random-effects distribution</strong>: the distribution of true effects is symmetric. When this is implausible — for example, when outlier studies are suspected — consider <a href="random-effects-distributions.html">Alternative RE Distributions</a> or <a href="robust-mixture-models.html">RE Mixture Models</a>.</li>
+<li>
+<strong>Known within-study variances</strong>: <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msubsup><mi>s</mi><mi>i</mi><mn>2</mn></msubsup><annotation encoding="application/x-tex">s_i^2</annotation></semantics></math> is treated as fixed at the estimated value. This approximation deteriorates for very small studies.</li>
+</ol></section><section class="level2"><h2 id="heterogeneity-assessment">Heterogeneity assessment<a class="anchor" aria-label="anchor" href="#heterogeneity-assessment"></a>
+</h2>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co">#| eval: false</span></span>
+<span><span class="fu"><a href="../reference/bayesma_output.html">bayesma_output</a></span><span class="op">(</span><span class="va">fit_re</span>, type <span class="op">=</span> <span class="st">"heterogeneity"</span><span class="op">)</span></span></code></pre></div>
+<p>This produces a table of <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>τ</mi><annotation encoding="application/x-tex">\tau</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>I</mi><mn>2</mn></msup><annotation encoding="application/x-tex">I^2</annotation></semantics></math>, and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>H</mi><mn>2</mn></msup><annotation encoding="application/x-tex">H^2</annotation></semantics></math> with posterior intervals. For a visual assessment see <a href="funnel-plots.html">Funnel Plots</a> and <a href="posterior-predictive-checks.html">Posterior Predictive Checks</a>.</p>
+</section><section class="level2"><h2 id="choosing-between-common-effect-and-random-effects">Choosing between common-effect and random-effects<a class="anchor" aria-label="anchor" href="#choosing-between-common-effect-and-random-effects"></a>
+</h2>
+<p>The random-effects model is the appropriate default for most meta-analyses. Reserve the common-effect model for planned sensitivity analyses, when exchangeability is genuinely implausible to question (e.g., replications of the same study by the same team), or when the number of studies is very small and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>τ</mi><annotation encoding="application/x-tex">\tau</annotation></semantics></math> cannot be estimated reliably.</p>
+<p>Bayesian model comparison via <code><a href="../reference/compare_models.html">compare_models()</a></code> provides formal evidence for or against heterogeneity:</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co">#| eval: false</span></span>
+<span><span class="va">fit_ce</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/bayesma.html">bayesma</a></span><span class="op">(</span><span class="va">data</span>, model <span class="op">=</span> <span class="st">"common_effect"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/compare_models.html">compare_models</a></span><span class="op">(</span><span class="va">fit_ce</span>, <span class="va">fit_re</span>, labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Common-effect"</span>, <span class="st">"Random-effects"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+</section><script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
       var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
       var mailtoRegex = new RegExp(/^mailto:/);

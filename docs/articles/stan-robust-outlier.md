@@ -1,126 +1,176 @@
-# Stan code — Robust outlier mixture (RoBMA)
+# Stan code — Robust outlier mixture model (Cruz et al.)
 
 ## Model description
 
-The robust Bayesian model averaging (RoBMA) approach models the evidence
-across multiple competing meta-analytic models: models that include or
-exclude heterogeneity, and models that include or exclude publication
-bias. Model weights are estimated via Bayes factors (bridge sampling)
-and used to produce a model-averaged posterior for the true effect.
+The robust outlier mixture model (Cruz et al.) extends the standard
+Gaussian random-effects model by allowing a small proportion of studies
+to be outliers — studies whose true effects are so discrepant from the
+bulk of the literature that they would distort estimates of $`\mu`$ and
+$`\tau`$ if analysed under a single-component Gaussian.
 
-The component models in RoBMA are:
+Unlike the [two-component RE mixture
+model](https://blmoran.github.io/bayesma/articles/stan-re-mixture-model.md),
+which assumes two substantive subpopulations with different means, the
+outlier model treats the second component as a nuisance: its role is to
+absorb anomalous studies and protect inference on $`\mu`$ for the main
+component.
 
-1.  Common effect, no publication bias
-2.  Random effects, no publication bias
-3.  Common effect + selection bias
-4.  Random effects + selection bias
-
-Each component is fitted separately; Bayes factors assess the evidence
-for heterogeneity and for publication bias independently.
+The model is fit via
+[`bayesma()`](https://blmoran.github.io/bayesma/reference/bayesma.md)
+with `model = "robust_outlier"`.
 
 ## Mathematical specification
 
-**Model-averaged posterior:**
+**Likelihood:**
 
 ``` math
 
-p(\theta \mid \mathbf{y}) = \sum_{k=1}^{K} p(M_k \mid \mathbf{y}) \cdot p(\theta \mid \mathbf{y}, M_k)
+y_i \mid \theta_i \sim \mathcal{N}(\theta_i,\; s_i^2)
 ```
 
-**Posterior model probability:**
+**Outlier mixture prior on true effects:**
 
 ``` math
 
-p(M_k \mid \mathbf{y}) \propto p(\mathbf{y} \mid M_k) \cdot p(M_k)
+p(\theta_i) = (1 - \pi) \cdot \mathcal{N}(\theta_i \mid \mu,\; \tau^2) + \pi \cdot \mathcal{N}(\theta_i \mid \mu,\; \tau_{\text{out}}^2)
 ```
 
-where $`p(\mathbf{y} \mid M_k)`$ is the marginal likelihood of model
-$`k`$ (computed via bridge sampling) and $`p(M_k)`$ is the prior model
-probability.
+The two components share the mean $`\mu`$ but have different scales:
+$`\tau`$ for typical studies and $`\tau_{\text{out}} \gg \tau`$ for
+outlier studies. The outlier component is much wider — it accommodates
+extreme effect sizes without pulling $`\mu`$ toward them.
 
-## Stan code (component RE model with spike-and-slab heterogeneity)
+**Marginalised likelihood:**
+
+``` math
+
+p(y_i \mid \mu, \tau, \tau_{\text{out}}, \pi) = (1-\pi) \cdot \mathcal{N}(y_i \mid \mu,\; \tau^2 + s_i^2) + \pi \cdot \mathcal{N}(y_i \mid \mu,\; \tau_{\text{out}}^2 + s_i^2)
+```
+
+**Outlier scale parameterisation:**
+
+``` math
+
+\tau_{\text{out}} = C \cdot \tau, \quad C > 1
+```
+
+The scale multiplier $`C`$ is typically fixed (default $`C = 10`$) or
+assigned a prior. This ensures that the outlier component is always
+wider than the main component.
+
+**Priors:**
+
+``` math
+
+\mu \sim \mathcal{N}(0,\; 1), \qquad \tau \sim \text{Half-Cauchy}(0,\; 0.5)
+```
+
+``` math
+
+\pi \sim \text{Beta}(1,\; 9)
+```
+
+The Beta(1, 9) prior places prior expectation on $`\pi`$ at 0.10,
+reflecting the assumption that outliers are uncommon.
+
+## Stan code
 
 ``` stan
 data {
   int<lower=1> N;
   vector[N] y;
   vector<lower=0>[N] se;
-  real<lower=0, upper=1> p_het;  // prior probability of heterogeneity
+  real<lower=1> C;  // outlier scale multiplier (default 10)
 }
 
 parameters {
   real mu;
-  real<lower=0, upper=1> include_tau;  // inclusion indicator
-  real<lower=0> tau_raw;
+  real<lower=0> tau;
+  real<lower=0, upper=1> pi_out;
 }
 
 transformed parameters {
-  real tau = include_tau > p_het ? tau_raw : 0.0;
+  real tau_out = C * tau;
 }
 
 model {
-  target += normal_lpdf(mu      | 0, 1);
-  target += bernoulli_lpdf(include_tau > p_het | p_het);
-  target += cauchy_lpdf(tau_raw | 0, 0.5);
+  target += normal_lpdf(mu     | 0, 1);
+  target += cauchy_lpdf(tau    | 0, 0.5);
+  target += beta_lpdf(pi_out   | 1, 9);
 
-  target += normal_lpdf(y | mu, sqrt(square(se) + square(tau)));
+  for (i in 1:N) {
+    target += log_mix(
+      pi_out,
+      normal_lpdf(y[i] | mu, sqrt(square(tau_out) + square(se[i]))),
+      normal_lpdf(y[i] | mu, sqrt(square(tau)     + square(se[i])))
+    );
+  }
 }
 
 generated quantities {
   real b_Intercept = mu;
+  real b_tau       = tau;
+  real b_pi_out    = pi_out;
+
+  // Posterior outlier probability for each study
+  vector[N] p_outlier;
+  for (i in 1:N) {
+    real lp_out = log(pi_out)      + normal_lpdf(y[i] | mu, sqrt(square(tau_out) + square(se[i])));
+    real lp_reg = log1m(pi_out)    + normal_lpdf(y[i] | mu, sqrt(square(tau)     + square(se[i])));
+    p_outlier[i] = exp(lp_out - log_sum_exp(lp_out, lp_reg));
+  }
 }
 ```
 
-Note: **bayesma** uses bridge sampling rather than spike-and-slab for
-RoBMA, computing the marginal likelihood for each component model
-separately and then combining via posterior model probabilities. The
-above is a simplified illustration.
-
-## How bayesma calls RoBMA
+## How bayesma calls this model
 
 ``` r
-fit_robma <- robma(
+#| eval: false
+fit_outlier <- bayesma(
   data,
-  method         = "bridge",
-  bias_models    = c("none", "pet_peese", "selection_weight"),
-  priors_effect  = normal(0, 1),
-  null_range     = c(-0.1, 0.1)
+  model   = "robust_outlier",
+  C       = 10,
+  prior_pi_out = beta(1, 9)
 )
+
+summary(fit_outlier)
 ```
 
-`method = "bridge"` fits each component model separately and computes
-Bayes factors via bridge sampling. `method = "ss"` uses a spike-and-slab
-formulation.
+The `generated quantities` block computes `p_outlier[i]` — the posterior
+probability that study $`i`$ belongs to the outlier component. These are
+extracted and reported by
+[`bayesma_output()`](https://blmoran.github.io/bayesma/reference/bayesma_output.md).
 
-## Bridge sampling for Bayes factors
+## Identifying outlier studies
 
-Bridge sampling (Meng & Wong, 1996) estimates the marginal likelihood:
-
-``` math
-
-p(\mathbf{y} \mid M_k) = \int p(\mathbf{y} \mid \boldsymbol{\theta}, M_k) \cdot p(\boldsymbol{\theta} \mid M_k) \cdot d\boldsymbol{\theta}
+``` r
+#| eval: false
+bayesma_output(fit_outlier, type = "outlier_probabilities")
 ```
 
-by fitting both the model and a reference distribution and computing a
-ratio estimator. Stan’s output is passed to
-[`bridgesampling::bridge_sampler()`](https://rdrr.io/pkg/bridgesampling/man/bridge_sampler.html).
+Studies with `p_outlier > 0.5` are flagged as probable outliers in the
+summary table. These should be investigated for data quality issues,
+coding errors, or genuine moderators that explain the discrepancy.
 
-## Interpreting RoBMA output
+## Key output parameters
 
-[`robma()`](https://blmoran.github.io/bayesma/reference/robma.md)
-returns:
+| Parameter      | Interpretation                                     |
+|----------------|----------------------------------------------------|
+| `mu`           | Pooled effect for the main (non-outlier) component |
+| `tau`          | Between-study heterogeneity in main component      |
+| `pi_out`       | Proportion of studies in the outlier component     |
+| `p_outlier[i]` | Per-study posterior outlier probability            |
 
-- **Component model weights**: posterior probability of each model.
-- **Bayes factor for heterogeneity**:
-  $`\text{BF}_\tau = P(\text{heterogeneity}) / P(\text{no heterogeneity})`$.
-- **Bayes factor for bias**:
-  $`\text{BF}_b = P(\text{bias}) / P(\text{no bias})`$.
-- **Model-averaged posterior for $`\mu`$**: weighted average across all
-  models.
+## Relation to the Student-t random-effects model
 
-## Known sampling difficulties
+A Student-t random-effects distribution (see [Alternative RE
+Distributions](https://blmoran.github.io/bayesma/articles/random-effects-distributions.md))
+achieves similar robustness through heavier tails rather than an
+explicit mixture. The mixture parameterisation is more interpretable —
+it assigns each study an outlier probability — but both approaches are
+defensible when outliers are a concern.
 
-Bridge sampling requires that the posterior is well-explored by MCMC.
-Use `iter_sampling = 5000` for reliable bridge sampling estimates. The
-variance of the bridge sampling estimate can be assessed via
-[`robma_sensitivity()`](https://blmoran.github.io/bayesma/reference/robma_sensitivity.md).
+## References
+
+Cruz KS, et al. A robust outlier mixture model for Bayesian
+meta-analysis. *Manuscript in preparation*.

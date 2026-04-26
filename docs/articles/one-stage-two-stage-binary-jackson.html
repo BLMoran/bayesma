@@ -40,12 +40,11 @@
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
-<li class="nav-item"><a class="nav-link" href="../articles/index.html">Getting Started</a></li>
 <li class="active nav-item dropdown">
-  <button class="nav-link dropdown-toggle" type="button" id="dropdown-model-basics" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Model Basics</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-model-basics">
-<li><a class="dropdown-item" href="../articles/one-stage-two-stage-binary-jackson.html">One-Stage vs Two-Stage Models</a></li>
-    <li><hr class="dropdown-divider"></li>
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-models" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Models</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-models">
+<li><h6 class="dropdown-header" data-toc-skip>Model Basics</h6></li>
+    <li><a class="dropdown-item" href="../articles/one-stage-two-stage-binary-jackson.html">One-Stage vs Two-Stage Models</a></li>
     <li><a class="dropdown-item" href="../articles/common-effect-model.html">Common-Effect Model</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Random-Effects Models</h6></li>
@@ -54,19 +53,13 @@
     <li><a class="dropdown-item" href="../articles/re-distribution-assessment.html">Assessment of RE Distributions</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><a class="dropdown-item" href="../articles/small-sample-adjustments.html">Small-Sample Adjustments</a></li>
-    <li><hr class="dropdown-divider"></li>
     <li><a class="dropdown-item" href="../articles/multiarm-models.html">Multiarm Models</a></li>
-    <li><hr class="dropdown-divider"></li>
     <li><a class="dropdown-item" href="../articles/model-comparison-diagnostics.html">Model Comparison &amp; Diagnostics</a></li>
-  </ul>
-</li>
-<li class="nav-item dropdown">
-  <button class="nav-link dropdown-toggle" type="button" id="dropdown-advanced-models" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Advanced Models</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-advanced-models">
-<li><a class="dropdown-item" href="../articles/multivariate-meta-analysis.html">Multivariate Meta-Analysis</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Advanced Models</h6></li>
+    <li><a class="dropdown-item" href="../articles/multivariate-meta-analysis.html">Multivariate Meta-Analysis</a></li>
     <li><a class="dropdown-item" href="../articles/longitudinal-meta-analysis.html">Longitudinal Meta-Analysis</a></li>
     <li><a class="dropdown-item" href="../articles/meta-regression.html">Meta-Regression</a></li>
-    <li><hr class="dropdown-divider"></li>
     <li><a class="dropdown-item" href="../articles/custom-models.html">Custom Models</a></li>
   </ul>
 </li>
@@ -184,35 +177,129 @@
 
     <section class="level2"><h2 id="introduction">Introduction<a class="anchor" aria-label="anchor" href="#introduction"></a>
 </h2>
-<p>Binary outcome meta-analyses can be performed using either <strong>two-stage</strong> or <strong>one-stage</strong> approaches.</p>
-<p>The two-stage method first computes study-level effect sizes, then performs meta-analysis.</p>
-<p>The one-stage method models the original likelihood directly.</p>
-</section><section class="level2"><h2 id="two-stage-model">Two-stage model<a class="anchor" aria-label="anchor" href="#two-stage-model"></a>
+<p>Meta-analyses of binary outcomes (events vs. non-events) can be conducted using either a <strong>two-stage</strong> or a <strong>one-stage</strong> approach. The distinction matters when studies are small, baseline event rates vary widely, or the outcome is rare.</p>
+<p><strong>Two-stage</strong>: each study is first summarised to a log-scale effect estimate <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>y</mi><mi>i</mi></msub><annotation encoding="application/x-tex">y_i</annotation></semantics></math> and standard error <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>s</mi><mi>i</mi></msub><annotation encoding="application/x-tex">s_i</annotation></semantics></math>, then the meta-analysis uses a Gaussian likelihood on those summaries. This is the default in <strong>bayesma</strong> and adequate for most applications.</p>
+<p><strong>One-stage</strong>: the original binomial counts are modelled directly, avoiding the normal approximation and handling studies with zero events without continuity corrections. <strong>bayesma</strong> implements the one-stage model following Jackson et al. (2018).</p>
+</section><section class="level2"><h2 id="two-stage-binary-meta-analysis">Two-stage binary meta-analysis<a class="anchor" aria-label="anchor" href="#two-stage-binary-meta-analysis"></a>
 </h2>
-<p>First compute the log odds ratio:</p>
-<p>[ y_i = (OR_i) ]</p>
-<p>Then perform random-effects meta-analysis:</p>
-<p>[ y_i (_i, s_i^2) ]</p>
-<p>[ _i (, ^2) ]</p>
-</section><section class="level2"><h2 id="one-stage-model-jackson-et-al-">One-stage model (Jackson et al.)<a class="anchor" aria-label="anchor" href="#one-stage-model-jackson-et-al-"></a>
-</h2>
-<p>For study (i) and arm (j):</p>
-<p>[ e_{ij} (n_{ij}, _{ij}) ]</p>
-<p>with logit link</p>
-<p>[ (_{ij}) = <em>i + j+ z</em>{ij}_i ]</p>
-<p>where</p>
-<ul>
-<li>(_i) = baseline risk</li>
-<li>() = treatment effect</li>
-<li>(_i) = heterogeneity term</li>
-</ul>
-<section class="level3"><h3 id="assumptions">Assumptions<a class="anchor" aria-label="anchor" href="#assumptions"></a>
+<section class="level3"><h3 id="effect-size-computation">Effect size computation<a class="anchor" aria-label="anchor" href="#effect-size-computation"></a>
+</h3>
+<p>For study <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>i</mi><annotation encoding="application/x-tex">i</annotation></semantics></math> with treatment arm <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>r</mi><mrow><mn>1</mn><mi>i</mi></mrow></msub><mo>,</mo><msub><mi>n</mi><mrow><mn>1</mn><mi>i</mi></mrow></msub><mo stretchy="true" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(r_{1i}, n_{1i})</annotation></semantics></math> and control arm <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>r</mi><mrow><mn>0</mn><mi>i</mi></mrow></msub><mo>,</mo><msub><mi>n</mi><mrow><mn>0</mn><mi>i</mi></mrow></msub><mo stretchy="true" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(r_{0i}, n_{0i})</annotation></semantics></math>, the log odds ratio is</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>y</mi><mi>i</mi></msub><mo>=</mo><mo>log</mo><mspace width="-0.167em"></mspace><mrow><mo stretchy="true" form="prefix">(</mo><mfrac><mrow><msub><mi>r</mi><mrow><mn>1</mn><mi>i</mi></mrow></msub><mi>/</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>n</mi><mrow><mn>1</mn><mi>i</mi></mrow></msub><mo>−</mo><msub><mi>r</mi><mrow><mn>1</mn><mi>i</mi></mrow></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow><mrow><msub><mi>r</mi><mrow><mn>0</mn><mi>i</mi></mrow></msub><mi>/</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>n</mi><mrow><mn>0</mn><mi>i</mi></mrow></msub><mo>−</mo><msub><mi>r</mi><mrow><mn>0</mn><mi>i</mi></mrow></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow></mfrac><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">
+y_i = \log\!\left(\frac{r_{1i}/(n_{1i}-r_{1i})}{r_{0i}/(n_{0i}-r_{0i})}\right)
+</annotation></semantics></math></p>
+<p>with approximate variance</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msubsup><mi>s</mi><mi>i</mi><mn>2</mn></msubsup><mo>=</mo><mfrac><mn>1</mn><msub><mi>r</mi><mrow><mn>1</mn><mi>i</mi></mrow></msub></mfrac><mo>+</mo><mfrac><mn>1</mn><mrow><msub><mi>n</mi><mrow><mn>1</mn><mi>i</mi></mrow></msub><mo>−</mo><msub><mi>r</mi><mrow><mn>1</mn><mi>i</mi></mrow></msub></mrow></mfrac><mo>+</mo><mfrac><mn>1</mn><msub><mi>r</mi><mrow><mn>0</mn><mi>i</mi></mrow></msub></mfrac><mo>+</mo><mfrac><mn>1</mn><mrow><msub><mi>n</mi><mrow><mn>0</mn><mi>i</mi></mrow></msub><mo>−</mo><msub><mi>r</mi><mrow><mn>0</mn><mi>i</mi></mrow></msub></mrow></mfrac></mrow><annotation encoding="application/x-tex">
+s_i^2 = \frac{1}{r_{1i}} + \frac{1}{n_{1i}-r_{1i}} + \frac{1}{r_{0i}} + \frac{1}{n_{0i}-r_{0i}}
+</annotation></semantics></math></p>
+<p>Log-risk ratios and risk differences are supported via the <code>effect_measure</code> argument.</p>
+</section><section class="level3"><h3 id="meta-analysis-model">Meta-analysis model<a class="anchor" aria-label="anchor" href="#meta-analysis-model"></a>
+</h3>
+<p>The two-stage random-effects model applies the standard Gaussian hierarchy to the log-scale summaries:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>y</mi><mi>i</mi></msub><mo>∣</mo><msub><mi>θ</mi><mi>i</mi></msub><mo>∼</mo><mi>𝒩</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>θ</mi><mi>i</mi></msub><mo>,</mo><mspace width="0.278em"></mspace><msubsup><mi>s</mi><mi>i</mi><mn>2</mn></msubsup><mo stretchy="true" form="postfix">)</mo></mrow><mo>,</mo><mspace width="2.0em"></mspace><msub><mi>θ</mi><mi>i</mi></msub><mo>∣</mo><mi>μ</mi><mo>,</mo><mi>τ</mi><mo>∼</mo><mi>𝒩</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>μ</mi><mo>,</mo><mspace width="0.278em"></mspace><msup><mi>τ</mi><mn>2</mn></msup><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">
+y_i \mid \theta_i \sim \mathcal{N}(\theta_i,\; s_i^2), \qquad \theta_i \mid \mu, \tau \sim \mathcal{N}(\mu,\; \tau^2)
+</annotation></semantics></math></p>
+<p>See <a href="common-effect-random-effect.html">Gaussian Random-Effects Model</a> for full details.</p>
+</section><section class="level3"><h3 id="limitations">Limitations<a class="anchor" aria-label="anchor" href="#limitations"></a>
 </h3>
 <ul>
-<li>binomial likelihood</li>
-<li>logit link</li>
-<li>study-specific baseline risks</li>
-</ul></section></section><script id="quarto-html-after-body" type="application/javascript">
+<li>The normal approximation to the log-OR is poor when cell counts are small (<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>r</mi><mi>i</mi></msub><mo>&lt;</mo><mn>5</mn></mrow><annotation encoding="application/x-tex">r_i &lt; 5</annotation></semantics></math>).</li>
+<li>Studies with zero events require a continuity correction, which shifts the estimate in ways that depend on the correction chosen.</li>
+<li>Within-study information about baseline event rates is discarded.</li>
+</ul></section></section><section class="level2"><h2 id="one-stage-model-jackson-et-al-">One-stage model (Jackson et al.)<a class="anchor" aria-label="anchor" href="#one-stage-model-jackson-et-al-"></a>
+</h2>
+<p>The one-stage model replaces the Gaussian approximation with an exact binomial likelihood. The formulation follows Jackson et al. (2018).</p>
+<section class="level3"><h3 id="model-specification">Model specification<a class="anchor" aria-label="anchor" href="#model-specification"></a>
+</h3>
+<p>For study <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>i</mi><mo>∈</mo><mo stretchy="false" form="prefix">{</mo><mn>1</mn><mo>,</mo><mi>…</mi><mo>,</mo><mi>k</mi><mo stretchy="false" form="postfix">}</mo></mrow><annotation encoding="application/x-tex">i \in \{1, \ldots, k\}</annotation></semantics></math> and arm <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>j</mi><mo>∈</mo><mo stretchy="false" form="prefix">{</mo><mn>0</mn><mspace width="0.278em"></mspace><mtext mathvariant="normal">(ctrl)</mtext><mo>,</mo><mspace width="0.278em"></mspace><mn>1</mn><mspace width="0.278em"></mspace><mtext mathvariant="normal">(trt)</mtext><mo stretchy="false" form="postfix">}</mo></mrow><annotation encoding="application/x-tex">j \in \{0\;\text{(ctrl)},\; 1\;\text{(trt)}\}</annotation></semantics></math>:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>r</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo>∼</mo><mtext mathvariant="normal">Binomial</mtext><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>n</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo>,</mo><mspace width="0.278em"></mspace><msub><mi>π</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">
+r_{ij} \sim \text{Binomial}(n_{ij},\; \pi_{ij})
+</annotation></semantics></math></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">logit</mtext><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>π</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><msub><mi>γ</mi><mi>i</mi></msub><mo>+</mo><msub><mi>θ</mi><mi>i</mi></msub><mo>⋅</mo><mi>j</mi></mrow><annotation encoding="application/x-tex">
+\text{logit}(\pi_{ij}) = \gamma_i + \theta_i \cdot j
+</annotation></semantics></math></p>
+<p>where <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>γ</mi><mi>i</mi></msub><annotation encoding="application/x-tex">\gamma_i</annotation></semantics></math> is the study-specific log-odds on control (baseline log-odds) and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>θ</mi><mi>i</mi></msub><annotation encoding="application/x-tex">\theta_i</annotation></semantics></math> is the study-specific log-odds ratio.</p>
+<p>Treatment effects are exchangeable across studies:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>θ</mi><mi>i</mi></msub><mo>∣</mo><mi>μ</mi><mo>,</mo><mi>τ</mi><mo>∼</mo><mi>𝒩</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>μ</mi><mo>,</mo><mspace width="0.278em"></mspace><msup><mi>τ</mi><mn>2</mn></msup><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">
+\theta_i \mid \mu, \tau \sim \mathcal{N}(\mu,\; \tau^2)
+</annotation></semantics></math></p>
+<p>Baseline log-odds receive weakly informative priors:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>γ</mi><mi>i</mi></msub><mo>∼</mo><mi>𝒩</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>0</mn><mo>,</mo><mspace width="0.278em"></mspace><msubsup><mi>σ</mi><mi>γ</mi><mn>2</mn></msubsup><mo stretchy="true" form="postfix">)</mo></mrow><mo>,</mo><mspace width="1.0em"></mspace><msub><mi>σ</mi><mi>γ</mi></msub><mo>=</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">
+\gamma_i \sim \mathcal{N}(0,\; \sigma_\gamma^2), \quad \sigma_\gamma = 2
+</annotation></semantics></math></p>
+<p>covering a wide range of baseline event rates on the logit scale.</p>
+</section><section class="level3"><h3 id="priors">Priors<a class="anchor" aria-label="anchor" href="#priors"></a>
+</h3>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>μ</mi><mo>∼</mo><mi>𝒩</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>0</mn><mo>,</mo><mspace width="0.278em"></mspace><mn>1</mn><mo stretchy="true" form="postfix">)</mo></mrow><mo>,</mo><mspace width="2.0em"></mspace><mi>τ</mi><mo>∼</mo><mtext mathvariant="normal">Half-Cauchy</mtext><mrow><mo stretchy="true" form="prefix">(</mo><mn>0</mn><mo>,</mo><mspace width="0.278em"></mspace><mn>0.5</mn><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">
+\mu \sim \mathcal{N}(0,\; 1), \qquad \tau \sim \text{Half-Cauchy}(0,\; 0.5)
+</annotation></semantics></math></p>
+<p>These match the defaults for the two-stage model. See <a href="prior-predictive-checks.html">Prior Predictive Checks</a> for outcome-specific guidance.</p>
+</section><section class="level3"><h3 id="why-the-one-stage-model-handles-zero-events">Why the one-stage model handles zero events<a class="anchor" aria-label="anchor" href="#why-the-one-stage-model-handles-zero-events"></a>
+</h3>
+<p>A study with <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>r</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">r_{ij} = 0</annotation></semantics></math> contributes a valid binomial log-likelihood term — the probability <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">Binomial</mtext><mrow><mo stretchy="true" form="prefix">(</mo><mn>0</mn><mo>∣</mo><mi>n</mi><mo>,</mo><mi>π</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\text{Binomial}(0 \mid n, \pi)</annotation></semantics></math> is defined and informative. The nuisance parameters <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>γ</mi><mi>i</mi></msub><annotation encoding="application/x-tex">\gamma_i</annotation></semantics></math> are integrated out by MCMC, so uncertainty about baseline risk propagates into the posteriors for <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>μ</mi><annotation encoding="application/x-tex">\mu</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>τ</mi><annotation encoding="application/x-tex">\tau</annotation></semantics></math>.</p>
+</section></section><section class="level2"><h2 id="fitting-in-bayesma">Fitting in bayesma<a class="anchor" aria-label="anchor" href="#fitting-in-bayesma"></a>
+</h2>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co">#| eval: false</span></span>
+<span></span>
+<span><span class="co"># Two-stage (default for binary outcomes with pre-computed summaries)</span></span>
+<span><span class="va">fit_2s</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/bayesma.html">bayesma</a></span><span class="op">(</span></span>
+<span>  <span class="va">data</span>,</span>
+<span>  outcome        <span class="op">=</span> <span class="st">"binary"</span>,</span>
+<span>  effect_measure <span class="op">=</span> <span class="st">"log_or"</span>,</span>
+<span>  model_stage    <span class="op">=</span> <span class="st">"two_stage"</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># One-stage (Jackson et al.) — expects raw count columns r1, n1, r0, n0</span></span>
+<span><span class="va">fit_1s</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/bayesma.html">bayesma</a></span><span class="op">(</span></span>
+<span>  <span class="va">data</span>,</span>
+<span>  outcome        <span class="op">=</span> <span class="st">"binary"</span>,</span>
+<span>  effect_measure <span class="op">=</span> <span class="st">"log_or"</span>,</span>
+<span>  model_stage    <span class="op">=</span> <span class="st">"one_stage"</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit_1s</span><span class="op">)</span></span></code></pre></div>
+</section><section class="level2"><h2 id="when-to-prefer-the-one-stage-model">When to prefer the one-stage model<a class="anchor" aria-label="anchor" href="#when-to-prefer-the-one-stage-model"></a>
+</h2>
+<table class="table caption-top">
+<thead><tr class="header">
+<th>Situation</th>
+<th>Recommendation</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>Large studies, moderate event rates</td>
+<td>Two-stage is adequate</td>
+</tr>
+<tr class="even">
+<td>One or more studies have zero events</td>
+<td>One-stage preferred</td>
+</tr>
+<tr class="odd">
+<td>Small <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math> or sparse data</td>
+<td>One-stage preferred</td>
+</tr>
+<tr class="even">
+<td>Baseline event rates vary substantially</td>
+<td>One-stage preferred</td>
+</tr>
+<tr class="odd">
+<td>Computational speed matters</td>
+<td>Two-stage is faster</td>
+</tr>
+</tbody>
+</table>
+<p>For most systematic reviews with reasonably sized studies and no zero-event cells, the two approaches yield very similar estimates.</p>
+</section><section class="level2"><h2 id="comparing-estimates">Comparing estimates<a class="anchor" aria-label="anchor" href="#comparing-estimates"></a>
+</h2>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co">#| eval: false</span></span>
+<span><span class="fu"><a href="../reference/compare_models.html">compare_models</a></span><span class="op">(</span><span class="va">fit_2s</span>, <span class="va">fit_1s</span>, labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Two-stage"</span>, <span class="st">"One-stage"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<p>Non-trivial differences between the two approaches indicate that the normal approximation is influencing the two-stage result. In that case, the one-stage estimate should be reported as the primary analysis.</p>
+</section><section class="level2"><h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
+</h2>
+<p>Jackson D, Law M, Stijnen T, Viechtbauer W, White IR (2018). A comparison of 7 random-effects models for meta-analyses that estimate the summary odds ratio. <em>Statistics in Medicine</em>, 37(7), 1059–1085.</p>
+</section><script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
       var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
       var mailtoRegex = new RegExp(/^mailto:/);

@@ -40,12 +40,11 @@
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
-<li class="nav-item"><a class="nav-link" href="../articles/index.html">Getting Started</a></li>
 <li class="nav-item dropdown">
-  <button class="nav-link dropdown-toggle" type="button" id="dropdown-model-basics" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Model Basics</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-model-basics">
-<li><a class="dropdown-item" href="../articles/one-stage-two-stage-binary-jackson.html">One-Stage vs Two-Stage Models</a></li>
-    <li><hr class="dropdown-divider"></li>
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-models" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Models</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-models">
+<li><h6 class="dropdown-header" data-toc-skip>Model Basics</h6></li>
+    <li><a class="dropdown-item" href="../articles/one-stage-two-stage-binary-jackson.html">One-Stage vs Two-Stage Models</a></li>
     <li><a class="dropdown-item" href="../articles/common-effect-model.html">Common-Effect Model</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Random-Effects Models</h6></li>
@@ -54,19 +53,13 @@
     <li><a class="dropdown-item" href="../articles/re-distribution-assessment.html">Assessment of RE Distributions</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><a class="dropdown-item" href="../articles/small-sample-adjustments.html">Small-Sample Adjustments</a></li>
-    <li><hr class="dropdown-divider"></li>
     <li><a class="dropdown-item" href="../articles/multiarm-models.html">Multiarm Models</a></li>
-    <li><hr class="dropdown-divider"></li>
     <li><a class="dropdown-item" href="../articles/model-comparison-diagnostics.html">Model Comparison &amp; Diagnostics</a></li>
-  </ul>
-</li>
-<li class="nav-item dropdown">
-  <button class="nav-link dropdown-toggle" type="button" id="dropdown-advanced-models" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Advanced Models</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-advanced-models">
-<li><a class="dropdown-item" href="../articles/multivariate-meta-analysis.html">Multivariate Meta-Analysis</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Advanced Models</h6></li>
+    <li><a class="dropdown-item" href="../articles/multivariate-meta-analysis.html">Multivariate Meta-Analysis</a></li>
     <li><a class="dropdown-item" href="../articles/longitudinal-meta-analysis.html">Longitudinal Meta-Analysis</a></li>
     <li><a class="dropdown-item" href="../articles/meta-regression.html">Meta-Regression</a></li>
-    <li><hr class="dropdown-divider"></li>
     <li><a class="dropdown-item" href="../articles/custom-models.html">Custom Models</a></li>
   </ul>
 </li>
@@ -184,27 +177,168 @@
 
     <section class="level2"><h2 id="introduction">Introduction<a class="anchor" aria-label="anchor" href="#introduction"></a>
 </h2>
-<p>Selection models adjust for <strong>publication bias</strong> by modelling the probability that a study is observed.</p>
-<p>Two common approaches are:</p>
+<p>Selection models address publication bias by explicitly modelling the mechanism by which studies enter (or fail to enter) the published literature. Rather than adjusting the effect estimate via regression, selection models embed the publication process into the likelihood, correcting inference about <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>μ</mi><annotation encoding="application/x-tex">\mu</annotation></semantics></math> by down-weighting observations that are over-represented due to selection.</p>
+<p><strong>bayesma</strong> implements two complementary families:</p>
+<ol type="1">
+<li>The <strong>Copas selection model</strong> — a latent-variable model in which selection depends on study precision.</li>
+<li>
+<strong>Vevea-Hedges weight-function models</strong> — a step-function model in which selection depends on the reported p-value.</li>
+</ol>
+<p>Both are available through <code><a href="../reference/bayesma.html">bayesma()</a></code>.</p>
+</section><section class="level2"><h2 id="copas-selection-model">Copas selection model<a class="anchor" aria-label="anchor" href="#copas-selection-model"></a>
+</h2>
+<section class="level3"><h3 id="mechanism">Mechanism<a class="anchor" aria-label="anchor" href="#mechanism"></a>
+</h3>
+<p>Copas &amp; Shi (2000) model each study as having been published if a latent selection variable exceeds zero:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>Z</mi><mi>i</mi></msub><mo>=</mo><msub><mi>γ</mi><mn>0</mn></msub><mo>+</mo><mfrac><msub><mi>γ</mi><mn>1</mn></msub><mrow><mi>S</mi><msub><mi>E</mi><mi>i</mi></msub></mrow></mfrac><mo>+</mo><msub><mi>δ</mi><mi>i</mi></msub><mo>,</mo><mspace width="2.0em"></mspace><msub><mi>δ</mi><mi>i</mi></msub><mo>∼</mo><mi>𝒩</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">
+Z_i = \gamma_0 + \frac{\gamma_1}{SE_i} + \delta_i, \qquad \delta_i \sim \mathcal{N}(0, 1)
+</annotation></semantics></math></p>
+<p>Study <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>i</mi><annotation encoding="application/x-tex">i</annotation></semantics></math> is observed if <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>Z</mi><mi>i</mi></msub><mo>&gt;</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">Z_i &gt; 0</annotation></semantics></math>. The selection parameters <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>γ</mi><mn>0</mn></msub><mo>,</mo><msub><mi>γ</mi><mn>1</mn></msub><mo stretchy="true" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(\gamma_0, \gamma_1)</annotation></semantics></math> control the shape of the selection mechanism:</p>
 <ul>
-<li>Copas selection model</li>
-<li>Weight-function models (Vevea &amp; Hedges)</li>
-</ul></section><section class="level2"><h2 id="copas-model">Copas model<a class="anchor" aria-label="anchor" href="#copas-model"></a>
+<li>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>γ</mi><mn>0</mn></msub><annotation encoding="application/x-tex">\gamma_0</annotation></semantics></math> is a baseline selection intercept (more negative → more severe selection overall).</li>
+<li>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>γ</mi><mn>1</mn></msub><annotation encoding="application/x-tex">\gamma_1</annotation></semantics></math> governs how much easier large-precision (small-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mi>E</mi></mrow><annotation encoding="application/x-tex">SE</annotation></semantics></math>) studies are to publish. Positive <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>γ</mi><mn>1</mn></msub><annotation encoding="application/x-tex">\gamma_1</annotation></semantics></math> means precise studies are more likely to be published regardless of their result.</li>
+</ul>
+<p>The selection variable <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>Z</mi><mi>i</mi></msub><annotation encoding="application/x-tex">Z_i</annotation></semantics></math> is correlated with the observed effect <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>y</mi><mi>i</mi></msub><annotation encoding="application/x-tex">y_i</annotation></semantics></math> through a joint bivariate normal:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mo stretchy="true" form="prefix">(</mo><mtable><mtr><mtd columnalign="center" style="text-align: center"><msub><mi>y</mi><mi>i</mi></msub></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"><msub><mi>Z</mi><mi>i</mi></msub></mtd></mtr></mtable><mo stretchy="true" form="postfix">)</mo></mrow><mo>∼</mo><mi>𝒩</mi><mspace width="-0.167em"></mspace><mrow><mo stretchy="true" form="prefix">(</mo><mrow><mo stretchy="true" form="prefix">(</mo><mtable><mtr><mtd columnalign="center" style="text-align: center"><msub><mi>θ</mi><mi>i</mi></msub></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"><msub><mi>γ</mi><mn>0</mn></msub><mo>+</mo><msub><mi>γ</mi><mn>1</mn></msub><mi>/</mi><mi>S</mi><msub><mi>E</mi><mi>i</mi></msub></mtd></mtr></mtable><mo stretchy="true" form="postfix">)</mo></mrow><mo>,</mo><mspace width="0.278em"></mspace><mrow><mo stretchy="true" form="prefix">(</mo><mtable><mtr><mtd columnalign="center" style="text-align: center"><msubsup><mi>s</mi><mi>i</mi><mn>2</mn></msubsup></mtd><mtd columnalign="center" style="text-align: center"><mi>ρ</mi><mspace width="0.167em"></mspace><msub><mi>s</mi><mi>i</mi></msub></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"><mi>ρ</mi><mspace width="0.167em"></mspace><msub><mi>s</mi><mi>i</mi></msub></mtd><mtd columnalign="center" style="text-align: center"><mn>1</mn></mtd></mtr></mtable><mo stretchy="true" form="postfix">)</mo></mrow><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">
+\begin{pmatrix} y_i \\ Z_i \end{pmatrix} \sim \mathcal{N}\!\left(\begin{pmatrix} \theta_i \\ \gamma_0 + \gamma_1 / SE_i \end{pmatrix},\; \begin{pmatrix} s_i^2 &amp; \rho\,s_i \\ \rho\,s_i &amp; 1 \end{pmatrix}\right)
+</annotation></semantics></math></p>
+<p>The correlation <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ρ</mi><annotation encoding="application/x-tex">\rho</annotation></semantics></math> captures the tendency for studies with large effects to be published (effect-dependent selection). Under the null <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ρ</mi><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\rho = 0</annotation></semantics></math>, selection depends only on precision, not on the effect magnitude.</p>
+</section><section class="level3"><h3 id="priors">Priors<a class="anchor" aria-label="anchor" href="#priors"></a>
+</h3>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>μ</mi><mo>∼</mo><mi>𝒩</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo stretchy="true" form="postfix">)</mo></mrow><mo>,</mo><mspace width="2.0em"></mspace><mi>τ</mi><mo>∼</mo><mtext mathvariant="normal">Half-Cauchy</mtext><mrow><mo stretchy="true" form="prefix">(</mo><mn>0</mn><mo>,</mo><mn>0.5</mn><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">
+\mu \sim \mathcal{N}(0, 1), \qquad \tau \sim \text{Half-Cauchy}(0, 0.5)
+</annotation></semantics></math></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>γ</mi><mn>0</mn></msub><mo>,</mo><msub><mi>γ</mi><mn>1</mn></msub><mo>∼</mo><mi>𝒩</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo stretchy="true" form="postfix">)</mo></mrow><mo>,</mo><mspace width="2.0em"></mspace><mi>ρ</mi><mo>∼</mo><mtext mathvariant="normal">Uniform</mtext><mrow><mo stretchy="true" form="prefix">(</mo><mi>−</mi><mn>1</mn><mo>,</mo><mn>1</mn><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">
+\gamma_0, \gamma_1 \sim \mathcal{N}(0, 1), \qquad \rho \sim \text{Uniform}(-1, 1)
+</annotation></semantics></math></p>
+<p>Informative priors can be supplied via <code><a href="../reference/prior_bias.html">prior_copas()</a></code>:</p>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co">#| eval: false</span></span>
+<span><span class="va">fit_copas</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/bayesma.html">bayesma</a></span><span class="op">(</span></span>
+<span>  <span class="va">data</span>,</span>
+<span>  model        <span class="op">=</span> <span class="st">"copas"</span>,</span>
+<span>  prior_copas  <span class="op">=</span> <span class="fu"><a href="../reference/prior_bias.html">prior_copas</a></span><span class="op">(</span>gamma0 <span class="op">=</span> <span class="fu"><a href="../reference/priors.html">normal</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span>, rho <span class="op">=</span> <span class="fu"><a href="../reference/priors.html">uniform</a></span><span class="op">(</span><span class="op">-</span><span class="fl">1</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p>Restricting <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ρ</mi><mo>≤</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\rho \leq 0</annotation></semantics></math> encodes the expectation that publication bias inflates effects upward.</p>
+</section></section><section class="level2"><h2 id="vevea-hedges-weight-function-models">Vevea-Hedges weight-function models<a class="anchor" aria-label="anchor" href="#vevea-hedges-weight-function-models"></a>
 </h2>
-<p>Studies are observed if</p>
-<p>[ Z_i &gt; 0 ]</p>
-<p>where</p>
-<p>[ Z_i = _0 + + _i ]</p>
-<p>This links study precision with probability of publication.</p>
-</section><section class="level2"><h2 id="weight-function-models">Weight-function models<a class="anchor" aria-label="anchor" href="#weight-function-models"></a>
+<section class="level3"><h3 id="mechanism-1">Mechanism<a class="anchor" aria-label="anchor" href="#mechanism-1"></a>
+</h3>
+<p>Vevea &amp; Hedges (1995) model selection as a step function of the two-tailed p-value. Studies are retained with probability <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>ω</mi><mi>j</mi></msub><annotation encoding="application/x-tex">\omega_j</annotation></semantics></math> if their p-value falls in interval <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math>:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mrow><mo stretchy="true" form="prefix">(</mo><mtext mathvariant="normal">study observed</mtext><mo>∣</mo><msub><mi>p</mi><mi>i</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><msub><mi>ω</mi><mi>j</mi></msub><mo>,</mo><mspace width="1.0em"></mspace><msub><mi>p</mi><mi>i</mi></msub><mo>∈</mo><mo stretchy="false" form="prefix">(</mo><msub><mi>a</mi><mrow><mi>j</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>,</mo><mspace width="0.278em"></mspace><msub><mi>a</mi><mi>j</mi></msub><mo stretchy="false" form="postfix">]</mo></mrow><annotation encoding="application/x-tex">
+p(\text{study observed} \mid p_i) = \omega_j, \quad p_i \in (a_{j-1},\; a_j]
+</annotation></semantics></math></p>
+<p>The likelihood is reweighted so that over-represented p-value regions (e.g., <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>&lt;</mo><mn>.05</mn></mrow><annotation encoding="application/x-tex">p &lt; .05</annotation></semantics></math>) contribute proportionally less to the pooled estimate.</p>
+<p><strong>bayesma</strong> implements the one-sided step function by default, with cut-points at <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>.025</mn><mo>,</mo><mspace width="0.278em"></mspace><mn>.05</mn><mo>,</mo><mspace width="0.278em"></mspace><mn>.10</mn><mo>,</mo><mspace width="0.278em"></mspace><mn>.25</mn><mo>,</mo><mspace width="0.278em"></mspace><mn>.50</mn><mo>,</mo><mspace width="0.278em"></mspace><mn>1.0</mn></mrow><annotation encoding="application/x-tex">.025,\; .05,\; .10,\; .25,\; .50,\; 1.0</annotation></semantics></math>:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>ω</mi><mn>1</mn></msub><mo>≥</mo><msub><mi>ω</mi><mn>2</mn></msub><mo>≥</mo><mi>⋯</mi><mo>≥</mo><msub><mi>ω</mi><mn>6</mn></msub><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">
+\omega_1 \geq \omega_2 \geq \cdots \geq \omega_6 = 1
+</annotation></semantics></math></p>
+<p>The final weight <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>ω</mi><mn>6</mn></msub><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">\omega_6 = 1</annotation></semantics></math> is fixed as the reference (non-significant studies), and each <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>ω</mi><mi>j</mi></msub><annotation encoding="application/x-tex">\omega_j</annotation></semantics></math> gives the relative probability that a study in p-value category <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math> is published compared to a study with <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>&gt;</mo><mn>.50</mn></mrow><annotation encoding="application/x-tex">p &gt; .50</annotation></semantics></math>.</p>
+</section><section class="level3"><h3 id="priors-1">Priors<a class="anchor" aria-label="anchor" href="#priors-1"></a>
+</h3>
+<p>The weight parameters are assigned a Dirichlet prior to ensure proper identification:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>ω</mi><mn>1</mn></msub><mo>,</mo><mi>…</mi><mo>,</mo><msub><mi>ω</mi><mn>5</mn></msub><mo stretchy="true" form="postfix">)</mo></mrow><mo>∼</mo><mtext mathvariant="normal">Dirichlet</mtext><mrow><mo stretchy="true" form="prefix">(</mo><mn>𝟏</mn><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">
+(\omega_1, \ldots, \omega_5) \sim \text{Dirichlet}(\mathbf{1})
+</annotation></semantics></math></p>
+<p>Custom weights can be specified via <code><a href="../reference/prior_bias.html">prior_weight_function()</a></code>.</p>
+</section><section class="level3"><h3 id="one-sided-vs--two-sided-step-function">One-sided vs. two-sided step function<a class="anchor" aria-label="anchor" href="#one-sided-vs--two-sided-step-function"></a>
+</h3>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co">#| eval: false</span></span>
+<span><span class="va">fit_wf1</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/bayesma.html">bayesma</a></span><span class="op">(</span></span>
+<span>  <span class="va">data</span>,</span>
+<span>  model       <span class="op">=</span> <span class="st">"weight_function"</span>,</span>
+<span>  weight_type <span class="op">=</span> <span class="st">"one_sided"</span>   <span class="co"># default</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">fit_wf2</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/bayesma.html">bayesma</a></span><span class="op">(</span></span>
+<span>  <span class="va">data</span>,</span>
+<span>  model       <span class="op">=</span> <span class="st">"weight_function"</span>,</span>
+<span>  weight_type <span class="op">=</span> <span class="st">"two_sided"</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p>The two-sided version uses the absolute p-value and is more appropriate when effects can be in either direction.</p>
+</section></section><section class="level2"><h2 id="fitting-and-comparing-selection-models">Fitting and comparing selection models<a class="anchor" aria-label="anchor" href="#fitting-and-comparing-selection-models"></a>
 </h2>
-<p>Selection probabilities depend on p-values.</p>
-[ w(p_i) =
-<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="true" form="prefix">{</mo><mtable><mtr><mtd columnalign="left" style="text-align: left"><msub><mi>ω</mi><mn>1</mn></msub></mtd><mtd columnalign="left" style="text-align: left"><mn>0</mn><mo>&lt;</mo><msub><mi>p</mi><mi>i</mi></msub><mo>≤</mo><msub><mi>a</mi><mn>1</mn></msub></mtd></mtr><mtr><mtd columnalign="left" style="text-align: left"><msub><mi>ω</mi><mi>j</mi></msub></mtd><mtd columnalign="left" style="text-align: left"><msub><mi>a</mi><mrow><mi>j</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>&lt;</mo><msub><mi>p</mi><mi>i</mi></msub><mo>≤</mo><msub><mi>a</mi><mi>j</mi></msub></mtd></mtr></mtable></mrow><annotation encoding="application/x-tex">\begin{cases}
-\omega_1 &amp; 0 &lt; p_i \le a_1 \\
-\omega_j &amp; a_{j-1} &lt; p_i \le a_j
-\end{cases}</annotation></semantics></math><p>]</p>
-<p>These weights modify the likelihood.</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co">#| eval: false</span></span>
+<span><span class="va">fit_re</span>    <span class="op">&lt;-</span> <span class="fu"><a href="../reference/bayesma.html">bayesma</a></span><span class="op">(</span><span class="va">data</span><span class="op">)</span></span>
+<span><span class="va">fit_copas</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/bayesma.html">bayesma</a></span><span class="op">(</span><span class="va">data</span>, model <span class="op">=</span> <span class="st">"copas"</span><span class="op">)</span></span>
+<span><span class="va">fit_wf</span>    <span class="op">&lt;-</span> <span class="fu"><a href="../reference/bayesma.html">bayesma</a></span><span class="op">(</span><span class="va">data</span>, model <span class="op">=</span> <span class="st">"weight_function"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="../reference/compare_models.html">compare_models</a></span><span class="op">(</span><span class="va">fit_re</span>, <span class="va">fit_copas</span>, <span class="va">fit_wf</span>,</span>
+<span>               labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Random-effects"</span>, <span class="st">"Copas"</span>, <span class="st">"Weight function"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<p><code><a href="../reference/compare_models.html">compare_models()</a></code> overlays the posteriors for <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>μ</mi><annotation encoding="application/x-tex">\mu</annotation></semantics></math> under each model, making it easy to see how much the publication-bias correction shifts the estimate and whether the two selection models agree.</p>
+</section><section class="level2"><h2 id="interpreting-the-output">Interpreting the output<a class="anchor" aria-label="anchor" href="#interpreting-the-output"></a>
+</h2>
+<p>For the Copas model, <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> returns:</p>
+<table class="table caption-top">
+<thead><tr class="header">
+<th>Parameter</th>
+<th>Interpretation</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><code>mu</code></td>
+<td>Bias-corrected pooled effect</td>
+</tr>
+<tr class="even">
+<td><code>tau</code></td>
+<td>Between-study heterogeneity</td>
+</tr>
+<tr class="odd">
+<td><code>gamma0</code></td>
+<td>Selection intercept</td>
+</tr>
+<tr class="even">
+<td><code>gamma1</code></td>
+<td>Precision-dependent selection</td>
+</tr>
+<tr class="odd">
+<td><code>rho</code></td>
+<td>Effect-dependent selection correlation</td>
+</tr>
+</tbody>
+</table>
+<p>For the weight-function model:</p>
+<table class="table caption-top">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead><tr class="header">
+<th>Parameter</th>
+<th>Interpretation</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><code>mu</code></td>
+<td>Bias-corrected pooled effect</td>
+</tr>
+<tr class="even">
+<td><code>tau</code></td>
+<td>Between-study heterogeneity</td>
+</tr>
+<tr class="odd">
+<td><code>omega_j</code></td>
+<td>Relative publication probability for p-value category <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math>
+</td>
+</tr>
+</tbody>
+</table></section><section class="level2"><h2 id="limitations">Limitations<a class="anchor" aria-label="anchor" href="#limitations"></a>
+</h2>
+<ul>
+<li>Both models require sufficient studies (<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>k</mi><mo>≥</mo><mn>20</mn></mrow><annotation encoding="application/x-tex">k \geq 20</annotation></semantics></math> is a practical minimum for the weight-function model; Copas can work with fewer but is sensitive to the prior on <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ρ</mi><annotation encoding="application/x-tex">\rho</annotation></semantics></math>).</li>
+<li>The Copas model assumes a specific functional form for the selection mechanism. If the true mechanism differs, the correction can be imprecise.</li>
+<li>Weight-function models assume that selection operates exclusively through p-values. Selection based on effect size direction or magnitude (without reference to p-values) is not captured.</li>
+<li>Neither model identifies publication bias if the filed studies are completely missing (i.e., the selection mechanism is so strong that no unpublished studies share observable characteristics with the published set).</li>
+</ul>
+<p>For a model-averaged approach that includes both PET-PEESE and weight functions as bias components, see <a href="robma.html">Robust Bayesian Meta-Analysis (RoBMA)</a>.</p>
+</section><section class="level2"><h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
+</h2>
+<p>Copas J, Shi JQ (2000). Meta-analysis, funnel plots and sensitivity analysis. <em>Biostatistics</em>, 1(3), 247–262.</p>
+<p>Vevea JL, Hedges LV (1995). A general linear model for estimating effect size in the presence of publication bias. <em>Psychometrika</em>, 60(3), 419–435.</p>
 </section><script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
       var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);

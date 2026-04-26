@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>Stan code — Robust outlier mixture (RoBMA) • bayesma</title>
+<title>Stan code — Robust outlier mixture model (Cruz et al.) • bayesma</title>
 <!-- favicons --><link rel="icon" type="image/png" sizes="96x96" href="../favicon-96x96.png">
 <link rel="icon" type="”image/svg+xml”" href="../favicon.svg">
 <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
@@ -20,7 +20,7 @@
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><script src="stan-robust-outlier_files/libs/quarto-html/popper.min.js"></script><script src="stan-robust-outlier_files/libs/quarto-html/tippy.umd.min.js"></script><link href="stan-robust-outlier_files/libs/quarto-html/tippy.css" rel="stylesheet">
 <link href="stan-robust-outlier_files/libs/quarto-html/light-border.css" rel="stylesheet">
-<!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Stan code — Robust outlier mixture (RoBMA)">
+<!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Stan code — Robust outlier mixture model (Cruz et al.)">
 <meta property="og:image" content="https://blmoran.github.io/bayesma/logo.png">
 </head>
 <body>
@@ -40,12 +40,11 @@
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
-<li class="nav-item"><a class="nav-link" href="../articles/index.html">Getting Started</a></li>
 <li class="nav-item dropdown">
-  <button class="nav-link dropdown-toggle" type="button" id="dropdown-model-basics" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Model Basics</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-model-basics">
-<li><a class="dropdown-item" href="../articles/one-stage-two-stage-binary-jackson.html">One-Stage vs Two-Stage Models</a></li>
-    <li><hr class="dropdown-divider"></li>
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-models" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Models</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-models">
+<li><h6 class="dropdown-header" data-toc-skip>Model Basics</h6></li>
+    <li><a class="dropdown-item" href="../articles/one-stage-two-stage-binary-jackson.html">One-Stage vs Two-Stage Models</a></li>
     <li><a class="dropdown-item" href="../articles/common-effect-model.html">Common-Effect Model</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Random-Effects Models</h6></li>
@@ -54,19 +53,13 @@
     <li><a class="dropdown-item" href="../articles/re-distribution-assessment.html">Assessment of RE Distributions</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><a class="dropdown-item" href="../articles/small-sample-adjustments.html">Small-Sample Adjustments</a></li>
-    <li><hr class="dropdown-divider"></li>
     <li><a class="dropdown-item" href="../articles/multiarm-models.html">Multiarm Models</a></li>
-    <li><hr class="dropdown-divider"></li>
     <li><a class="dropdown-item" href="../articles/model-comparison-diagnostics.html">Model Comparison &amp; Diagnostics</a></li>
-  </ul>
-</li>
-<li class="nav-item dropdown">
-  <button class="nav-link dropdown-toggle" type="button" id="dropdown-advanced-models" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Advanced Models</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-advanced-models">
-<li><a class="dropdown-item" href="../articles/multivariate-meta-analysis.html">Multivariate Meta-Analysis</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Advanced Models</h6></li>
+    <li><a class="dropdown-item" href="../articles/multivariate-meta-analysis.html">Multivariate Meta-Analysis</a></li>
     <li><a class="dropdown-item" href="../articles/longitudinal-meta-analysis.html">Longitudinal Meta-Analysis</a></li>
     <li><a class="dropdown-item" href="../articles/meta-regression.html">Meta-Regression</a></li>
-    <li><hr class="dropdown-divider"></li>
     <li><a class="dropdown-item" href="../articles/custom-models.html">Custom Models</a></li>
   </ul>
 </li>
@@ -168,7 +161,7 @@
 </nav><div class="container template-quarto">
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
-      <img src="../logo.png" class="logo" alt=""><h1>Stan code — Robust outlier mixture (RoBMA)</h1>
+      <img src="../logo.png" class="logo" alt=""><h1>Stan code — Robust outlier mixture model (Cruz et al.)</h1>
 
 
 
@@ -184,90 +177,133 @@
 
     <section class="level2"><h2 id="model-description">Model description<a class="anchor" aria-label="anchor" href="#model-description"></a>
 </h2>
-<p>The robust Bayesian model averaging (RoBMA) approach models the evidence across multiple competing meta-analytic models: models that include or exclude heterogeneity, and models that include or exclude publication bias. Model weights are estimated via Bayes factors (bridge sampling) and used to produce a model-averaged posterior for the true effect.</p>
-<p>The component models in RoBMA are:</p>
-<ol type="1">
-<li>Common effect, no publication bias</li>
-<li>Random effects, no publication bias</li>
-<li>Common effect + selection bias</li>
-<li>Random effects + selection bias</li>
-</ol>
-<p>Each component is fitted separately; Bayes factors assess the evidence for heterogeneity and for publication bias independently.</p>
+<p>The robust outlier mixture model (Cruz et al.) extends the standard Gaussian random-effects model by allowing a small proportion of studies to be outliers — studies whose true effects are so discrepant from the bulk of the literature that they would distort estimates of <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>μ</mi><annotation encoding="application/x-tex">\mu</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>τ</mi><annotation encoding="application/x-tex">\tau</annotation></semantics></math> if analysed under a single-component Gaussian.</p>
+<p>Unlike the <a href="stan-re-mixture-model.html">two-component RE mixture model</a>, which assumes two substantive subpopulations with different means, the outlier model treats the second component as a nuisance: its role is to absorb anomalous studies and protect inference on <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>μ</mi><annotation encoding="application/x-tex">\mu</annotation></semantics></math> for the main component.</p>
+<p>The model is fit via <code><a href="../reference/bayesma.html">bayesma()</a></code> with <code>model = "robust_outlier"</code>.</p>
 </section><section class="level2"><h2 id="mathematical-specification">Mathematical specification<a class="anchor" aria-label="anchor" href="#mathematical-specification"></a>
 </h2>
-<p><strong>Model-averaged posterior:</strong></p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>θ</mi><mo>∣</mo><mi>𝐲</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><munderover><mo>∑</mo><mrow><mi>k</mi><mo>=</mo><mn>1</mn></mrow><mi>K</mi></munderover><mi>p</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>M</mi><mi>k</mi></msub><mo>∣</mo><mi>𝐲</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>⋅</mo><mi>p</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>θ</mi><mo>∣</mo><mi>𝐲</mi><mo>,</mo><msub><mi>M</mi><mi>k</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">
-p(\theta \mid \mathbf{y}) = \sum_{k=1}^{K} p(M_k \mid \mathbf{y}) \cdot p(\theta \mid \mathbf{y}, M_k)
+<p><strong>Likelihood:</strong></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>y</mi><mi>i</mi></msub><mo>∣</mo><msub><mi>θ</mi><mi>i</mi></msub><mo>∼</mo><mi>𝒩</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>θ</mi><mi>i</mi></msub><mo>,</mo><mspace width="0.278em"></mspace><msubsup><mi>s</mi><mi>i</mi><mn>2</mn></msubsup><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">
+y_i \mid \theta_i \sim \mathcal{N}(\theta_i,\; s_i^2)
 </annotation></semantics></math></p>
-<p><strong>Posterior model probability:</strong></p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>M</mi><mi>k</mi></msub><mo>∣</mo><mi>𝐲</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>∝</mo><mi>p</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>𝐲</mi><mo>∣</mo><msub><mi>M</mi><mi>k</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow><mo>⋅</mo><mi>p</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>M</mi><mi>k</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">
-p(M_k \mid \mathbf{y}) \propto p(\mathbf{y} \mid M_k) \cdot p(M_k)
+<p><strong>Outlier mixture prior on true effects:</strong></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>θ</mi><mi>i</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mrow><mo stretchy="true" form="prefix">(</mo><mn>1</mn><mo>−</mo><mi>π</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>⋅</mo><mi>𝒩</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>θ</mi><mi>i</mi></msub><mo>∣</mo><mi>μ</mi><mo>,</mo><mspace width="0.278em"></mspace><msup><mi>τ</mi><mn>2</mn></msup><mo stretchy="true" form="postfix">)</mo></mrow><mo>+</mo><mi>π</mi><mo>⋅</mo><mi>𝒩</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>θ</mi><mi>i</mi></msub><mo>∣</mo><mi>μ</mi><mo>,</mo><mspace width="0.278em"></mspace><msubsup><mi>τ</mi><mtext mathvariant="normal">out</mtext><mn>2</mn></msubsup><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">
+p(\theta_i) = (1 - \pi) \cdot \mathcal{N}(\theta_i \mid \mu,\; \tau^2) + \pi \cdot \mathcal{N}(\theta_i \mid \mu,\; \tau_{\text{out}}^2)
 </annotation></semantics></math></p>
-<p>where <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>𝐲</mi><mo>∣</mo><msub><mi>M</mi><mi>k</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">p(\mathbf{y} \mid M_k)</annotation></semantics></math> is the marginal likelihood of model <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math> (computed via bridge sampling) and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>M</mi><mi>k</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">p(M_k)</annotation></semantics></math> is the prior model probability.</p>
-</section><section class="level2"><h2 id="stan-code-component-re-model-with-spike-and-slab-heterogeneity">Stan code (component RE model with spike-and-slab heterogeneity)<a class="anchor" aria-label="anchor" href="#stan-code-component-re-model-with-spike-and-slab-heterogeneity"></a>
+<p>The two components share the mean <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>μ</mi><annotation encoding="application/x-tex">\mu</annotation></semantics></math> but have different scales: <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>τ</mi><annotation encoding="application/x-tex">\tau</annotation></semantics></math> for typical studies and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>τ</mi><mtext mathvariant="normal">out</mtext></msub><mo>≫</mo><mi>τ</mi></mrow><annotation encoding="application/x-tex">\tau_{\text{out}} \gg \tau</annotation></semantics></math> for outlier studies. The outlier component is much wider — it accommodates extreme effect sizes without pulling <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>μ</mi><annotation encoding="application/x-tex">\mu</annotation></semantics></math> toward them.</p>
+<p><strong>Marginalised likelihood:</strong></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>y</mi><mi>i</mi></msub><mo>∣</mo><mi>μ</mi><mo>,</mo><mi>τ</mi><mo>,</mo><msub><mi>τ</mi><mtext mathvariant="normal">out</mtext></msub><mo>,</mo><mi>π</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mrow><mo stretchy="true" form="prefix">(</mo><mn>1</mn><mo>−</mo><mi>π</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>⋅</mo><mi>𝒩</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>y</mi><mi>i</mi></msub><mo>∣</mo><mi>μ</mi><mo>,</mo><mspace width="0.278em"></mspace><msup><mi>τ</mi><mn>2</mn></msup><mo>+</mo><msubsup><mi>s</mi><mi>i</mi><mn>2</mn></msubsup><mo stretchy="true" form="postfix">)</mo></mrow><mo>+</mo><mi>π</mi><mo>⋅</mo><mi>𝒩</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>y</mi><mi>i</mi></msub><mo>∣</mo><mi>μ</mi><mo>,</mo><mspace width="0.278em"></mspace><msubsup><mi>τ</mi><mtext mathvariant="normal">out</mtext><mn>2</mn></msubsup><mo>+</mo><msubsup><mi>s</mi><mi>i</mi><mn>2</mn></msubsup><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">
+p(y_i \mid \mu, \tau, \tau_{\text{out}}, \pi) = (1-\pi) \cdot \mathcal{N}(y_i \mid \mu,\; \tau^2 + s_i^2) + \pi \cdot \mathcal{N}(y_i \mid \mu,\; \tau_{\text{out}}^2 + s_i^2)
+</annotation></semantics></math></p>
+<p><strong>Outlier scale parameterisation:</strong></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>τ</mi><mtext mathvariant="normal">out</mtext></msub><mo>=</mo><mi>C</mi><mo>⋅</mo><mi>τ</mi><mo>,</mo><mspace width="1.0em"></mspace><mi>C</mi><mo>&gt;</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">
+\tau_{\text{out}} = C \cdot \tau, \quad C &gt; 1
+</annotation></semantics></math></p>
+<p>The scale multiplier <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>C</mi><annotation encoding="application/x-tex">C</annotation></semantics></math> is typically fixed (default <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>C</mi><mo>=</mo><mn>10</mn></mrow><annotation encoding="application/x-tex">C = 10</annotation></semantics></math>) or assigned a prior. This ensures that the outlier component is always wider than the main component.</p>
+<p><strong>Priors:</strong></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>μ</mi><mo>∼</mo><mi>𝒩</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>0</mn><mo>,</mo><mspace width="0.278em"></mspace><mn>1</mn><mo stretchy="true" form="postfix">)</mo></mrow><mo>,</mo><mspace width="2.0em"></mspace><mi>τ</mi><mo>∼</mo><mtext mathvariant="normal">Half-Cauchy</mtext><mrow><mo stretchy="true" form="prefix">(</mo><mn>0</mn><mo>,</mo><mspace width="0.278em"></mspace><mn>0.5</mn><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">
+\mu \sim \mathcal{N}(0,\; 1), \qquad \tau \sim \text{Half-Cauchy}(0,\; 0.5)
+</annotation></semantics></math></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>π</mi><mo>∼</mo><mtext mathvariant="normal">Beta</mtext><mrow><mo stretchy="true" form="prefix">(</mo><mn>1</mn><mo>,</mo><mspace width="0.278em"></mspace><mn>9</mn><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">
+\pi \sim \text{Beta}(1,\; 9)
+</annotation></semantics></math></p>
+<p>The Beta(1, 9) prior places prior expectation on <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>π</mi><annotation encoding="application/x-tex">\pi</annotation></semantics></math> at 0.10, reflecting the assumption that outliers are uncommon.</p>
+</section><section class="level2"><h2 id="stan-code">Stan code<a class="anchor" aria-label="anchor" href="#stan-code"></a>
 </h2>
 <div class="sourceCode" id="cb1"><pre class="sourceCode stan"><code class="sourceCode stan"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> {</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">int</span>&lt;<span class="kw">lower</span>=<span class="dv">1</span>&gt; N;</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">vector</span>[N] y;</span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">vector</span>&lt;<span class="kw">lower</span>=<span class="dv">0</span>&gt;[N] se;</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">real</span>&lt;<span class="kw">lower</span>=<span class="dv">0</span>, <span class="kw">upper</span>=<span class="dv">1</span>&gt; p_het;  <span class="co">// prior probability of heterogeneity</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">real</span>&lt;<span class="kw">lower</span>=<span class="dv">1</span>&gt; C;  <span class="co">// outlier scale multiplier (default 10)</span></span>
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>}</span>
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="kw">parameters</span> {</span>
 <span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">real</span> mu;</span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  <span class="dt">real</span>&lt;<span class="kw">lower</span>=<span class="dv">0</span>, <span class="kw">upper</span>=<span class="dv">1</span>&gt; include_tau;  <span class="co">// inclusion indicator</span></span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  <span class="dt">real</span>&lt;<span class="kw">lower</span>=<span class="dv">0</span>&gt; tau_raw;</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  <span class="dt">real</span>&lt;<span class="kw">lower</span>=<span class="dv">0</span>&gt; tau;</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  <span class="dt">real</span>&lt;<span class="kw">lower</span>=<span class="dv">0</span>, <span class="kw">upper</span>=<span class="dv">1</span>&gt; pi_out;</span>
 <span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>}</span>
 <span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="kw">transformed parameters</span> {</span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>  <span class="dt">real</span> tau = include_tau &gt; p_het ? tau_raw : <span class="fl">0.0</span>;</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>  <span class="dt">real</span> tau_out = C * tau;</span>
 <span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>}</span>
 <span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="kw">model</span> {</span>
-<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>  <span class="kw">target +=</span> normal_lpdf(mu      | <span class="dv">0</span>, <span class="dv">1</span>);</span>
-<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>  <span class="kw">target +=</span> bernoulli_lpdf(include_tau &gt; p_het | p_het);</span>
-<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>  <span class="kw">target +=</span> cauchy_lpdf(tau_raw | <span class="dv">0</span>, <span class="fl">0.5</span>);</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>  <span class="kw">target +=</span> normal_lpdf(mu     | <span class="dv">0</span>, <span class="dv">1</span>);</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>  <span class="kw">target +=</span> cauchy_lpdf(tau    | <span class="dv">0</span>, <span class="fl">0.5</span>);</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>  <span class="kw">target +=</span> beta_lpdf(pi_out   | <span class="dv">1</span>, <span class="dv">9</span>);</span>
 <span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>  <span class="kw">target +=</span> normal_lpdf(y | mu, sqrt(square(se) + square(tau)));</span>
-<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a><span class="kw">generated quantities</span> {</span>
-<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>  <span class="dt">real</span> b_Intercept = mu;</span>
-<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
-<p>Note: <strong>bayesma</strong> uses bridge sampling rather than spike-and-slab for RoBMA, computing the marginal likelihood for each component model separately and then combining via posterior model probabilities. The above is a simplified illustration.</p>
-</section><section class="level2"><h2 id="how-bayesma-calls-robma">How bayesma calls RoBMA<a class="anchor" aria-label="anchor" href="#how-bayesma-calls-robma"></a>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span>:N) {</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>    <span class="kw">target +=</span> log_mix(</span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>      pi_out,</span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>      normal_lpdf(y[i] | mu, sqrt(square(tau_out) + square(se[i]))),</span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>      normal_lpdf(y[i] | mu, sqrt(square(tau)     + square(se[i])))</span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>    );</span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a><span class="kw">generated quantities</span> {</span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a>  <span class="dt">real</span> b_Intercept = mu;</span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a>  <span class="dt">real</span> b_tau       = tau;</span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a>  <span class="dt">real</span> b_pi_out    = pi_out;</span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Posterior outlier probability for each study</span></span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a>  <span class="dt">vector</span>[N] p_outlier;</span>
+<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span>:N) {</span>
+<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a>    <span class="dt">real</span> lp_out = log(pi_out)      + normal_lpdf(y[i] | mu, sqrt(square(tau_out) + square(se[i])));</span>
+<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a>    <span class="dt">real</span> lp_reg = log1m(pi_out)    + normal_lpdf(y[i] | mu, sqrt(square(tau)     + square(se[i])));</span>
+<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a>    p_outlier[i] = exp(lp_out - log_sum_exp(lp_out, lp_reg));</span>
+<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+</section><section class="level2"><h2 id="how-bayesma-calls-this-model">How bayesma calls this model<a class="anchor" aria-label="anchor" href="#how-bayesma-calls-this-model"></a>
 </h2>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">fit_robma</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/robma.html">robma</a></span><span class="op">(</span></span>
+<code class="sourceCode R"><span><span class="co">#| eval: false</span></span>
+<span><span class="va">fit_outlier</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/bayesma.html">bayesma</a></span><span class="op">(</span></span>
 <span>  <span class="va">data</span>,</span>
-<span>  method         <span class="op">=</span> <span class="st">"bridge"</span>,</span>
-<span>  bias_models    <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"none"</span>, <span class="st">"pet_peese"</span>, <span class="st">"selection_weight"</span><span class="op">)</span>,</span>
-<span>  priors_effect  <span class="op">=</span> <span class="fu"><a href="../reference/priors.html">normal</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span>,</span>
-<span>  null_range     <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">0.1</span>, <span class="fl">0.1</span><span class="op">)</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-<p><code>method = "bridge"</code> fits each component model separately and computes Bayes factors via bridge sampling. <code>method = "ss"</code> uses a spike-and-slab formulation.</p>
-</section><section class="level2"><h2 id="bridge-sampling-for-bayes-factors">Bridge sampling for Bayes factors<a class="anchor" aria-label="anchor" href="#bridge-sampling-for-bayes-factors"></a>
+<span>  model   <span class="op">=</span> <span class="st">"robust_outlier"</span>,</span>
+<span>  C       <span class="op">=</span> <span class="fl">10</span>,</span>
+<span>  prior_pi_out <span class="op">=</span> <span class="fu"><a href="../reference/priors.html">beta</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">9</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit_outlier</span><span class="op">)</span></span></code></pre></div>
+<p>The <code>generated quantities</code> block computes <code>p_outlier[i]</code> — the posterior probability that study <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>i</mi><annotation encoding="application/x-tex">i</annotation></semantics></math> belongs to the outlier component. These are extracted and reported by <code><a href="../reference/bayesma_output.html">bayesma_output()</a></code>.</p>
+</section><section class="level2"><h2 id="identifying-outlier-studies">Identifying outlier studies<a class="anchor" aria-label="anchor" href="#identifying-outlier-studies"></a>
 </h2>
-<p>Bridge sampling (Meng &amp; Wong, 1996) estimates the marginal likelihood:</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>𝐲</mi><mo>∣</mo><msub><mi>M</mi><mi>k</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mo>∫</mo><mi>p</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>𝐲</mi><mo>∣</mo><mi>𝛉</mi><mo>,</mo><msub><mi>M</mi><mi>k</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow><mo>⋅</mo><mi>p</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>𝛉</mi><mo>∣</mo><msub><mi>M</mi><mi>k</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow><mo>⋅</mo><mi>d</mi><mi>𝛉</mi></mrow><annotation encoding="application/x-tex">
-p(\mathbf{y} \mid M_k) = \int p(\mathbf{y} \mid \boldsymbol{\theta}, M_k) \cdot p(\boldsymbol{\theta} \mid M_k) \cdot d\boldsymbol{\theta}
-</annotation></semantics></math></p>
-<p>by fitting both the model and a reference distribution and computing a ratio estimator. Stan’s output is passed to <code><a href="https://rdrr.io/pkg/bridgesampling/man/bridge_sampler.html" class="external-link">bridgesampling::bridge_sampler()</a></code>.</p>
-</section><section class="level2"><h2 id="interpreting-robma-output">Interpreting RoBMA output<a class="anchor" aria-label="anchor" href="#interpreting-robma-output"></a>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co">#| eval: false</span></span>
+<span><span class="fu"><a href="../reference/bayesma_output.html">bayesma_output</a></span><span class="op">(</span><span class="va">fit_outlier</span>, type <span class="op">=</span> <span class="st">"outlier_probabilities"</span><span class="op">)</span></span></code></pre></div>
+<p>Studies with <code>p_outlier &gt; 0.5</code> are flagged as probable outliers in the summary table. These should be investigated for data quality issues, coding errors, or genuine moderators that explain the discrepancy.</p>
+</section><section class="level2"><h2 id="key-output-parameters">Key output parameters<a class="anchor" aria-label="anchor" href="#key-output-parameters"></a>
 </h2>
-<p><code><a href="../reference/robma.html">robma()</a></code> returns:</p>
-<ul>
-<li>
-<strong>Component model weights</strong>: posterior probability of each model.</li>
-<li>
-<strong>Bayes factor for heterogeneity</strong>: <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mtext mathvariant="normal">BF</mtext><mi>τ</mi></msub><mo>=</mo><mi>P</mi><mrow><mo stretchy="true" form="prefix">(</mo><mtext mathvariant="normal">heterogeneity</mtext><mo stretchy="true" form="postfix">)</mo></mrow><mi>/</mi><mi>P</mi><mrow><mo stretchy="true" form="prefix">(</mo><mtext mathvariant="normal">no heterogeneity</mtext><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\text{BF}_\tau = P(\text{heterogeneity}) / P(\text{no heterogeneity})</annotation></semantics></math>.</li>
-<li>
-<strong>Bayes factor for bias</strong>: <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mtext mathvariant="normal">BF</mtext><mi>b</mi></msub><mo>=</mo><mi>P</mi><mrow><mo stretchy="true" form="prefix">(</mo><mtext mathvariant="normal">bias</mtext><mo stretchy="true" form="postfix">)</mo></mrow><mi>/</mi><mi>P</mi><mrow><mo stretchy="true" form="prefix">(</mo><mtext mathvariant="normal">no bias</mtext><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\text{BF}_b = P(\text{bias}) / P(\text{no bias})</annotation></semantics></math>.</li>
-<li>
-<strong>Model-averaged posterior for <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>μ</mi><annotation encoding="application/x-tex">\mu</annotation></semantics></math></strong>: weighted average across all models.</li>
-</ul></section><section class="level2"><h2 id="known-sampling-difficulties">Known sampling difficulties<a class="anchor" aria-label="anchor" href="#known-sampling-difficulties"></a>
+<table class="table caption-top">
+<thead><tr class="header">
+<th>Parameter</th>
+<th>Interpretation</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><code>mu</code></td>
+<td>Pooled effect for the main (non-outlier) component</td>
+</tr>
+<tr class="even">
+<td><code>tau</code></td>
+<td>Between-study heterogeneity in main component</td>
+</tr>
+<tr class="odd">
+<td><code>pi_out</code></td>
+<td>Proportion of studies in the outlier component</td>
+</tr>
+<tr class="even">
+<td><code>p_outlier[i]</code></td>
+<td>Per-study posterior outlier probability</td>
+</tr>
+</tbody>
+</table></section><section class="level2"><h2 id="relation-to-the-student-t-random-effects-model">Relation to the Student-t random-effects model<a class="anchor" aria-label="anchor" href="#relation-to-the-student-t-random-effects-model"></a>
 </h2>
-<p>Bridge sampling requires that the posterior is well-explored by MCMC. Use <code>iter_sampling = 5000</code> for reliable bridge sampling estimates. The variance of the bridge sampling estimate can be assessed via <code><a href="../reference/robma_sensitivity.html">robma_sensitivity()</a></code>.</p>
+<p>A Student-t random-effects distribution (see <a href="random-effects-distributions.html">Alternative RE Distributions</a>) achieves similar robustness through heavier tails rather than an explicit mixture. The mixture parameterisation is more interpretable — it assigns each study an outlier probability — but both approaches are defensible when outliers are a concern.</p>
+</section><section class="level2"><h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
+</h2>
+<p>Cruz KS, et al. A robust outlier mixture model for Bayesian meta-analysis. <em>Manuscript in preparation</em>.</p>
 </section><script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
       var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
