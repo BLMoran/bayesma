@@ -1,7 +1,7 @@
 #' Plot Method for bayesma_coef_evidence Objects
 #'
 #' Creates a forest-style plot for meta-regression coefficients using
-#' posterior density slabs, consistent with the `bayes_forest` visual style.
+#' posterior density slabs, consistent with the `forest` visual style.
 #'
 #' @param x A `bayesma_coef_evidence` object (created by `coefficient_evidence()`).
 #' @param model The `bayesma_metareg` model. Required to extract posterior
@@ -41,7 +41,7 @@
 #' @details
 #' This function creates a forest-style visualisation for meta-regression
 
-#' coefficients that matches the aesthetic of `bayes_forest()`. Each coefficient
+#' coefficients that matches the aesthetic of `forest()`. Each coefficient
 #' is displayed as a posterior density slab (or point interval), allowing
 #' visualisation of the full posterior distribution rather than just point
 #' estimates and credible intervals
@@ -263,7 +263,7 @@ metareg_mod_plot <- function(x,
       )
   }
 
-  # Apply theme and styling (matching bayes_forest)
+  # Apply theme and styling (matching forest)
   p <- p +
     ggplot2::coord_cartesian(xlim = xlim, clip = "off") +
     ggplot2::scale_x_continuous(breaks = breaks, expand = c(0, 0)) +

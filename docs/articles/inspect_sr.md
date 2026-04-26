@@ -138,8 +138,7 @@ freq_results <- inspect_sr(inspect_sr_example, studyvar = study)
 
 The `studyvar` argument uses tidyeval (unquoted), consistent with
 [`bayesma()`](https://blmoran.github.io/bayesma/reference/bayesma.md)
-and
-[`bayes_forest()`](https://blmoran.github.io/bayesma/reference/bayes_forest.md).
+and `bayes_forest()`.
 
 ### Step 2 — `inspect_sr_table()`
 

@@ -8,7 +8,7 @@ Produces density plots of the pooled effect (\\\mu\\), heterogeneity
 ``` r
 overall_plot(
   model,
-  measure,
+  estimand,
   add_tau = FALSE,
   add_mu_prior = FALSE,
   add_tau_prior = FALSE,
@@ -49,10 +49,12 @@ overall_plot(
 
   A `bayesma` object.
 
-- measure:
+- estimand:
 
-  Character string for effect measure ("OR", "RR", "HR", "IRR", "MD",
-  "SMD").
+  Character string for the effect measure or marginal estimand.
+  Relative-effect: `"OR"`, `"HR"`, `"RR"`, `"IRR"`, `"MD"`, `"SMD"`.
+  Marginal: `"RD"`/`"ARR"`, `"ATE"`, `"ATT"`, `"CATE"`. For marginal
+  estimands the pooled posterior is drawn from `model$marginal$draws`.
 
 - add_tau:
 

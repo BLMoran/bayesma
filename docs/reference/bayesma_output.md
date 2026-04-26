@@ -2,7 +2,7 @@
 
 Combines the outputs of the earlier stages into the standard `bayesma`
 return object consumed by downstream tools
-([`bayes_forest()`](https://blmoran.github.io/bayesma/reference/bayes_forest.md),
+([`forest()`](https://blmoran.github.io/bayesma/reference/forest.md),
 [`diagnostics()`](https://blmoran.github.io/bayesma/reference/diagnostics.md),
 etc.).
 

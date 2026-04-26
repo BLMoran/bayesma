@@ -7,7 +7,7 @@
 funnel_plot(
   model,
   data,
-  measure,
+  estimand,
   studyvar = NULL,
   year = NULL,
   c_n = NULL,
@@ -44,14 +44,14 @@ funnel_plot(
 )
 }
 \arguments{
-\item{model}{A fitted model object. Either a brmsfit object (class
-'brmsfit') or a bayesma object (class 'bayesma').}
+\item{model}{A fitted bayesma object (class 'bayesma').}
 
 \item{data}{A data frame containing the study data used for the meta-analysis.}
 
-\item{measure}{Character string specifying the effect measure. Must be one of:
+\item{estimand}{Character string specifying the effect measure. Must be one of:
 "OR" (Odds Ratio), "HR" (Hazard Ratio), "RR" (Risk Ratio),
-"IRR" (Incidence Rate Ratio), "MD" (Mean Difference), or "SMD" (Standardized Mean Difference).}
+"IRR" (Incidence Rate Ratio), "MD" (Mean Difference), "SMD" (Standardized Mean Difference),
+"RD", "ARR", "ATE", "ATT", or "CATE" (marginal estimands).}
 
 \item{studyvar}{Column name containing study identifiers/authors. Default is NULL.}
 
@@ -130,6 +130,5 @@ A ggplot object containing the funnel plot.
 \description{
 Creates a publication-ready funnel plot for meta-analysis, displaying
 study-level effect sizes against their precision (standard error).
-Supports both brmsfit and bayesma model objects. The plot aesthetic
-matches the bayesfoRest package style.
+The plot aesthetic matches the bayesfoRest package style.
 }

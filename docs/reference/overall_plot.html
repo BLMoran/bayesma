@@ -138,7 +138,7 @@
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">overall_plot</span><span class="op">(</span></span>
 <span>  <span class="va">model</span>,</span>
-<span>  <span class="va">measure</span>,</span>
+<span>  <span class="va">estimand</span>,</span>
 <span>  add_tau <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  add_mu_prior <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  add_tau_prior <span class="op">=</span> <span class="cn">FALSE</span>,</span>
@@ -181,8 +181,12 @@
 <dd><p>A <code>bayesma</code> object.</p></dd>
 
 
-<dt id="arg-measure">measure<a class="anchor" aria-label="anchor" href="#arg-measure"></a></dt>
-<dd><p>Character string for effect measure ("OR", "RR", "HR", "IRR", "MD", "SMD").</p></dd>
+<dt id="arg-estimand">estimand<a class="anchor" aria-label="anchor" href="#arg-estimand"></a></dt>
+<dd><p>Character string for the effect measure or marginal estimand.
+Relative-effect: <code>"OR"</code>, <code>"HR"</code>, <code>"RR"</code>, <code>"IRR"</code>,
+<code>"MD"</code>, <code>"SMD"</code>. Marginal: <code>"RD"</code>/<code>"ARR"</code>, <code>"ATE"</code>,
+<code>"ATT"</code>, <code>"CATE"</code>. For marginal estimands the pooled posterior is
+drawn from <code>model$marginal$draws</code>.</p></dd>
 
 
 <dt id="arg-add-tau">add_tau<a class="anchor" aria-label="anchor" href="#arg-add-tau"></a></dt>

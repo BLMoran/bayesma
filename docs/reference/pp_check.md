@@ -2,8 +2,8 @@
 
 Produces a posterior predictive check plot comparing observed data to
 replicated datasets drawn from the posterior predictive distribution.
-Mimics the interface of
-[`brms::pp_check()`](https://mc-stan.org/bayesplot/reference/pp_check.html).
+Provides a posterior predictive check interface analogous to standard
+Bayesian workflow.
 
 ## Usage
 

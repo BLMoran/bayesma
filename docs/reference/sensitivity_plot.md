@@ -15,7 +15,7 @@ sensitivity_plot(
   model,
   data,
   priors,
-  measure,
+  estimand,
   prior_order = NULL,
   model_order = NULL,
   rob_var = NULL,
@@ -72,9 +72,11 @@ sensitivity_plot(
   at least `mu_prior` and (optionally) `tau_prior`, and may include
   `name` used for display.
 
-- measure:
+- estimand:
 
-  Effect measure string (e.g., "OR", "RR", "HR", "IRR", "MD", "SMD").
+  Effect measure or marginal estimand. Relative-effect: `"OR"`, `"HR"`,
+  `"RR"`, `"IRR"`, `"MD"`, `"SMD"`. Marginal: `"RD"`/`"ARR"`, `"ATE"`,
+  `"ATT"`, `"CATE"`.
 
 - prior_order:
 

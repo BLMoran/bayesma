@@ -1,9 +1,8 @@
 # Create a Funnel Plot for Bayesian Meta-Analysis
 
 Creates a publication-ready funnel plot for meta-analysis, displaying
-study-level effect sizes against their precision (standard error).
-Supports both brmsfit and bayesma model objects. The plot aesthetic
-matches the bayesfoRest package style.
+study-level effect sizes against their precision (standard error). The
+plot aesthetic matches the bayesfoRest package style.
 
 ## Usage
 
@@ -11,7 +10,7 @@ matches the bayesfoRest package style.
 funnel_plot(
   model,
   data,
-  measure,
+  estimand,
   studyvar = NULL,
   year = NULL,
   c_n = NULL,
@@ -52,19 +51,19 @@ funnel_plot(
 
 - model:
 
-  A fitted model object. Either a brmsfit object (class 'brmsfit') or a
-  bayesma object (class 'bayesma').
+  A fitted bayesma object (class 'bayesma').
 
 - data:
 
   A data frame containing the study data used for the meta-analysis.
 
-- measure:
+- estimand:
 
   Character string specifying the effect measure. Must be one of: "OR"
   (Odds Ratio), "HR" (Hazard Ratio), "RR" (Risk Ratio), "IRR" (Incidence
-  Rate Ratio), "MD" (Mean Difference), or "SMD" (Standardized Mean
-  Difference).
+  Rate Ratio), "MD" (Mean Difference), "SMD" (Standardized Mean
+  Difference), "RD", "ARR", "ATE", "ATT", or "CATE" (marginal
+  estimands).
 
 - studyvar:
 

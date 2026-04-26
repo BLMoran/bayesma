@@ -3,7 +3,7 @@
 #' @description
 #' Produces a posterior predictive check plot comparing observed data to
 #' replicated datasets drawn from the posterior predictive distribution.
-#' Mimics the interface of \code{brms::pp_check()}.
+#' Provides a posterior predictive check interface analogous to standard Bayesian workflow.
 #'
 #' @param object A \code{bayesma} object.
 #' @param type Character. Plot type passed to \code{bayesplot::ppc_*}.

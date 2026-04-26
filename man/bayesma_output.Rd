@@ -18,6 +18,6 @@ A list of class \code{"bayesma"}.
 }
 \description{
 Combines the outputs of the earlier stages into the standard \code{bayesma}
-return object consumed by downstream tools (\code{bayes_forest()}, \code{diagnostics()},
+return object consumed by downstream tools (\code{forest()}, \code{diagnostics()},
 etc.).
 }

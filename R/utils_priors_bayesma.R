@@ -1,63 +1,11 @@
-#' Extract Tau Prior from Model
-#'
-#' @description
-#' Extracts the prior specification for the heterogeneity parameter (tau)
-#' from a brms or bayesma model.
-#'
-#' @param model A fitted brmsfit or bayesma object
-#'
-#' @return Character string of the tau prior, or NA if not found
-#'
-#' @keywords internal
 #' @noRd
 extract_tau_from_model <- function(model) {
-
-  if (inherits(model, "brmsfit")) {
-    tau_prior <- model$prior |>
-      dplyr::filter(class == "sd") |>
-      dplyr::pull(prior)
-
-    if (length(tau_prior) == 0) {
-      NA_character_
-    } else {
-      tau_prior[[1]]
-    }
-
-  } else if (inherits(model, "bayesma")) {
-    # Extract tau prior from stored priors in meta
-    tau_prior <- model$meta$priors$tau
-    if (is.null(tau_prior)) return(NA_character_)
-
-    # Convert bayesma_prior to a string representation
-    format(tau_prior)
-
-  } else {
-    NA_character_
-  }
+  if (!inherits(model, "bayesma")) return(NA_character_)
+  tau_prior <- model$meta$priors$tau
+  if (is.null(tau_prior)) return(NA_character_)
+  format(tau_prior)
 }
 
-#' Convert Prior String to Unicode Format
-#'
-#' @description
-#' Converts prior distribution strings to Unicode mathematical notation
-#' for pretty printing in tables. Works with both brms prior strings and
-#' bayesma prior format strings.
-#'
-#' @param prior_string Character string representing a prior distribution
-#'
-#' @return Unicode-formatted prior string
-#'
-#' @details
-#' Supports conversion of:
-#' \itemize{
-#'   \item normal() / N() to 𝒩()
-#'   \item cauchy() / C() to 𝒞()
-#'   \item student_t() / t() to 𝓉()
-#'   \item exponential() / Exp() to ℰ()
-#'   \item HN() to 𝒩⁺()  (half-normal)
-#' }
-#'
-#' @keywords internal
 #' @noRd
 prior_to_unicode <- function(prior_string) {
   if (is.null(prior_string) || is.na(prior_string)) {
@@ -122,106 +70,26 @@ prior_to_unicode <- function(prior_string) {
     return(paste0(script_E, "(", params, ")\u2009"))
   }
 
-  # ---- brms format strings (original logic) ----
-  # Normal
-  if (grepl("^normal\\s*\\(", prior_string)) {
-    params <- sub("^normal\\s*\\(([^)]+)\\).*$", "\\1", prior_string)
-    params <- gsub("\\s+", "", params)
-    return(paste0(script_N, "(", params, ")\u2009"))
-  }
-
-  # Cauchy (ignore truncation in display)
-  if (grepl("^cauchy\\s*\\(", prior_string)) {
-    base <- sub("\\s*\\[.*$", "", prior_string)
-    params <- sub("^cauchy\\s*\\(([^)]+)\\).*$", "\\1", base)
-    params <- gsub("\\s+", "", params)
-    return(paste0(script_C, "(", params, ")\u2009"))
-  }
-
-  # Student-t
-  if (grepl("^student_t\\s*\\(", prior_string)) {
-    clean <- sub("\\[.*$", "", prior_string)
-    params <- sub("^student_t\\s*\\(([^)]+)\\).*$", "\\1", clean)
-    parts <- strsplit(params, ",")[[1]]
-    parts <- trimws(parts)
-
-    if (length(parts) != 3) {
-      return(prior_string)
-    }
-
-    df  <- gsub("\\s+", "", parts[1])
-    loc <- gsub("\\s+", "", parts[2])
-    scl <- gsub("\\s+", "", parts[3])
-
-    if (nchar(df) == 1 && grepl("^[0-9]$", df)) {
-      df <- c(
-        "0" = "\u2080", "1" = "\u2081", "2" = "\u2082", "3" = "\u2083",
-        "4" = "\u2084", "5" = "\u2085", "6" = "\u2086", "7" = "\u2087",
-        "8" = "\u2088", "9" = "\u2089"
-      )[df]
-    }
-
-    return(paste0(script_t, df, "(", loc, ", ", scl, ")\u2009"))
-  }
-
-  # Exponential
-  if (grepl("^exponential\\s*\\(", prior_string)) {
-    params <- sub("^exponential\\s*\\(([^)]+)\\).*$", "\\1", prior_string)
-    params <- gsub("\\s+", "", params)
-    return(paste0(script_E, "(", params, ")\u2009"))
-  }
-
   prior_string
 }
 
-#' Extract Mu and Tau Priors
-#'
-#' @description
-#' Extracts and formats the prior specifications for both the mean (mu) and
-#' heterogeneity (tau) parameters from a list of priors. Supports both
-#' brms priors (brmsprior objects) and bayesma priors (named lists of
-#' bayesma_prior objects).
-#'
-#' @param priors Named list of prior specifications
-#' @param model A fitted brmsfit or bayesma object (for extracting default tau prior)
-#'
-#' @return A tibble with columns: prior, prior_label, mu_prior_unicode, tau_prior_unicode
-#'
-#' @keywords internal
 #' @noRd
 extract_mu_tau_priors <- function(priors, model) {
 
   model_tau <- extract_tau_from_model(model)
-  is_bayesma <- inherits(model, "bayesma")
 
   purrr::imap(priors, function(prior_obj, prior_name) {
 
-    if (is_bayesma) {
-      # bayesma priors: named list with bayesma_prior objects
-      mu_prior_str <- if (!is.null(prior_obj$mu_prior)) {
-        format(prior_obj$mu_prior)
-      } else {
-        NA_character_
-      }
-
-      tau_prior_str <- if (!is.null(prior_obj$tau_prior)) {
-        format(prior_obj$tau_prior)
-      } else {
-        NA_character_
-      }
-
+    mu_prior_str <- if (!is.null(prior_obj$mu_prior)) {
+      format(prior_obj$mu_prior)
     } else {
-      # brms priors: brmsprior data frames
-      mu_prior <- prior_obj |>
-        dplyr::filter(class == "Intercept") |>
-        dplyr::pull(prior)
+      NA_character_
+    }
 
-      tau_prior <- prior_obj |>
-        dplyr::filter(class == "sd") |>
-        dplyr::pull(prior)
-
-      mu_prior_str <- if (length(mu_prior) > 0) mu_prior[[1]] else NA_character_
-      tau_prior_str <- if (length(tau_prior) > 0) tau_prior[[1]] else NA_character_
+    tau_prior_str <- if (!is.null(prior_obj$tau_prior)) {
+      format(prior_obj$tau_prior)
+    } else {
+      NA_character_
     }
 
     tibble::tibble(
@@ -272,17 +140,6 @@ apply_math_font <- function(
       locations = gt::cells_body(columns = columns))
 }
 
-#' Extract Priors from RoBMA Fit
-#'
-#' @description
-#' Extracts and formats prior specifications from a RoBMA_brms fit object
-#' for display in tables.
-#'
-#' @param robma_fit A RoBMA_brms fit object
-#'
-#' @return List with mu_prior_unicode and tau_prior_unicode
-#'
-#' @keywords internal
 #' @noRd
 extract_priors_from_robma_fit <- function(robma_fit) {
 

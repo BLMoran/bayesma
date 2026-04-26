@@ -2,3 +2,17 @@
 ^\.Rproj\.user$
 ^\.positai$
 ^\.claude$
+^R/\.claude$
+^vignettes/\.quarto$
+^docs$
+^pkgdown$
+^_pkgdown\.yml$
+^data-raw$
+^README\.Rmd$
+^cran-comments\.md$
+^CODE_OF_CONDUCT\.md$
+^LICENSE\.md$
+^Untitled\.qmd$
+^Untitled\.html$
+^Untitled_files$
+^vignettes/.*_files$

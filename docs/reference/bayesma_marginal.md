@@ -50,14 +50,23 @@ already returns the pooled effect on the appropriate scale.
 
 - RD / ARR / ATE — binomial, one-stage:
 
-  Computed from posterior draws of the per-arm linear predictor. Mean
-  over studies of `inv_logit(eta_int) - inv_logit(eta_ctrl)`.
+  Computed via marginal standardisation (g-computation) over posterior
+  draws of the per-study baseline logit (`gamma[s]`) and the pooled
+  log-OR (`mu`), optionally shifted by study-level random effects
+  (`epsilon[s]`). The per-study RD is
+  `plogis(gamma[s] + mu + epsilon[s]) - plogis(gamma[s])`, averaged
+  across studies weighted by the harmonic mean of arm sample sizes. This
+  corresponds to a population-weighted ATE over the observed study mix
+  and requires no external baseline assumption.
 
 - RD / ARR / ATE — binomial, two-stage:
 
-  Requires `baseline_risk`. Posterior draws of the pooled OR are
-  back-transformed at the supplied baseline. Defaults to the unweighted
-  mean of the observed control rates when `baseline_risk = NULL`.
+  Back-transforms posterior draws of the pooled log-OR using a baseline
+  risk drawn per-iteration from a Beta distribution fitted
+  (method-of-moments) to the observed control-arm event rates.
+  Propagates baseline uncertainty into the posterior RD. A fixed scalar
+  `baseline_risk` bypasses this and uses the supplied value directly
+  (old behaviour).
 
 - ATE — gaussian:
 
@@ -65,9 +74,11 @@ already returns the pooled effect on the appropriate scale.
 
 - ATT:
 
-  Computed as ATE weighted by treated-arm sample size
-  (`n_int / sum(n_int)`). Without IPD this is an arm-size-weighted ATE,
-  not a true causal ATT — interpret with caution.
+  One-stage: weighted by intervention-arm sample size
+  (`n_int / sum(n_int)`). Two-stage: same back-transform as ATE but with
+  intervention-size-weighted baseline. Without IPD this is an
+  arm-size-weighted ATE on the treated, not a true causal ATT —
+  interpret with caution.
 
 - CATE:
 

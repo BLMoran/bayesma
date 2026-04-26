@@ -118,7 +118,6 @@ egger_spec <- function(
       noev0s[zero_cells] <- noev0[zero_cells] + 0.5
       noev1s[zero_cells] <- noev1[zero_cells] + 0.5
     }
-
     yi      <- log(r1s / noev1s) - log(r0s / noev0s)
     sei     <- sqrt(1 / r0s + 1 / r1s + 1 / noev0s + 1 / noev1s)
     measure <- "log_or"
@@ -168,21 +167,21 @@ egger_spec <- function(
                  d = d_prior, tau = tau_prior)
 
   spec <- list(
-    likelihood     = likelihood,
-    heterogeneity  = heterogeneity,
-    S              = S,
-    study_labels   = study_labels,
-    n_c            = n_c,
-    n_i            = n_i,
-    r0             = r0,
-    r1             = r1,
-    yi             = yi,
-    sei            = sei,
-    measure        = measure,
-    priors         = priors,
-    credible_level = credible_level,
-    custom_model   = custom_model,
-    custom_data    = custom_data
+    likelihood    = likelihood,
+    heterogeneity = heterogeneity,
+    S                = S,
+    study_labels     = study_labels,
+    n_c              = n_c,
+    n_i              = n_i,
+    r0               = r0,
+    r1               = r1,
+    yi               = yi,
+    sei              = sei,
+    measure          = measure,
+    priors           = priors,
+    credible_level   = credible_level,
+    custom_model     = custom_model,
+    custom_data      = custom_data
   )
   class(spec) <- c("egger_spec", "list")
   spec
@@ -477,19 +476,149 @@ egger_output <- function(spec, fit, effects) {
     stan_code     = code_full,
     stan_data     = fit$stan_data,
     meta          = list(
-      likelihood     = spec$likelihood,
-      heterogeneity  = spec$heterogeneity,
-      measure        = spec$measure,
-      study_labels   = spec$study_labels,
-      priors         = spec$priors,
-      credible_level = spec$credible_level,
-      yi             = spec$yi,
-      sei            = spec$sei,
-      n_studies      = spec$S
+      likelihood    = spec$likelihood,
+      heterogeneity = spec$heterogeneity,
+      measure          = spec$measure,
+      study_labels     = spec$study_labels,
+      priors           = spec$priors,
+      credible_level   = spec$credible_level,
+      yi               = spec$yi,
+      sei              = spec$sei,
+      n_studies        = spec$S
     )
   )
   class(out) <- "bayesma_egger"
   out
+}
+
+
+# -----------------------------------------------------------------------------
+# Print / summary
+# -----------------------------------------------------------------------------
+
+#' @export
+print.bayesma_egger <- function(x, digits = 3, ...) {
+  print(summary(x), digits = digits, ...)
+}
+
+#' Summarise a fitted \code{bayesma_egger} model
+#'
+#' @param object A \code{bayesma_egger} object.
+#' @param ... Currently unused.
+#' @return An object of class \code{egger_summary}.
+#' @keywords internal
+#' @export
+summary.bayesma_egger <- function(object, ...) {
+  meta <- object$meta
+  cred <- meta$credible_level
+  al   <- (1 - cred) / 2
+  au   <- 1 - al
+
+  measure_label <- switch(
+    meta$measure %||% "log_or",
+    log_or    = "log-OR",
+    arr       = "ARR",
+    mean_diff = "MD",
+    log_rr    = "log-IRR",
+    meta$measure
+  )
+
+  md            <- tryCatch(object$fit$metadata(), error = function(e) NULL)
+  chains        <- if (!is.null(md)) md$num_chains    else NA_integer_
+  iter_warmup   <- if (!is.null(md)) md$iter_warmup   else NA_integer_
+  iter_sampling <- if (!is.null(md)) md$iter_sampling else NA_integer_
+
+  key_vars <- c("alpha", "beta",
+    if (meta$heterogeneity == "multiplicative") "kappa" else "gamma")
+  if (meta$likelihood == "binomial")
+    key_vars <- c(key_vars, "d", "tau")
+
+  drw <- posterior::as_draws_df(object$fit$draws(variables = key_vars))
+
+  coef_mat <- do.call(rbind, purrr::map(key_vars, function(v) {
+    d <- as.numeric(drw[[v]])
+    matrix(
+      c(stats::median(d), stats::mad(d),
+        stats::quantile(d, al, names = FALSE),
+        stats::quantile(d, au, names = FALSE),
+        posterior::ess_bulk(drw[[v]]),
+        posterior::ess_tail(drw[[v]]),
+        posterior::rhat(drw[[v]])),
+      nrow = 1,
+      dimnames = list(v, c(
+        "Estimate", "Est.Error",
+        sprintf("Q%.1f", al * 100), sprintf("Q%.1f", au * 100),
+        "Bulk_ESS", "Tail_ESS", "Rhat"
+      ))
+    )
+  }))
+
+  fmt_prior <- function(pr) if (is.null(pr)) NULL else format(pr)
+  p <- meta$priors
+  priors <- list(
+    alpha = fmt_prior(p$alpha),
+    beta  = fmt_prior(p$beta),
+    het   = fmt_prior(p[[if (meta$heterogeneity == "multiplicative") "kappa" else "gamma"]]),
+    het_name = if (meta$heterogeneity == "multiplicative") "kappa" else "gamma"
+  )
+
+  structure(
+    list(
+      likelihood    = meta$likelihood,
+      measure       = measure_label,
+      heterogeneity = meta$heterogeneity,
+      n_studies     = meta$n_studies,
+      chains        = chains,
+      iter_warmup   = iter_warmup,
+      iter_sampling = iter_sampling,
+      total_draws   = chains * iter_sampling,
+      credible_level = cred,
+      priors        = priors,
+      coef_mat      = coef_mat,
+      beta_summary  = object$beta_summary,
+      conclusion    = object$conclusion
+    ),
+    class = "egger_summary"
+  )
+}
+
+#' @export
+print.egger_summary <- function(x, digits = 3, ...) {
+  # ---- Header ----
+  cat(" Likelihood:", x$likelihood, "\n")
+  cat("    Measure:", x$measure, "\n")
+  cat("Heterogeneity:", x$heterogeneity, "\n")
+  cat("    Studies:", x$n_studies, "\n")
+  cat("      Draws:", paste0(
+    x$chains, " chains, each with iter_sampling = ", x$iter_sampling,
+    "; warmup = ", x$iter_warmup, ";\n",
+    "             total post-warmup draws = ", x$total_draws
+  ), "\n\n")
+
+  # ---- Priors ----
+  cat("Priors:\n")
+  cat("  alpha:", x$priors$alpha, "\n")
+  cat("   beta:", x$priors$beta,  "\n")
+  cat(sprintf("  %s: %s\n", x$priors$het_name, x$priors$het))
+  cat("\n")
+
+  # ---- Coefficients ----
+  cat("Regression Coefficients:\n")
+  print_format(x$coef_mat, digits = digits)
+  cat("\n")
+
+  # ---- Egger conclusion ----
+  cat(sprintf("Egger's Test (%g%% CrI):\n", x$credible_level * 100))
+  cat(x$conclusion, "\n\n")
+
+  cat(
+    "Draws were sampled using CmdStan. For each parameter, Bulk_ESS\n",
+    "and Tail_ESS are effective sample size measures, and Rhat is the\n",
+    "potential scale reduction factor on split chains (at convergence, Rhat = 1).\n",
+    sep = ""
+  )
+
+  invisible(x)
 }
 
 

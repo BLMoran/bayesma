@@ -1,12 +1,11 @@
 #' Internal function to generate plot section of forest plot
 #'
 #' @param fixef_summary A 1x4 matrix with columns Estimate, Est.Error, Q2.5, Q97.5.
-#'   Extracted via `extract_fixef()` which works for both brms and bayesma models.
 #'
 #' @noRd
 study.density.plot_fn  <- function(df,
                                    fixef_summary,
-                                   measure = measure,
+                                   estimand,
                                    subgroup = FALSE,
                                    subgroup_order = NULL,
                                    has_re = TRUE,
@@ -60,7 +59,7 @@ study.density.plot_fn  <- function(df,
   }
 
   # Get effect size properties
-  props <- get_measure_properties(measure)
+  props <- get_measure_properties(estimand)
 
   # Determine x_breaks to use: custom if provided, otherwise use measure defaults
   breaks <- if (!is.null(x_breaks)) x_breaks else ggplot2::waiver()
@@ -71,12 +70,15 @@ study.density.plot_fn  <- function(df,
   # Process ROPE values if provided
   if (isTRUE(add_rope)) {
     if (is.null(rope_value)) {
-      if (measure %in% c("OR", "HR", "RR", "IRR")) {
+      if (estimand %in% c("OR", "HR", "RR", "IRR")) {
         rope_range <- c(0.9, 1.1)
-      } else if (measure == "SMD") {
+      } else if (estimand == "SMD") {
         rope_range <- c(-0.1, 0.1)
-      } else if (measure == "MD") {
-        stop("For mean differences, rope_value must be specified as it depends on the measurement scale")
+      } else {
+        cli::cli_abort(
+          "{.arg rope_value} must be specified for {.val {estimand}}.",
+          call = rlang::caller_env()
+        )
       }
     } else {
       if (length(rope_value) == 1) {
@@ -325,7 +327,7 @@ study.density.plot_fn  <- function(df,
     ggplot2::ylab(NULL) +
     ggplot2::geom_hline(yintercept = 1, color = "black", linewidth = 0.75)
 
-  # ---- Reference lines using fixef_summary (works for both brms and bayesma) ----
+  # ---- Reference lines ----
   if (isTRUE(props$log_scale)){
     study.density.plot <- study.density.plot +
       ggplot2::scale_x_log10(breaks = breaks, expand = c(0, 0), limits = calc_xlim)+

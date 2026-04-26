@@ -13,7 +13,10 @@
 #' @param priors A named list of prior specifications. Each element must be a list
 #'   with at least `mu_prior` and (optionally) `tau_prior`, and may include
 #'   `name` used for display.
-#' @param measure Effect measure string (e.g., "OR", "RR", "HR", "IRR", "MD", "SMD").
+#' @param estimand Effect measure or marginal estimand. Relative-effect:
+#'   \code{"OR"}, \code{"HR"}, \code{"RR"}, \code{"IRR"}, \code{"MD"},
+#'   \code{"SMD"}. Marginal: \code{"RD"}/\code{"ARR"}, \code{"ATE"},
+#'   \code{"ATT"}, \code{"CATE"}.
 #' @param prior_order Optional character vector specifying the display order of priors.
 #'   Should contain the names (IDs) of the priors in the desired order,
 #'   e.g., `c("vague", "weak_reg", "informative")`. If NULL (default), priors
@@ -84,7 +87,7 @@ sensitivity_plot <- function(
     model,
     data,
     priors,
-    measure,
+    estimand,
     prior_order = NULL,
     model_order = NULL,
     rob_var = NULL,
@@ -121,6 +124,8 @@ sensitivity_plot <- function(
     plot_width = 4,
     font = NULL
 ) {
+
+  measure <- estimand
 
   # ---------------------------
   # 1) Validation
@@ -212,7 +217,10 @@ sensitivity_plot <- function(
       HR  = c(0.9, 1.1),
       IRR = c(0.9, 1.1),
       SMD = c(-0.1, 0.1),
-      cli::cli_abort("For MD, {.arg null_range} must be supplied.")
+      cli::cli_abort(
+        "{.arg null_range} must be supplied for {.val {measure}}.",
+        call = rlang::caller_env()
+      )
     )
   } else if (!is.null(null_range)) {
     null_range <- if (length(null_range) == 1) {
@@ -343,6 +351,15 @@ sensitivity_plot <- function(
       if (measure %in% c("OR", "RR", "HR", "IRR")) exp(mu_raw) else mu_raw
     }
 
+    # helper: extract mu draws from a model (uses marginal draws for marginal estimands)
+    extract_mu_draws <- function(m) {
+      if (is_marginal_estimand(measure) && !is.null(m$marginal)) {
+        m$marginal$draws
+      } else {
+        as.numeric(m$draws[["mu"]])
+      }
+    }
+
     # Helper: check if two bayesma_prior objects are identical
     priors_match <- function(p1, p2) {
       if (is.null(p1) && is.null(p2)) return(TRUE)
@@ -394,7 +411,7 @@ sensitivity_plot <- function(
       if (can_reuse) {
         cli::cli_alert_success("{sec$label} + {prior_id}: reusing original draws")
         n_reused <<- n_reused + 1
-        mu_raw <- as.numeric(model$draws[["mu"]])
+        mu_raw <- extract_mu_draws(model)
         x <- transform_mu(mu_raw)
         return(tibble::tibble(
           section_label = sec$label,
@@ -439,7 +456,7 @@ sensitivity_plot <- function(
       }
 
       # Check for problematic estimates (e.g., Copas model failures)
-      mu_raw <- as.numeric(fit$draws[["mu"]])
+      mu_raw <- extract_mu_draws(fit)
       x <- transform_mu(mu_raw)
 
       # Warn and optionally exclude if estimates are unreasonable

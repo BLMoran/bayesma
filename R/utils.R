@@ -403,10 +403,10 @@ patchwork_fn <- function(table.left,
 #' Get recommended figure height for a bayesma plot
 #'
 #' Extracts the recommended figure height (in inches) stored by
-#' \code{\link{bayes_forest}} or \code{\link{sensitivity_plot}}.
+#' \code{\link{bayesma::forest}} or \code{\link{sensitivity_plot}}.
 #' Useful for setting \code{fig-height} dynamically in Quarto/Rmd chunks.
 #'
-#' @param plot A patchwork object returned by \code{bayes_forest} or
+#' @param plot A patchwork object returned by \code{bayesma::forest} or
 #'   \code{sensitivity_plot}.
 #' @param default Fallback height if the attribute is not found.
 #'
@@ -414,7 +414,7 @@ patchwork_fn <- function(table.left,
 #'
 #' @examples
 #' \dontrun{
-#' p <- bayes_forest(model, data, measure = "OR", studyvar = Author)
+#' p <- bayesma::forest(model, data, measure = "OR", studyvar = Author)
 #' # In a Quarto chunk header:
 #' # fig-height: !expr bayesma::fig_height(p)
 #' }
@@ -429,7 +429,7 @@ fig_height <- function(plot, default = 8) {
 #' Get recommended figure width for a bayesma plot
 #'
 #' Extracts the recommended figure width (in inches) stored by
-#' \code{\link{bayes_forest}} or \code{\link{sensitivity_plot}}.
+#' \code{\link{bayesma::forest}} or \code{\link{sensitivity_plot}}.
 #'
 #' @inheritParams fig_height
 #'
@@ -508,7 +508,47 @@ get_measure_properties <- function(measure) {
            x_label = "Standardised Mean Difference",
            data_cols = c("Mean_Control", "SD_Control", "N_Control", "Mean_Intervention", "SD_Intervention", "N_Intervention")
          ),
-         cli::cli_abort("Effect size must be one of: {.val OR}, {.val HR}, {.val RR}, {.val IRR}, {.val MD}, {.val SMD}.")
+         "RD" = ,
+         "ARR" = list(
+           null_value = 0,
+           log_scale = FALSE,
+           x_label = "Risk Difference",
+           data_cols = NULL
+         ),
+         "ATE" = list(
+           null_value = 0,
+           log_scale = FALSE,
+           x_label = "Average Treatment Effect",
+           data_cols = NULL
+         ),
+         "ATT" = list(
+           null_value = 0,
+           log_scale = FALSE,
+           x_label = "Average Treatment Effect on the Treated",
+           data_cols = NULL
+         ),
+         "CATE" = list(
+           null_value = 0,
+           log_scale = FALSE,
+           x_label = "Conditional Average Treatment Effect",
+           data_cols = NULL
+         ),
+         cli::cli_abort("Effect size must be one of: {.val OR}, {.val HR}, {.val RR}, {.val IRR}, {.val MD}, {.val SMD}, {.val RD}, {.val ARR}, {.val ATE}, {.val ATT}, {.val CATE}.")
+  )
+}
+
+#' Map a marginal estimand to the underlying model-scale measure
+#'
+#' Used by forest/funnel plots to display individual study effects on the
+#' native model scale (log-OR, MD, IRR) rather than the marginal scale.
+#'
+#' @noRd
+underlying_measure <- function(estimand, likelihood) {
+  if (!is_marginal_estimand(estimand)) return(estimand)
+  switch(likelihood,
+    binomial = "OR",
+    poisson  = "IRR",
+    gaussian = "MD"
   )
 }
 

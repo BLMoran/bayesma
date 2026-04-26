@@ -5,10 +5,11 @@ forest_table_left_fn <- function(forest.data.summary,
                                  subgroup = FALSE,
                                  label_control = "Control",
                                  label_intervention = "Intervention",
-                                 measure = "OR",
+                                 estimand = "OR",
                                  font = NULL) {
 
-  is_continuous <- measure %in% c("MD", "SMD")
+  is_continuous <- estimand %in% c("MD", "SMD") ||
+    (is_marginal_estimand(estimand) && "int_mean_sd" %in% names(forest.data.summary))
 
   # Define column labels based on effect type
   if (is_continuous) {
@@ -110,7 +111,7 @@ forest_table_left_fn <- function(forest.data.summary,
       locations = gt::cells_body(rows = Author %in% c("Pooled Effect", "Overall Effect", "Prediction"))
     )
 
-  if (measure %in% c("MD", "SMD")) {
+  if (is_continuous) {
     forest.table.left <- forest.table.left |>
       gt::sub_missing(columns = c(int_mean_sd, ctrl_mean_sd), missing_text = "")
   }
@@ -124,7 +125,7 @@ forest_table_left_fn <- function(forest.data.summary,
 #' @noRd
 forest_table_right_fn <- function(df,
                                   subgroup = FALSE,
-                                  measure = "OR",
+                                  estimand = "OR",
                                   add_rob = FALSE,
                                   has_re = TRUE,
                                   font = NULL) {
@@ -193,7 +194,7 @@ forest_table_right_fn <- function(df,
   forest.table.right <- forest.table.right |>
     gt::tab_options(column_labels.font.weight = "bold") |>
     gt::cols_align(align = "right") |>
-    gt::cols_label(.list = create_rob_labels(df, measure, has_re = has_re)) |>
+    gt::cols_label(.list = create_rob_labels(df, estimand, has_re = has_re)) |>
     gt::tab_options(
       table.border.top.color = "white",
       table.border.bottom.color = "white",

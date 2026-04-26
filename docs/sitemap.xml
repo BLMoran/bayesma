@@ -113,6 +113,7 @@
 <url><loc>https://blmoran.github.io/bayesma/reference/extract_forest_draws.html</loc></url>
 <url><loc>https://blmoran.github.io/bayesma/reference/filter_trustworthy.html</loc></url>
 <url><loc>https://blmoran.github.io/bayesma/reference/fixef.bayesma.html</loc></url>
+<url><loc>https://blmoran.github.io/bayesma/reference/forest.html</loc></url>
 <url><loc>https://blmoran.github.io/bayesma/reference/funnel_plot.html</loc></url>
 <url><loc>https://blmoran.github.io/bayesma/reference/grim_test.html</loc></url>
 <url><loc>https://blmoran.github.io/bayesma/reference/has_robma_sensitivity.html</loc></url>
@@ -140,6 +141,7 @@
 <url><loc>https://blmoran.github.io/bayesma/reference/pp_check.bayesma.html</loc></url>
 <url><loc>https://blmoran.github.io/bayesma/reference/pp_check.html</loc></url>
 <url><loc>https://blmoran.github.io/bayesma/reference/primed.html</loc></url>
+<url><loc>https://blmoran.github.io/bayesma/reference/print.bayesma.html</loc></url>
 <url><loc>https://blmoran.github.io/bayesma/reference/print.bayesma_egger.html</loc></url>
 <url><loc>https://blmoran.github.io/bayesma/reference/print.bayesma_robma_sensitivity.html</loc></url>
 <url><loc>https://blmoran.github.io/bayesma/reference/print.bayesma_sensitivity_plot.html</loc></url>
@@ -163,6 +165,7 @@
 <url><loc>https://blmoran.github.io/bayesma/reference/sens_add.html</loc></url>
 <url><loc>https://blmoran.github.io/bayesma/reference/sensitivity_plot.html</loc></url>
 <url><loc>https://blmoran.github.io/bayesma/reference/stan_code.html</loc></url>
+<url><loc>https://blmoran.github.io/bayesma/reference/summary.bayesma.html</loc></url>
 <url><loc>https://blmoran.github.io/bayesma/reference/summary.bayesma_egger.html</loc></url>
 <url><loc>https://blmoran.github.io/bayesma/reference/verify_pvalue.html</loc></url>
 </urlset>

@@ -3,15 +3,14 @@
 #' @description
 #' Creates a publication-ready funnel plot for meta-analysis, displaying
 #' study-level effect sizes against their precision (standard error).
-#' Supports both brmsfit and bayesma model objects. The plot aesthetic
-#' matches the bayesfoRest package style.
+#' The plot aesthetic matches the bayesfoRest package style.
 #'
-#' @param model A fitted model object. Either a brmsfit object (class
-#'   'brmsfit') or a bayesma object (class 'bayesma').
+#' @param model A fitted bayesma object (class 'bayesma').
 #' @param data A data frame containing the study data used for the meta-analysis.
-#' @param measure Character string specifying the effect measure. Must be one of:
+#' @param estimand Character string specifying the effect measure. Must be one of:
 #'   "OR" (Odds Ratio), "HR" (Hazard Ratio), "RR" (Risk Ratio),
-#'   "IRR" (Incidence Rate Ratio), "MD" (Mean Difference), or "SMD" (Standardized Mean Difference).
+#'   "IRR" (Incidence Rate Ratio), "MD" (Mean Difference), "SMD" (Standardized Mean Difference),
+#'   "RD", "ARR", "ATE", "ATT", or "CATE" (marginal estimands).
 #' @param studyvar Column name containing study identifiers/authors. Default is NULL.
 #' @param year Column name containing publication years. Default is NULL.
 #' @param c_n Column name containing control group sample sizes.
@@ -56,7 +55,7 @@
 #' @export
 funnel_plot <- function(model,
                         data,
-                        measure,
+                        estimand,
                         studyvar = NULL,
                         year = NULL,
                         c_n = NULL,
@@ -93,49 +92,51 @@ funnel_plot <- function(model,
 
   pooled_line <- rlang::arg_match(pooled_line)
 
-  # ---- Detect model class ----
-  is_bayesma <- inherits(model, "bayesma")
-  is_brms    <- inherits(model, "brmsfit")
-
-  if (!is_bayesma && !is_brms) {
-    rlang::abort("`model` must be a {.cls brmsfit} or {.cls bayesma} object.")
+  if (!inherits(model, "bayesma")) {
+    cli::cli_abort("{.arg model} must be a {.cls bayesma} object.")
   }
 
-  # ---- Get measure properties ----
-  props <- get_measure_properties(measure)
+  is_marginal_binary <- is_marginal_estimand(estimand) &&
+    identical(model$meta$likelihood, "binomial")
+
+  # Column renaming routes on the underlying model scale (OR for marginal binary)
+  col_estimand <- if (is_marginal_binary) "OR" else underlying_measure(estimand, model$meta$likelihood)
+
+  # Plot properties (labels, null value, scale) follow the requested estimand
+  props      <- get_measure_properties(estimand)
   null_value <- if (!is.null(null_value)) null_value else props$null_value
 
   # ---- Column renaming ----
-  if (measure %in% c("OR", "RR")) {
+  if (col_estimand %in% c("OR", "RR", "HR")) {
     data <- data |>
       dplyr::rename(
-        Author = {{studyvar}},
-        Year = {{year}},
-        N_Control = {{c_n}},
-        N_Intervention = {{i_n}},
-        Event_Control = {{c_event}},
+        Author             = {{studyvar}},
+        Year               = {{year}},
+        N_Control          = {{c_n}},
+        N_Intervention     = {{i_n}},
+        Event_Control      = {{c_event}},
         Event_Intervention = {{i_event}}
       )
-  } else if (measure %in% c("MD", "SMD")) {
+  } else if (col_estimand %in% c("MD", "SMD")) {
     data <- data |>
       dplyr::rename(
-        Author = {{studyvar}},
-        Year = {{year}},
-        N_Control = {{c_n}},
-        N_Intervention = {{i_n}},
-        Mean_Control = {{c_mean}},
-        Mean_Intervention = {{i_mean}},
-        SD_Control = {{c_sd}},
-        SD_Intervention = {{i_sd}}
+        Author             = {{studyvar}},
+        Year               = {{year}},
+        N_Control          = {{c_n}},
+        N_Intervention     = {{i_n}},
+        Mean_Control       = {{c_mean}},
+        Mean_Intervention  = {{i_mean}},
+        SD_Control         = {{c_sd}},
+        SD_Intervention    = {{i_sd}}
       )
-  } else if (measure == "IRR") {
+  } else if (col_estimand == "IRR") {
     data <- data |>
       dplyr::rename(
-        Author = {{studyvar}},
-        Year = {{year}},
-        Time_Control = {{c_time}},
-        Time_Intervention = {{i_time}},
-        Event_Control = {{c_event}},
+        Author             = {{studyvar}},
+        Year               = {{year}},
+        Time_Control       = {{c_time}},
+        Time_Intervention  = {{i_time}},
+        Event_Control      = {{c_event}},
         Event_Intervention = {{i_event}}
       )
   }
@@ -152,7 +153,15 @@ funnel_plot <- function(model,
   }
 
   # ---- Compute yi and sei ----
-  if (is_bayesma) {
+  if (is_marginal_binary) {
+    p_ctrl      <- data$Event_Control      / data$N_Control
+    p_int       <- data$Event_Intervention / data$N_Intervention
+    data$yi     <- p_int - p_ctrl
+    data$sei    <- sqrt(
+      p_int  * (1 - p_int)  / data$N_Intervention +
+      p_ctrl * (1 - p_ctrl) / data$N_Control
+    )
+  } else {
     es <- model$meta$es
     if (!is.null(es)) {
       data$yi  <- es$yi
@@ -162,37 +171,14 @@ funnel_plot <- function(model,
       data$yi  <- fdf$estimate
       data$sei <- (fdf$upper - fdf$lower) / (2 * 1.96)
     }
-  } else {
-    # brmsfit: yi and sei should already be in data, or compute from raw columns
-    if (!"yi" %in% names(data)) {
-      if (measure %in% c("OR", "RR")) {
-        a <- data$Event_Intervention
-        b <- data$N_Intervention - data$Event_Intervention
-        c <- data$Event_Control
-        d <- data$N_Control - data$Event_Control
-        cc <- dplyr::if_else(a == 0 | b == 0 | c == 0 | d == 0, 0.5, 0)
-        data$yi  <- log(((a + cc) * (d + cc)) / ((b + cc) * (c + cc)))
-        data$sei <- sqrt(1 / (a + cc) + 1 / (b + cc) + 1 / (c + cc) + 1 / (d + cc))
-      } else if (measure %in% c("MD", "SMD")) {
-        data$yi  <- data$Mean_Intervention - data$Mean_Control
-        sp <- sqrt(((data$N_Control - 1) * data$SD_Control^2 +
-                      (data$N_Intervention - 1) * data$SD_Intervention^2) /
-                     (data$N_Control + data$N_Intervention - 2))
-        data$sei <- sp * sqrt(1 / data$N_Control + 1 / data$N_Intervention)
-      } else if (measure == "IRR") {
-        data$yi  <- log((data$Event_Intervention / data$Time_Intervention) /
-                          (data$Event_Control / data$Time_Control))
-        data$sei <- sqrt(1 / data$Event_Intervention + 1 / data$Event_Control)
-      }
-    }
-    if (!"sei" %in% names(data) && "vi" %in% names(data)) {
-      data$sei <- sqrt(data$vi)
-    }
   }
 
   # ---- Extract pooled estimate ----
-  fixef_summary <- extract_fixef(model)
-  pooled_estimate <- fixef_summary[1, 1]  # Posterior median of mu
+  pooled_estimate <- if (is_marginal_binary && !is.null(model$marginal)) {
+    model$marginal$summary$median
+  } else {
+    extract_fixef(model)[1, 1]
+  }
 
   # ---- Prepare plot data ----
   plot_data <- data |>

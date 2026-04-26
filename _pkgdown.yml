@@ -437,7 +437,7 @@ reference:
 
   - title: Visualisations
     contents:
-      - bayes_forest
+      - forest
       - overall_plot
       - funnel_plot
       - rob_plot

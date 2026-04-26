@@ -8,7 +8,7 @@ sensitivity_plot(
   model,
   data,
   priors,
-  measure,
+  estimand,
   prior_order = NULL,
   model_order = NULL,
   rob_var = NULL,
@@ -56,7 +56,10 @@ sensitivity_plot(
 with at least \code{mu_prior} and (optionally) \code{tau_prior}, and may include
 \code{name} used for display.}
 
-\item{measure}{Effect measure string (e.g., "OR", "RR", "HR", "IRR", "MD", "SMD").}
+\item{estimand}{Effect measure or marginal estimand. Relative-effect:
+\code{"OR"}, \code{"HR"}, \code{"RR"}, \code{"IRR"}, \code{"MD"},
+\code{"SMD"}. Marginal: \code{"RD"}/\code{"ARR"}, \code{"ATE"},
+\code{"ATT"}, \code{"CATE"}.}
 
 \item{prior_order}{Optional character vector specifying the display order of priors.
 Should contain the names (IDs) of the priors in the desired order,

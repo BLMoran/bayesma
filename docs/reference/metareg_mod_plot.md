@@ -1,8 +1,7 @@
 # Plot Method for bayesma_coef_evidence Objects
 
 Creates a forest-style plot for meta-regression coefficients using
-posterior density slabs, consistent with the `bayes_forest` visual
-style.
+posterior density slabs, consistent with the `forest` visual style.
 
 ## Usage
 
@@ -141,7 +140,7 @@ A ggplot object (or patchwork object if `add_table = TRUE`).
 
 This function creates a forest-style visualisation for meta-regression
 coefficients that matches the aesthetic of
-[`bayes_forest()`](https://blmoran.github.io/bayesma/reference/bayes_forest.md).
+[`forest()`](https://blmoran.github.io/bayesma/reference/forest.md).
 Each coefficient is displayed as a posterior density slab (or point
 interval), allowing visualisation of the full posterior distribution
 rather than just point estimates and credible intervals

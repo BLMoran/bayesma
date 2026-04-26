@@ -273,7 +273,7 @@ get_rob_text_columns <- function(df) {
 #' Internal function to create RoB labels based on how many domains are present
 #'
 #' @noRd
-create_rob_labels <- function(df, measure, has_re = TRUE) {
+create_rob_labels <- function(df, estimand, has_re = TRUE) {
 
   # Get the column names that start with D or are "Overall"
   rob_cols <- names(df)[grepl("^D\\d+$|^Overall$", names(df))]
@@ -281,13 +281,13 @@ create_rob_labels <- function(df, measure, has_re = TRUE) {
   # Create base labels — adjust depending on whether random effects are present
   if (isTRUE(has_re)) {
     base_labels <- list(
-      weighted_effect = gt::md(paste("Shrinkage", measure, "\n", "[95% CrI]")),
-      unweighted_effect = gt::md(paste("Observed", measure, "\n", "[95% CI]"))
+      weighted_effect = gt::md(paste("Shrinkage", estimand, "\n", "[95% CrI]")),
+      unweighted_effect = gt::md(paste("Observed", estimand, "\n", "[95% CI]"))
     )
   } else {
     # Common-effect: no shrinkage column; single column with both CI and CrI
     base_labels <- list(
-      unweighted_effect = gt::md(paste("Observed", measure, "\n", "[95% CI]"))
+      unweighted_effect = gt::md(paste("Observed", estimand, "\n", "[95% CI]"))
     )
   }
 

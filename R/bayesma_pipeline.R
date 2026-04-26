@@ -1164,7 +1164,7 @@ extract_effects_custom <- function(fit, spec) {
 #' Assemble a `bayesma` object from pipeline outputs
 #'
 #' Combines the outputs of the earlier stages into the standard `bayesma`
-#' return object consumed by downstream tools (`bayes_forest()`, `diagnostics()`,
+#' return object consumed by downstream tools (`forest()`, `diagnostics()`,
 #' etc.).
 #'
 #' @param spec    A `bayesma_spec` object.
@@ -1206,6 +1206,8 @@ bayesma_output <- function(spec, fit, effects) {
   if (isTRUE(spec$robust_config$enabled))    meta$robust_config    <- spec$robust_config
   if (isTRUE(spec$multi_arm_config$enabled)) meta$multi_arm_config <- spec$multi_arm_config
   if (spec$model_type == "bias_corrected")   meta$use_known_bias   <- spec$use_known_bias
+  if (!is.null(spec$outcome_ctrl))           meta$outcome_ctrl     <- spec$outcome_ctrl
+  if (!is.null(spec$n_c))                    meta$n_c              <- spec$n_c
 
   if (!is.null(effects$extra_meta)) {
     for (nm in names(effects$extra_meta)) meta[[nm]] <- effects$extra_meta[[nm]]

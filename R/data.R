@@ -71,3 +71,54 @@
 #' bres
 #' }
 "inspect_sr_example"
+
+#' Example Binary Outcome Dataset
+#'
+#' A simulated 12-study meta-analysis of a binary outcome (postoperative nausea
+#' and vomiting) used to demonstrate bayesma workflows for binomial likelihoods.
+#'
+#' @format A tibble with 12 rows and 18 columns:
+#' \describe{
+#'   \item{`Author`}{Character. Study author/identifier.}
+#'   \item{`Year`}{Numeric. Publication year.}
+#'   \item{`Subgroup`}{Character. Surgical specialty subgroup.}
+#'   \item{`Control`}{Character. Control intervention label.}
+#'   \item{`Intervention`}{Character. Active intervention label.}
+#'   \item{`N_Total`}{Numeric. Total sample size.}
+#'   \item{`N_Control`}{Numeric. Control arm sample size.}
+#'   \item{`N_Intervention`}{Numeric. Intervention arm sample size.}
+#'   \item{`Event_Control`}{Numeric. Events in control arm.}
+#'   \item{`Outcome_Control_No`}{Numeric. Non-events in control arm.}
+#'   \item{`Event_Intervention`}{Numeric. Events in intervention arm.}
+#'   \item{`Outcome_Intervention_No`}{Numeric. Non-events in intervention arm.}
+#'   \item{`D1`, `D2`, `D3`, `D4`, `D5`}{Character. Risk-of-bias domain
+#'     judgements: `"Low"`, `"Some concerns"`, or `"High"`.}
+#'   \item{`Overall`}{Character. Overall risk-of-bias judgement.}
+#' }
+#'
+#' @source Simulated.
+"binary_outcome"
+
+#' Example Continuous Outcome Dataset
+#'
+#' A simulated 12-study meta-analysis of a continuous outcome used to
+#' demonstrate bayesma workflows for Gaussian likelihoods.
+#'
+#' @format A tibble with 12 rows and 15 columns:
+#' \describe{
+#'   \item{`Author`}{Character. Study author/identifier.}
+#'   \item{`Year`}{Numeric. Publication year.}
+#'   \item{`Subgroup`}{Character. Subgroup label.}
+#'   \item{`Mean_Control`}{Numeric. Control arm mean.}
+#'   \item{`SD_Control`}{Numeric. Control arm standard deviation.}
+#'   \item{`N_Control`}{Numeric. Control arm sample size.}
+#'   \item{`Mean_Intervention`}{Numeric. Intervention arm mean.}
+#'   \item{`SD_Intervention`}{Numeric. Intervention arm standard deviation.}
+#'   \item{`N_Intervention`}{Numeric. Intervention arm sample size.}
+#'   \item{`D1`, `D2`, `D3`, `D4`, `D5`}{Character. Risk-of-bias domain
+#'     judgements: `"Low"`, `"Some concerns"`, or `"High"`.}
+#'   \item{`Overall`}{Character. Overall risk-of-bias judgement.}
+#' }
+#'
+#' @source Simulated.
+"cont_outcome"

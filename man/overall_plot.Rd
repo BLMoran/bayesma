@@ -6,7 +6,7 @@
 \usage{
 overall_plot(
   model,
-  measure,
+  estimand,
   add_tau = FALSE,
   add_mu_prior = FALSE,
   add_tau_prior = FALSE,
@@ -43,7 +43,11 @@ overall_plot(
 \arguments{
 \item{model}{A \code{bayesma} object.}
 
-\item{measure}{Character string for effect measure ("OR", "RR", "HR", "IRR", "MD", "SMD").}
+\item{estimand}{Character string for the effect measure or marginal estimand.
+Relative-effect: \code{"OR"}, \code{"HR"}, \code{"RR"}, \code{"IRR"},
+\code{"MD"}, \code{"SMD"}. Marginal: \code{"RD"}/\code{"ARR"}, \code{"ATE"},
+\code{"ATT"}, \code{"CATE"}. For marginal estimands the pooled posterior is
+drawn from \code{model$marginal$draws}.}
 
 \item{add_tau}{Logical, whether to include the heterogeneity (tau) plot.}
 

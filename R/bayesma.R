@@ -228,6 +228,7 @@ bayesma <- function(
   out <- bayesma_output(spec, fit, effects)
   if (is_marginal_estimand(spec$estimand)) {
     out$marginal <- bayesma_marginal(fit, spec)
+    out$pred_interval <- compute_marginal_pred_interval(fit, spec, out$marginal$draws)
   }
   out
 }

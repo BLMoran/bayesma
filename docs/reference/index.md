@@ -246,8 +246,8 @@ Preliminary investigation of meta-analytic data structure.
 
 ## Visualisations
 
-- [`bayes_forest()`](https://blmoran.github.io/bayesma/reference/bayes_forest.md)
-  : Create Bayesian Forest Plot for Meta-Analysis
+- [`forest()`](https://blmoran.github.io/bayesma/reference/forest.md) :
+  Create Bayesian Forest Plot for Meta-Analysis
 - [`overall_plot()`](https://blmoran.github.io/bayesma/reference/overall_plot.md)
   : Create posterior plots for Bayesian meta-analysis
 - [`funnel_plot()`](https://blmoran.github.io/bayesma/reference/funnel_plot.md)

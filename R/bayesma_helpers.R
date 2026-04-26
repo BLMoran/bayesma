@@ -31,14 +31,6 @@ enforce_re_min_k <- function(model_type, re_min_k, data, studyvar) {
   "common_effect"
 }
 
-#' Extract fixed effect summary from a bayesma object
-#'
-#' Returns a named numeric vector mimicking the structure of brms::fixef(),
-#' with elements: Estimate, Est.Error, Q2.5, Q97.5
-#'
-#' @param x A bayesma object
-#' @return A 1x4 matrix with columns Estimate, Est.Error, Q2.5, Q97.5
-#'
 #' @noRd
 fixef.bayesma <- function(x) {
   mu_row <- x$summary |>
@@ -66,10 +58,13 @@ fixef.bayesma <- function(x) {
 #'   - .chain, .iteration, .draw: MCMC identifiers
 #'
 #' @param x A bayesma object
+#' @param estimand The estimand string. When a marginal binary estimand
+#'   (RD/ARR/ATE/ATT) is requested and per-study gamma draws are available,
+#'   `b_Intercept` is returned on the risk-difference scale.
 #' @return A tibble of posterior draws in long format
 #'
 #' @noRd
-extract_forest_draws  <- function(x) {
+extract_forest_draws <- function(x, estimand = NULL) {
   meta       <- x$meta
   S          <- length(meta$study_labels)
   stage      <- meta$stage
@@ -77,26 +72,44 @@ extract_forest_draws  <- function(x) {
   re_dist    <- meta$re_dist
   is_re      <- model_type == "random_effect"
 
-  # Get raw cmdstanr draws as a draws_df
+  is_marginal_binary <- !is.null(estimand) &&
+    is_marginal_estimand(estimand) &&
+    identical(meta$likelihood, "binomial")
+
   raw_draws <- x$draws
+  n_draws   <- nrow(raw_draws)
+  mu_draws  <- as.numeric(raw_draws[["mu"]])
 
-  # Number of posterior draws
-  n_draws <- nrow(raw_draws)
+  # Per-study gamma (control-arm baseline logit) for marginal standardisation.
+  # One-stage: modelled gamma[s] draws available from Stan.
+  # Two-stage: no gamma parameter — derive from observed control-arm event rates
+  #   stored in model$arm_data. These are fixed across draws (scalar per study).
+  gamma_mat      <- NULL
+  gamma_fixed    <- NULL  # length-S numeric vector for two-stage
+  if (is_marginal_binary) {
+    if (stage == "one_stage") {
+      gamma_mat <- try_extract_arm_draws(x$fit, "gamma")  # n_draws x S
+    } else if (stage == "two_stage" &&
+               !is.null(meta$outcome_ctrl) && !is.null(meta$n_c)) {
+      p_ctrl      <- meta$outcome_ctrl / meta$n_c
+      p_ctrl      <- pmax(pmin(p_ctrl, 1 - 1e-6), 1e-6)
+      gamma_fixed <- stats::qlogis(p_ctrl)
+    }
+  }
 
-  # Extract mu (pooled effect) draws
-  mu_draws <- as.numeric(raw_draws[["mu"]])
+  # Pooled effect: use marginal$draws if available (already on RD scale)
+  pooled_effect_draws <- if (is_marginal_binary && !is.null(x$marginal)) {
+    x$marginal$draws
+  } else {
+    mu_draws
+  }
 
-  # Extract tau draws (if random effects)
   if (is_re && "tau" %in% names(raw_draws)) {
     tau_draws <- as.numeric(raw_draws[["tau"]])
   } else {
-    # Common effect: no tau. Use NA scalar (not a vector) so it recycles
-    # to length 1 when paired with scalar Author, or to n_draws when paired
-    # with n_draws-length vectors.
     tau_draws <- NA_real_
   }
 
-  # Extract MCMC identifiers
   chain_col <- if (".chain" %in% names(raw_draws)) {
     as.integer(raw_draws[[".chain"]])
   } else {
@@ -119,36 +132,36 @@ extract_forest_draws  <- function(x) {
 
     if (is_re && re_dist %in% c("normal", "t", "skew_normal")) {
       if (stage == "two_stage") {
-        # theta[i] = mu + tau * z[i] (already computed in Stan)
         theta_var <- paste0("theta[", i, "]")
         theta_i <- as.numeric(raw_draws[[theta_var]])
-        r_author <- theta_i - mu_draws
       } else {
-        # one_stage: epsilon[i] is the random effect
         eps_var <- paste0("epsilon[", i, "]")
         eps_i <- as.numeric(raw_draws[[eps_var]])
         theta_i <- mu_draws + eps_i
-        r_author <- eps_i
       }
     } else {
-      # Common effect or mixture — no per-study shrinkage draws available.
-      # For common effect: each study shares the pooled effect (mu).
-      # The observed yi/vi are used for the likelihood-based density
-      # (plotted separately), but for the posterior draws column
-      # (b_Intercept) we use mu_draws since all studies are shrunk
-      # fully to the common effect.
       theta_i <- mu_draws
-      r_author <- rep(0, n_draws)
+    }
+
+    # Transform to marginal (RD) scale
+    if (is_marginal_binary && !is.null(gamma_mat)) {
+      gamma_i     <- as.numeric(gamma_mat[, i])
+      b_intercept <- stats::plogis(gamma_i + theta_i) - stats::plogis(gamma_i)
+    } else if (is_marginal_binary && !is.null(gamma_fixed)) {
+      g           <- gamma_fixed[i]
+      b_intercept <- stats::plogis(g + theta_i) - stats::plogis(g)
+    } else {
+      b_intercept <- theta_i
     }
 
     tibble::tibble(
-      Author                 = label,
-      b_Intercept            = theta_i,
-      r_Author               = r_author,
-      sd_Author__Intercept   = tau_draws,
-      .chain                 = chain_col,
-      .iteration             = iteration_col,
-      .draw                  = draw_col
+      Author               = label,
+      b_Intercept          = b_intercept,
+      r_Author             = b_intercept - pooled_effect_draws,
+      sd_Author__Intercept = tau_draws,
+      .chain               = chain_col,
+      .iteration           = iteration_col,
+      .draw                = draw_col
     )
   })
 
@@ -156,40 +169,58 @@ extract_forest_draws  <- function(x) {
 
   # --- Pooled draws ---
   pooled_draws <- tibble::tibble(
-    Author                 = "Pooled Effect",
-    b_Intercept            = mu_draws,
-    r_Author               = 0,
-    sd_Author__Intercept   = tau_draws,
-    .chain                 = chain_col,
-    .iteration             = iteration_col,
-    .draw                  = draw_col
+    Author               = "Pooled Effect",
+    b_Intercept          = pooled_effect_draws,
+    r_Author             = 0,
+    sd_Author__Intercept = tau_draws,
+    .chain               = chain_col,
+    .iteration           = iteration_col,
+    .draw                = draw_col
   )
 
   # --- Prediction draws ---
-  # For RE models: use mu_new draws (mu + tau * z_new)
   pred_draws <- NULL
-  if (is_re) {
-    # Try to get mu_new from the stored draws first
-    mu_new_draws <- if ("mu_new" %in% names(raw_draws)) {
-      as.numeric(raw_draws[["mu_new"]])
-    } else {
-      # Fallback: try extracting from the fit object
-      tryCatch({
-        as.numeric(posterior::subset_draws(
-          x$fit$draws("mu_new"), variable = "mu_new"
-        ))
-      }, error = function(e) NULL)
-    }
+  mu_new_draws <- if ("mu_new" %in% names(raw_draws)) {
+    as.numeric(raw_draws[["mu_new"]])
+  } else {
+    tryCatch(
+      as.numeric(posterior::subset_draws(x$fit$draws("mu_new"), variable = "mu_new")),
+      error = function(e) NULL
+    )
+  }
 
-    if (!is.null(mu_new_draws)) {
+  if (is_re && !is.null(mu_new_draws)) {
+    if (is_marginal_binary) {
+      # Predict ARR for a new study at the average baseline risk.
+      # One-stage: per-draw mean of modelled gamma; two-stage: mean of observed logits.
+      gamma_rep <- if (!is.null(gamma_mat)) {
+        as.numeric(rowMeans(gamma_mat))
+      } else if (!is.null(gamma_fixed)) {
+        rep(mean(gamma_fixed), n_draws)
+      } else {
+        NULL
+      }
+      if (!is.null(gamma_rep)) {
+        arr_pred   <- stats::plogis(gamma_rep + mu_new_draws) - stats::plogis(gamma_rep)
+        pred_draws <- tibble::tibble(
+          Author               = "Prediction",
+          b_Intercept          = arr_pred,
+          r_Author             = arr_pred - pooled_effect_draws,
+          sd_Author__Intercept = tau_draws,
+          .chain               = chain_col,
+          .iteration           = iteration_col,
+          .draw                = draw_col
+        )
+      }
+    } else {
       pred_draws <- tibble::tibble(
-        Author                 = "Prediction",
-        b_Intercept            = mu_new_draws,
-        r_Author               = 0,
-        sd_Author__Intercept   = tau_draws,
-        .chain                 = chain_col,
-        .iteration             = iteration_col,
-        .draw                  = draw_col
+        Author               = "Prediction",
+        b_Intercept          = mu_new_draws,
+        r_Author             = 0,
+        sd_Author__Intercept = tau_draws,
+        .chain               = chain_col,
+        .iteration           = iteration_col,
+        .draw                = draw_col
       )
     }
   }
@@ -1160,4 +1191,274 @@ build_output <- function(fit, likelihood, model_type, re_dist,
 stan_code <- function(fit) {
   base::cat(fit$stan_code)
   base::invisible(fit$stan_code)
+}
+
+#' Print a summary for a fitted model represented by a \code{bayesma} object
+#'
+#' @aliases print.bayesma_summary
+#'
+#' @param x An object of class \code{bayesma}.
+#' @param digits The number of significant digits for printing out the summary;
+#'   defaults to 2. Bulk_ESS and Tail_ESS are always rounded to integers.
+#' @param ... Additional arguments passed to \code{\link{summary.bayesma}}.
+#'
+#' @seealso \code{\link{summary.bayesma}}
+#'
+#' @keywords internal
+#' @export
+print.bayesma <- function(x, digits = 2, ...) {
+  print(summary(x, ...), digits = digits, ...)
+}
+
+#' @export
+print.bayesma_summary <- function(x, digits = 2, ...) {
+  digits <- as.integer(digits)
+
+  # ---- Header ----
+  cat(" Likelihood:", x$likelihood, "\n")
+  cat("     Stage:", x$stage, "\n")
+  cat("     Model:", x$model_type)
+  if (!is.null(x$re_dist) && x$model_type == "random_effect") {
+    cat(paste0(" (", x$re_dist, " random effects)"))
+  }
+  cat("\n")
+  cat("  Estimand:", x$estimand, "\n")
+  cat("    Studies:", x$n_studies, "\n")
+  cat("      Draws:", paste0(
+    x$chains, " chains, each with iter_sampling = ", x$iter_sampling,
+    "; warmup = ", x$iter_warmup, ";\n",
+    "             total post-warmup draws = ", x$total_draws
+  ), "\n")
+  cat("\n")
+
+  # ---- Priors ----
+  cat("Priors:\n")
+  cat("  mu:", x$priors$mu, "\n")
+  if (!is.null(x$priors$tau)) {
+    cat("  tau:", x$priors$tau, "\n")
+  }
+  if (!is.null(x$priors$gamma)) {
+    cat("  gamma (baseline):", x$priors$gamma, "\n")
+  }
+  if (!is.null(x$priors$nu)) {
+    cat("  nu (df):", x$priors$nu, "\n")
+  }
+  if (!is.null(x$priors$alpha)) {
+    cat("  alpha (skewness):", x$priors$alpha, "\n")
+  }
+  cat("\n")
+
+  # ---- Pooled effect ----
+  cat("Pooled Effect (", x$effect_label, "):\n", sep = "")
+  print_format(x$pooled, digits = digits)
+  cat("\n")
+
+  # ---- Heterogeneity ----
+  if (!is.null(x$heterogeneity)) {
+    cat("Heterogeneity:\n")
+    print_format(x$heterogeneity, digits = digits)
+    cat("\n")
+  }
+
+  # ---- Marginal estimand ----
+  if (!is.null(x$marginal)) {
+    cat("Marginal Estimand (", x$marginal$estimand, "):\n", sep = "")
+    print_format(x$marginal$table, digits = digits)
+    cat("\n")
+  }
+
+  # ---- Convergence note ----
+  cat(
+    "Draws were sampled using CmdStan. For each parameter, Bulk_ESS\n",
+    "and Tail_ESS are effective sample size measures, and Rhat is the\n",
+    "potential scale reduction factor on split chains (at convergence, Rhat = 1).\n",
+    sep = ""
+  )
+
+  invisible(x)
+}
+
+#' Summarise a fitted \code{bayesma} model
+#'
+#' Collects all relevant posterior summaries into a \code{bayesma_summary}
+#' object that \code{print.bayesma_summary} renders in brms-style layout.
+#'
+#' @param object An object of class \code{bayesma}.
+#' @param ... Currently unused.
+#'
+#' @return An object of class \code{bayesma_summary} (a named list).
+#'
+#' @keywords internal
+#' @export
+summary.bayesma <- function(object, ...) {
+  meta <- object$meta
+
+  # ---- MCMC diagnostics ----
+  fit      <- object$fit
+  var_info <- fit$summary(variables = c("mu")) |> tibble::as_tibble()
+
+  # Try to infer iter/warmup/chains from the fit metadata
+  md <- tryCatch(fit$metadata(), error = function(e) NULL)
+  chains        <- if (!is.null(md)) md$num_chains       else NA_integer_
+  iter_warmup   <- if (!is.null(md)) md$iter_warmup      else NA_integer_
+  iter_sampling <- if (!is.null(md)) md$iter_sampling    else NA_integer_
+  total_draws   <- if (!is.null(md)) chains * iter_sampling else NA_integer_
+
+  # ---- Estimand label ----
+  estimand     <- meta$estimand %||% resolve_estimand(NULL, meta$likelihood)
+  effect_label <- meta$effect_label %||% switch(
+    meta$likelihood,
+    binomial = "log-OR",
+    poisson  = "log-IRR",
+    gaussian = "MD"
+  )
+
+  # ---- Priors (format as strings) ----
+  p         <- meta$priors
+  fmt_prior <- function(pr) if (is.null(pr)) NULL else format(pr)
+  priors <- list(
+    mu    = fmt_prior(p$mu),
+    tau   = fmt_prior(p$tau),
+    gamma = fmt_prior(p$gamma),
+    nu    = fmt_prior(p$nu),
+    alpha = fmt_prior(p$alpha)
+  )
+
+  # ---- Pooled effect table ----
+  mu_vars  <- fit$summary(variables = "mu") |> tibble::as_tibble()
+  pooled   <- build_summary_table(mu_vars, row_label = "mu")
+
+  # ---- Heterogeneity table ----
+  is_re        <- meta$model_type == "random_effect"
+  heterogeneity <- NULL
+
+  if (is_re) {
+    tau_vars <- tryCatch(
+      fit$summary(variables = "tau") |> tibble::as_tibble(),
+      error = function(e) NULL
+    )
+    if (!is.null(tau_vars)) {
+      heterogeneity <- build_summary_table(tau_vars, row_label = "tau")
+
+      # Add nu (t-dist df) if present
+      nu_vars <- tryCatch(
+        fit$summary(variables = "nu") |> tibble::as_tibble(),
+        error = function(e) NULL
+      )
+      if (!is.null(nu_vars)) {
+        heterogeneity <- rbind(
+          heterogeneity,
+          build_summary_table(nu_vars, row_label = "nu")
+        )
+      }
+
+      # Add alpha_skew if present
+      as_vars <- tryCatch(
+        fit$summary(variables = "alpha_skew") |> tibble::as_tibble(),
+        error = function(e) NULL
+      )
+      if (!is.null(as_vars)) {
+        heterogeneity <- rbind(
+          heterogeneity,
+          build_summary_table(as_vars, row_label = "alpha_skew")
+        )
+      }
+    }
+  }
+
+  # ---- Marginal estimand ----
+  marginal_out <- NULL
+  if (!is.null(object$marginal)) {
+    mg <- object$marginal
+    marginal_tbl <- matrix(
+      c(mg$summary$median,
+        mg$summary$upper - mg$summary$lower,   # approximate spread
+        mg$summary$lower,
+        mg$summary$upper,
+        mg$summary$p_gt_0),
+      nrow = 1,
+      dimnames = list(
+        mg$estimand,
+        c("Median", "MAD", "Q2.5", "Q97.5", "P(>0)")
+      )
+    )
+    marginal_out <- list(estimand = mg$estimand, table = marginal_tbl)
+  }
+
+  structure(
+    list(
+      likelihood    = meta$likelihood,
+      stage         = meta$stage,
+      model_type    = meta$model_type,
+      re_dist       = meta$re_dist,
+      estimand      = estimand,
+      effect_label  = effect_label,
+      n_studies     = length(meta$study_labels),
+      chains        = chains,
+      iter_warmup   = iter_warmup,
+      iter_sampling = iter_sampling,
+      total_draws   = total_draws,
+      priors        = priors,
+      pooled        = pooled,
+      heterogeneity = heterogeneity,
+      marginal      = marginal_out
+    ),
+    class = "bayesma_summary"
+  )
+}
+
+
+# ---- Internal helpers ----
+
+#' Build a formatted summary matrix from a cmdstanr summary tibble
+#'
+#' @param tbl Tibble from \code{fit$summary()}.
+#' @param row_label Character label for the row name.
+#' @return A 1-row matrix with columns Estimate, Est.Error, Q2.5, Q97.5,
+#'   Bulk_ESS, Tail_ESS, Rhat.
+#' @noRd
+build_summary_table <- function(tbl, row_label) {
+  mat <- matrix(
+    c(
+      tbl$median   %||% tbl$mean,
+      tbl$mad      %||% tbl$sd,
+      tbl$q2.5     %||% NA_real_,
+      tbl$q97.5    %||% NA_real_,
+      tbl$ess_bulk %||% NA_real_,
+      tbl$ess_tail %||% NA_real_,
+      tbl$rhat     %||% NA_real_
+    ),
+    nrow = 1,
+    dimnames = list(
+      row_label,
+      c("Estimate", "Est.Error", "Q2.5", "Q97.5", "Bulk_ESS", "Tail_ESS", "Rhat")
+    )
+  )
+  mat
+}
+
+#' Print a numeric matrix with controlled digits, matching brms style
+#'
+#' Bulk_ESS and Tail_ESS are always shown as integers.
+#'
+#' @param x Object coercible to matrix.
+#' @param digits Number of decimal places for numeric columns.
+#' @param no_digits Column names to show as integers.
+#' @noRd
+print_format <- function(x, digits = 2,
+                         no_digits = c("Bulk_ESS", "Tail_ESS")) {
+  x   <- as.matrix(x)
+  fmt <- paste0("%.", digits, "f")
+  out <- x
+
+  for (i in seq_len(ncol(x))) {
+    if (colnames(x)[i] %in% no_digits) {
+      out[, i] <- sprintf("%.0f", as.numeric(x[, i]))
+    } else {
+      out[, i] <- sprintf(fmt, as.numeric(x[, i]))
+    }
+  }
+
+  print(out, quote = FALSE, right = TRUE)
+  invisible(x)
 }

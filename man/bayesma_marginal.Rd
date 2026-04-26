@@ -35,18 +35,27 @@ the pooled effect on the appropriate scale.
 
 
 \describe{
-\item{RD / ARR / ATE — binomial, one-stage}{Computed from posterior draws
-of the per-arm linear predictor. Mean over studies of
-\code{inv_logit(eta_int) - inv_logit(eta_ctrl)}.}
-\item{RD / ARR / ATE — binomial, two-stage}{Requires \code{baseline_risk}.
-Posterior draws of the pooled OR are back-transformed at the supplied
-baseline. Defaults to the unweighted mean of the observed control rates
-when \code{baseline_risk = NULL}.}
+\item{RD / ARR / ATE — binomial, one-stage}{Computed via marginal
+standardisation (g-computation) over posterior draws of the per-study
+baseline logit (\code{gamma[s]}) and the pooled log-OR (\code{mu}), optionally
+shifted by study-level random effects (\code{epsilon[s]}). The per-study RD
+is \code{plogis(gamma[s] + mu + epsilon[s]) - plogis(gamma[s])}, averaged
+across studies weighted by the harmonic mean of arm sample sizes.
+This corresponds to a population-weighted ATE over the observed study
+mix and requires no external baseline assumption.}
+\item{RD / ARR / ATE — binomial, two-stage}{Back-transforms posterior
+draws of the pooled log-OR using a baseline risk drawn per-iteration
+from a Beta distribution fitted (method-of-moments) to the observed
+control-arm event rates. Propagates baseline uncertainty into the
+posterior RD. A fixed scalar \code{baseline_risk} bypasses this and uses
+the supplied value directly (old behaviour).}
 \item{ATE — gaussian}{Equivalent to MD. Returns the pooled posterior on
 the absolute scale.}
-\item{ATT}{Computed as ATE weighted by treated-arm sample size
-(\code{n_int / sum(n_int)}). Without IPD this is an arm-size-weighted ATE,
-not a true causal ATT — interpret with caution.}
+\item{ATT}{One-stage: weighted by intervention-arm sample size
+(\code{n_int / sum(n_int)}). Two-stage: same back-transform as ATE but with
+intervention-size-weighted baseline. Without IPD this is an
+arm-size-weighted ATE on the treated, not a true causal ATT —
+interpret with caution.}
 \item{CATE}{Routes to \code{\link[=meta_reg]{meta_reg()}} with \code{moderators = cate_covariate}.
 Reports the meta-regression effect; the user is expected to evaluate
 it at a specific covariate value downstream.}

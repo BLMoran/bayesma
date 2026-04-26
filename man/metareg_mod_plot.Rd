@@ -89,11 +89,11 @@ A ggplot object (or patchwork object if \code{add_table = TRUE}).
 }
 \description{
 Creates a forest-style plot for meta-regression coefficients using
-posterior density slabs, consistent with the \code{bayes_forest} visual style.
+posterior density slabs, consistent with the \code{forest} visual style.
 }
 \details{
 This function creates a forest-style visualisation for meta-regression
-coefficients that matches the aesthetic of \code{bayes_forest()}. Each coefficient
+coefficients that matches the aesthetic of \code{forest()}. Each coefficient
 is displayed as a posterior density slab (or point interval), allowing
 visualisation of the full posterior distribution rather than just point
 estimates and credible intervals

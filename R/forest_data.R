@@ -37,14 +37,10 @@ remap_draws_authors <- function(draws, model, data) {
 }
 
 
-#' Internal function to extract draws from the posterior
-#'
-#' Dispatches to brms-specific or bayesma-specific extraction depending
-#' on the class of `model`.
-#'
 #' @noRd
 forest_data_fn <- function(data,
                            model,
+                           estimand = NULL,
                            subgroup = FALSE,
                            sort_studies_by = "author",
                            subgroup_order = NULL,
@@ -52,31 +48,21 @@ forest_data_fn <- function(data,
                            add_pred_subgroup = FALSE,
                            has_re = TRUE) {
 
-  is_bayesma <- inherits(model, "bayesma")
-
-  if (is_bayesma) {
-    forest_data_fn_bayesma(
-      data = data,
-      model = model,
-      subgroup = subgroup,
-      sort_studies_by = sort_studies_by,
-      subgroup_order = subgroup_order,
-      add_pred = add_pred,
-      add_pred_subgroup = add_pred_subgroup,
-      has_re = has_re
-    )
-  } else {
-    forest_data_fn_brms(
-      data = data,
-      model = model,
-      subgroup = subgroup,
-      sort_studies_by = sort_studies_by,
-      subgroup_order = subgroup_order,
-      add_pred = add_pred,
-      add_pred_subgroup = add_pred_subgroup,
-      has_re = has_re
-    )
+  if (!inherits(model, "bayesma")) {
+    cli::cli_abort("{.arg model} must be a {.cls bayesma} object.")
   }
+
+  forest_data_fn_bayesma(
+    data              = data,
+    model             = model,
+    estimand          = estimand,
+    subgroup          = subgroup,
+    sort_studies_by   = sort_studies_by,
+    subgroup_order    = subgroup_order,
+    add_pred          = add_pred,
+    add_pred_subgroup = add_pred_subgroup,
+    has_re            = has_re
+  )
 }
 
 
@@ -87,6 +73,7 @@ forest_data_fn <- function(data,
 #' @noRd
 forest_data_fn_bayesma <- function(data,
                                    model,
+                                   estimand = NULL,
                                    subgroup = FALSE,
                                    sort_studies_by = "author",
                                    subgroup_order = NULL,
@@ -100,7 +87,7 @@ forest_data_fn_bayesma <- function(data,
 
   if (isFALSE(subgroup)) {
     # ---- No subgroup: extract draws from bayesma object directly ----
-    effect.draws <- extract_forest_draws(model)
+    effect.draws <- extract_forest_draws(model, estimand = estimand)
 
     # Remap Author names to match disambiguated data (e.g. "Wildes" -> "Wildes_a")
     effect.draws <- remap_draws_authors(effect.draws, model, data)
@@ -111,7 +98,7 @@ forest_data_fn_bayesma <- function(data,
         dplyr::filter(Author != "Prediction")
     }
 
-    # Replace dots with spaces in Author names (matching brms convention)
+    # Replace dots with spaces in Author names
     effect.draws <- effect.draws |>
       dplyr::mutate(Author = stringr::str_replace_all(Author, "\\.", " ")) |>
       dplyr::ungroup() |>
@@ -217,208 +204,7 @@ forest_data_fn_bayesma <- function(data,
 
 
 # ============================================================================
-# brms pathway (original logic, extracted to its own function)
-# ============================================================================
-
-#' @noRd
-forest_data_fn_brms <- function(data,
-                                model,
-                                subgroup = FALSE,
-                                sort_studies_by = "author",
-                                subgroup_order = NULL,
-                                add_pred = FALSE,
-                                add_pred_subgroup = FALSE,
-                                has_re = TRUE) {
-
-  if (subgroup == FALSE && "Subgroup" %in% names(data)) {
-    data <- data |> dplyr::select(-Subgroup)
-  }
-  if (subgroup == FALSE) {
-    if (isTRUE(has_re)) {
-      # Random effects model — extract study-level and pooled draws
-      study.draws <- tidybayes::spread_draws(model, r_Author[Author, ], b_Intercept) |>
-        dplyr::mutate(b_Intercept = r_Author + b_Intercept)
-      pooled.draws <- tidybayes::spread_draws(model, b_Intercept, sd_Author__Intercept) |>
-        dplyr::mutate(Author = "Pooled Effect")
-    } else {
-      # Common effect model — no random effects, study draws use observed yi
-      pooled.draws <- tidybayes::spread_draws(model, b_Intercept) |>
-        dplyr::mutate(
-          Author = "Pooled Effect",
-          sd_Author__Intercept = NA_real_
-        )
-
-      # For common effect, study-level draws are just the pooled draws
-      # (no shrinkage). We still need them in the same structure for plotting
-      # the observed likelihood-based densities via yi/vi.
-      study_authors <- unique(data$Author)
-      study.draws <- purrr::map(study_authors, function(auth) {
-        tidybayes::spread_draws(model, b_Intercept) |>
-          dplyr::mutate(
-            Author = auth,
-            r_Author = 0,
-            sd_Author__Intercept = NA_real_
-          )
-      }) |> purrr::list_rbind()
-    }
-
-    effect.draws <- dplyr::bind_rows(study.draws, pooled.draws)
-
-    # Generate prediction draws if requested (only meaningful for RE models)
-    if (isTRUE(add_pred) && isTRUE(has_re)) {
-      nd <- data.frame(Author = "new", sei = 0)
-      pred_samples <- brms::posterior_predict(
-        object = model,
-        newdata = nd,
-        re_formula = NULL,
-        allow_new_levels = TRUE,
-        sample_new_levels = "gaussian"
-      )
-
-      pred.draws <- tidybayes::spread_draws(model, b_Intercept, sd_Author__Intercept) |>
-        dplyr::mutate(
-          Author = "Prediction",
-          b_Intercept = as.vector(pred_samples)
-        )
-      effect.draws <- dplyr::bind_rows(effect.draws, pred.draws)
-    }
-
-    effect.draws <- effect.draws |>
-      dplyr::mutate(Author = stringr::str_replace_all(Author, "\\.", " ")) |>
-      dplyr::ungroup() |>
-      dplyr::left_join(dplyr::select(data, Author, Author_original, Year, yi, vi), by = dplyr::join_by(Author)) |>
-      sort_studies_fn(sort_studies_by)
-  } else {
-    # With subgroup
-    subgroup_df <- data |>
-      tidyr::nest(.by = Subgroup) |>
-      dplyr::mutate(
-        subgroup_model = purrr::map(data, ~ stats::update(model, newdata = .x)),
-        study_count = purrr::map_int(data, nrow)
-      )
-
-    if (isTRUE(has_re)) {
-      overall.effect.draws <- tidybayes::spread_draws(model, b_Intercept, sd_Author__Intercept) |>
-        dplyr::mutate(
-          Author = "Overall Effect",
-          Author_original = NA_character_,
-          Subgroup = "Overall",
-          r_Author = 0,
-          Year = NA_character_,
-          yi = NA_real_,
-          vi = NA_real_
-        )
-    } else {
-      overall.effect.draws <- tidybayes::spread_draws(model, b_Intercept) |>
-        dplyr::mutate(
-          Author = "Overall Effect",
-          Author_original = NA_character_,
-          Subgroup = "Overall",
-          r_Author = 0,
-          sd_Author__Intercept = NA_real_,
-          Year = NA_character_,
-          yi = NA_real_,
-          vi = NA_real_
-        )
-    }
-
-    study.effect.draws <- subgroup_df |>
-      dplyr::mutate(
-        effect_draws = purrr::pmap(list(subgroup_model, data, study_count), function(sub_mod, sub_data, n_studies) {
-          if (isTRUE(has_re)) {
-            study <- tidybayes::spread_draws(sub_mod, r_Author[Author, ], b_Intercept) |>
-              dplyr::mutate(b_Intercept = r_Author + b_Intercept)
-          } else {
-            study_authors <- unique(sub_data$Author)
-            study <- purrr::map(study_authors, function(auth) {
-              tidybayes::spread_draws(sub_mod, b_Intercept) |>
-                dplyr::mutate(Author = auth, r_Author = 0, sd_Author__Intercept = NA_real_)
-            }) |> purrr::list_rbind()
-          }
-
-          pooled_label <- if (n_studies == 1) "No Pooled Effect" else "Pooled Effect"
-
-          if (isTRUE(has_re)) {
-            pooled <- tidybayes::spread_draws(sub_mod, b_Intercept, sd_Author__Intercept) |>
-              dplyr::mutate(Author = pooled_label)
-          } else {
-            pooled <- tidybayes::spread_draws(sub_mod, b_Intercept) |>
-              dplyr::mutate(Author = pooled_label, sd_Author__Intercept = NA_real_)
-          }
-
-          combined <- dplyr::bind_rows(study, pooled)
-
-          if (isTRUE(add_pred) && isTRUE(add_pred_subgroup) && n_studies > 1 && isTRUE(has_re)) {
-            nd <- data.frame(Author = "new", sei = 0)
-            pred_samples <- brms::posterior_predict(
-              object = sub_mod,
-              newdata = nd,
-              re_formula = NULL,
-              allow_new_levels = TRUE,
-              sample_new_levels = "gaussian"
-            )
-
-            pred <- tidybayes::spread_draws(sub_mod, b_Intercept, sd_Author__Intercept) |>
-              dplyr::mutate(
-                Author = "Prediction",
-                b_Intercept = as.vector(pred_samples)
-              )
-            combined <- dplyr::bind_rows(combined, pred)
-          }
-
-          combined <- combined |>
-            dplyr::mutate(Author = stringr::str_replace_all(Author, "\\.", " ")) |>
-            dplyr::ungroup() |>
-            dplyr::left_join(dplyr::select(sub_data, Author, Author_original, Year, yi, vi), by = dplyr::join_by(Author)) |>
-            sort_studies_fn(sort_studies_by)
-          return(combined)
-        })
-      ) |>
-      tidyr::unnest(effect_draws) |>
-      dplyr::select(-data, -subgroup_model, -study_count)
-
-    effect.draws <- dplyr::bind_rows(study.effect.draws, overall.effect.draws)
-
-    if (isTRUE(add_pred) && isTRUE(has_re)) {
-      nd <- data.frame(Author = "new", sei = 0)
-      pred_samples <- brms::posterior_predict(
-        object = model,
-        newdata = nd,
-        re_formula = NULL,
-        allow_new_levels = TRUE,
-        sample_new_levels = "gaussian"
-      )
-
-      overall.pred.draws <- tidybayes::spread_draws(model, b_Intercept, sd_Author__Intercept) |>
-        dplyr::mutate(
-          Author = "Prediction",
-          Author_original = NA_character_,
-          Subgroup = "Overall",
-          r_Author = 0,
-          Year = NA_character_,
-          yi = NA_real_,
-          vi = NA_real_,
-          b_Intercept = as.vector(pred_samples)
-        )
-      effect.draws <- dplyr::bind_rows(effect.draws, overall.pred.draws)
-    }
-
-    if (!is.null(subgroup_order)) {
-      effect.draws <- effect.draws |>
-        dplyr::mutate(Subgroup = factor(Subgroup, levels = subgroup_order)) |>
-        dplyr::arrange(Subgroup) |>
-        dplyr::mutate(Subgroup = dplyr::case_when(
-          is.na(Subgroup) & Author == "Overall Effect" ~ "Overall",
-          .default = Subgroup
-        ))
-    }
-  }
-  return(effect.draws)
-}
-
-
-# ============================================================================
-# forest.data.summary_fn — unchanged, works with both pathways
+# forest.data.summary_fn
 # ============================================================================
 
 #' Internal function to summarise data for forest plot
@@ -426,14 +212,14 @@ forest_data_fn_brms <- function(data,
 #' @noRd
 forest.data.summary_fn <- function(spread_df,
                                    data,
-                                   measure,
+                                   estimand,
                                    sort_studies_by = "author",
                                    subgroup = FALSE,
                                    add_pred = FALSE,
                                    add_pred_subgroup = FALSE,
                                    has_re = TRUE) {
   # Get effect size properties
-  props <- get_measure_properties(measure)
+  props <- get_measure_properties(estimand)
 
   if (isFALSE(subgroup)){
     # Study Summaries
@@ -483,22 +269,33 @@ forest.data.summary_fn <- function(spread_df,
     }
   }
 
-  # Select only needed join columns — include Author_original so it survives
-  join_vars <- unique(c("Author", "Author_original", "Year", props$data_cols))
+  # Always include all possible display columns — any_of() silently skips absent ones.
+  # Marginal estimands have props$data_cols = NULL but still need the binary count
+  # columns (Event_Control etc.) for the events/total display in the table.
+  all_display_cols <- c(
+    "Author", "Author_original", "Year",
+    "Event_Control", "N_Control", "Event_Intervention", "N_Intervention",
+    "Mean_Control", "SD_Control", "Mean_Intervention", "SD_Intervention",
+    "Time_Control", "Time_Intervention",
+    props$data_cols
+  )
+  join_vars <- unique(all_display_cols)
   forest.data.summary <- forest.data |>
-    dplyr::left_join(data |> dplyr::select(dplyr::any_of(join_vars), yi, vi, D1:Overall), by = dplyr::join_by(Author)) |>
+    dplyr::left_join(data |> dplyr::select(dplyr::any_of(join_vars), yi, vi, dplyr::matches("^D\\d+$|^Overall$")), by = dplyr::join_by(Author)) |>
     dplyr::left_join(tau.summary, by = dplyr::join_by(Author), suffix = c("", "_sd")) |>
     sort_studies_fn(sort_studies_by)
 
   # Add formatted effect estimates
+  # log_scale = FALSE for: MD, SMD, and all marginal estimands (b_Intercept and yi
+  # are already on the natural scale for these)
   forest.data.summary <- forest.data.summary |>
     dplyr::mutate(
-      weighted_effect = if (measure %in% c("MD", "SMD")) {
+      weighted_effect = if (!isTRUE(props$log_scale)) {
         paste0(sprintf("%.2f", b_Intercept), " [", sprintf("%.2f", .lower), ", ", sprintf("%.2f", .upper), "]")
       } else {
         paste0(sprintf("%.2f", exp(b_Intercept)), " [", sprintf("%.2f", exp(.lower)), ", ", sprintf("%.2f", exp(.upper)), "]")
       },
-      unweighted_effect = if (measure %in% c("MD", "SMD")) {
+      unweighted_effect = if (!isTRUE(props$log_scale)) {
         paste0(sprintf("%.2f", yi), " [", sprintf("%.2f", yi - 1.96 * sqrt(vi)), ", ", sprintf("%.2f", yi + 1.96 * sqrt(vi)), "]")
       } else {
         paste0(sprintf("%.2f", exp(yi)), " [", sprintf("%.2f", exp(yi - 1.96 * sqrt(vi))), ", ", sprintf("%.2f", exp(yi + 1.96 * sqrt(vi))), "]")
@@ -526,8 +323,13 @@ forest.data.summary_fn <- function(spread_df,
       )
     )
 
-  # Add study group summary columns depending on measure type
-  if (measure %in% c("MD", "SMD")) {
+  # Add study group summary columns depending on estimand type
+  # Gaussian (MD/SMD) and gaussian marginal estimands (ATE/ATT) use mean/SD columns;
+  # binary/count estimands use events/total columns.
+  is_continuous_display <- estimand %in% c("MD", "SMD") ||
+    (is_marginal_estimand(estimand) && isTRUE("Mean_Control" %in% names(forest.data.summary)))
+
+  if (is_continuous_display) {
     forest.data.summary <- forest.data.summary |>
       dplyr::mutate(
         N_int = dplyr::case_when(

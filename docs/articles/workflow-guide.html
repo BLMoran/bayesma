@@ -752,7 +752,7 @@
 <span><span class="fu">bayesma</span><span class="fu">::</span><span class="fu">build_tau_prior_overlay</span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Forest plot (includes tau visually)</span></span>
-<span><span class="fu">bayesma</span><span class="fu">::</span><span class="fu"><a href="../reference/bayes_forest.html">bayes_forest</a></span><span class="op">(</span><span class="va">fit</span>, data <span class="op">=</span> <span class="va">meta_data</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu">bayesma</span><span class="fu">::</span><span class="fu">bayes_forest</span><span class="op">(</span><span class="va">fit</span>, data <span class="op">=</span> <span class="va">meta_data</span><span class="op">)</span></span></code></pre></div>
 </section><section class="level3"><h3 id="predictive-distribution">Predictive Distribution<a class="anchor" aria-label="anchor" href="#predictive-distribution"></a>
 </h3>
 <p>What to expect in a new study:</p>
@@ -1187,7 +1187,7 @@
 <span><span class="co"># Inspect: "Model posteriors" section</span></span>
 <span></span>
 <span><span class="co"># Forest plot showing weighted effect (averaged over models)</span></span>
-<span><span class="fu">bayesma</span><span class="fu">::</span><span class="fu"><a href="../reference/bayes_forest.html">bayes_forest</a></span><span class="op">(</span><span class="va">robma_fit</span>, data <span class="op">=</span> <span class="va">meta_data</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu">bayesma</span><span class="fu">::</span><span class="fu">bayes_forest</span><span class="op">(</span><span class="va">robma_fit</span>, data <span class="op">=</span> <span class="va">meta_data</span><span class="op">)</span></span></code></pre></div>
 </section><section class="level3"><h3 id="robma-sensitivity-plot">ROBMA Sensitivity Plot<a class="anchor" aria-label="anchor" href="#robma-sensitivity-plot"></a>
 </h3>
 <div class="sourceCode" id="cb54"><pre class="downlit sourceCode r">
@@ -1284,7 +1284,7 @@
 </h3>
 <div class="sourceCode" id="cb59"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Forest plot table</span></span>
-<span><span class="va">forest_table</span> <span class="op">&lt;-</span> <span class="fu">bayesma</span><span class="fu">::</span><span class="fu"><a href="../reference/bayes_forest.html">bayes_forest</a></span><span class="op">(</span><span class="va">fit_re</span>, data <span class="op">=</span> <span class="va">meta_data</span><span class="op">)</span></span>
+<span><span class="va">forest_table</span> <span class="op">&lt;-</span> <span class="fu">bayesma</span><span class="fu">::</span><span class="fu">bayes_forest</span><span class="op">(</span><span class="va">fit_re</span>, data <span class="op">=</span> <span class="va">meta_data</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">forest_table</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Model comparison table</span></span>
@@ -1447,10 +1447,10 @@
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">summary_main</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Forest plot</span></span>
-<span><span class="fu">bayesma</span><span class="fu">::</span><span class="fu"><a href="../reference/bayes_forest.html">bayes_forest</a></span><span class="op">(</span><span class="va">fit_re</span>, data <span class="op">=</span> <span class="va">meta_data</span><span class="op">)</span></span>
+<span><span class="fu">bayesma</span><span class="fu">::</span><span class="fu">bayes_forest</span><span class="op">(</span><span class="va">fit_re</span>, data <span class="op">=</span> <span class="va">meta_data</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Model-averaged forest plot</span></span>
-<span><span class="fu">bayesma</span><span class="fu">::</span><span class="fu"><a href="../reference/bayes_forest.html">bayes_forest</a></span><span class="op">(</span><span class="va">robma_fit</span>, data <span class="op">=</span> <span class="va">meta_data</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu">bayesma</span><span class="fu">::</span><span class="fu">bayes_forest</span><span class="op">(</span><span class="va">robma_fit</span>, data <span class="op">=</span> <span class="va">meta_data</span><span class="op">)</span></span></code></pre></div>
 <hr></section><section class="level2"><h2 id="summary-key-functions-by-task">Summary: Key Functions by Task<a class="anchor" aria-label="anchor" href="#summary-key-functions-by-task"></a>
 </h2>
 <table class="table caption-top">
@@ -1512,7 +1512,7 @@
 <tr class="odd">
 <td><strong>Visualization</strong></td>
 <td>
-<code><a href="../reference/bayes_forest.html">bayes_forest()</a></code>, <code><a href="../reference/funnel_plot.html">funnel_plot()</a></code>, <code><a href="../reference/egger_plot.html">egger_plot()</a></code>, <code><a href="../reference/metareg_mod_plot.html">metareg_mod_plot()</a></code>, <code><a href="../reference/sensitivity_plot.html">sensitivity_plot()</a></code>
+<code>bayes_forest()</code>, <code><a href="../reference/funnel_plot.html">funnel_plot()</a></code>, <code><a href="../reference/egger_plot.html">egger_plot()</a></code>, <code><a href="../reference/metareg_mod_plot.html">metareg_mod_plot()</a></code>, <code><a href="../reference/sensitivity_plot.html">sensitivity_plot()</a></code>
 </td>
 </tr>
 <tr class="even">

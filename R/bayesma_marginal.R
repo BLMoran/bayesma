@@ -12,18 +12,27 @@
 #' @section Methods by estimand and stage:
 #'
 #' \describe{
-#'   \item{RD / ARR / ATE — binomial, one-stage}{Computed from posterior draws
-#'     of the per-arm linear predictor. Mean over studies of
-#'     `inv_logit(eta_int) - inv_logit(eta_ctrl)`.}
-#'   \item{RD / ARR / ATE — binomial, two-stage}{Requires `baseline_risk`.
-#'     Posterior draws of the pooled OR are back-transformed at the supplied
-#'     baseline. Defaults to the unweighted mean of the observed control rates
-#'     when `baseline_risk = NULL`.}
+#'   \item{RD / ARR / ATE — binomial, one-stage}{Computed via marginal
+#'     standardisation (g-computation) over posterior draws of the per-study
+#'     baseline logit (`gamma[s]`) and the pooled log-OR (`mu`), optionally
+#'     shifted by study-level random effects (`epsilon[s]`). The per-study RD
+#'     is `plogis(gamma[s] + mu + epsilon[s]) - plogis(gamma[s])`, averaged
+#'     across studies weighted by the harmonic mean of arm sample sizes.
+#'     This corresponds to a population-weighted ATE over the observed study
+#'     mix and requires no external baseline assumption.}
+#'   \item{RD / ARR / ATE — binomial, two-stage}{Back-transforms posterior
+#'     draws of the pooled log-OR using a baseline risk drawn per-iteration
+#'     from a Beta distribution fitted (method-of-moments) to the observed
+#'     control-arm event rates. Propagates baseline uncertainty into the
+#'     posterior RD. A fixed scalar `baseline_risk` bypasses this and uses
+#'     the supplied value directly (old behaviour).}
 #'   \item{ATE — gaussian}{Equivalent to MD. Returns the pooled posterior on
 #'     the absolute scale.}
-#'   \item{ATT}{Computed as ATE weighted by treated-arm sample size
-#'     (`n_int / sum(n_int)`). Without IPD this is an arm-size-weighted ATE,
-#'     not a true causal ATT — interpret with caution.}
+#'   \item{ATT}{One-stage: weighted by intervention-arm sample size
+#'     (`n_int / sum(n_int)`). Two-stage: same back-transform as ATE but with
+#'     intervention-size-weighted baseline. Without IPD this is an
+#'     arm-size-weighted ATE on the treated, not a true causal ATT —
+#'     interpret with caution.}
 #'   \item{CATE}{Routes to [meta_reg()] with `moderators = cate_covariate`.
 #'     Reports the meta-regression effect; the user is expected to evaluate
 #'     it at a specific covariate value downstream.}
@@ -126,8 +135,8 @@ validate_estimand_args <- function(estimand, likelihood, cate_covariate,
 
   if (!is.null(baseline_risk)) {
     valid <- (is.numeric(baseline_risk) && length(baseline_risk) == 1 &&
-              baseline_risk > 0 && baseline_risk < 1) ||
-             identical(baseline_risk, "study_mean")
+                baseline_risk > 0 && baseline_risk < 1) ||
+      identical(baseline_risk, "study_mean")
     if (!valid) {
       cli::cli_abort(
         "{.arg baseline_risk} must be a single number in (0, 1) or \\
@@ -160,10 +169,26 @@ compute_absolute_draws <- function(fit, spec, estimand) {
   }
 }
 
+
+#' Marginal standardisation (g-computation) over the one-stage binomial model.
+#'
+#' Per-study RD is computed as:
+#'   `plogis(gamma[s] + mu + epsilon[s]) - plogis(gamma[s])`
+#'
+#' where `gamma[s]` is the study baseline on the logit scale, `mu` is the pooled
+#' log-OR, and `epsilon[s]` is the study-level random effect (zero for
+#' common-effect models). This is mathematically equivalent to what
+#' marginaleffects::avg_comparisons() does on a binomial(logit) model.
+#'
+#' Studies are weighted by the harmonic mean of arm sample sizes for ATE/RD/ARR
+#' (precision-weighted, equivalent to inverse-variance weighting of the RD
+#' estimator), and by intervention-arm size for ATT.
+#'
 #' @noRd
 onestage_rd_draws <- function(fit, spec, estimand) {
   gamma_draws <- try_extract_arm_draws(fit, "gamma")
   mu_draws    <- extract_pooled_draws(fit)
+
   if (is.null(gamma_draws)) {
     cli::cli_warn(
       "One-stage fit does not expose per-study {.var gamma}; \\
@@ -172,46 +197,100 @@ onestage_rd_draws <- function(fit, spec, estimand) {
     return(twostage_rd_draws(fit, spec, estimand))
   }
 
-  S <- ncol(gamma_draws)
+  S       <- ncol(gamma_draws)
   n_draws <- nrow(gamma_draws)
 
   eps_draws <- if (spec$model_type == "random_effect") {
     try_extract_arm_draws(fit, "epsilon")
-  } else NULL
+  } else {
+    NULL
+  }
 
+  # Control arm probabilities: plogis(gamma[s])  [n_draws x S]
   p_c <- stats::plogis(gamma_draws)
-  mu_mat <- if (!is.null(eps_draws)) eps_draws + mu_draws
-            else matrix(mu_draws, n_draws, S)
+
+  # Treatment arm linear predictor: gamma[s] + mu + epsilon[s]  [n_draws x S]
+  mu_mat <- if (!is.null(eps_draws)) {
+    eps_draws + matrix(mu_draws, nrow = n_draws, ncol = S)
+  } else {
+    matrix(mu_draws, nrow = n_draws, ncol = S)
+  }
   p_i <- stats::plogis(gamma_draws + mu_mat)
 
-  rd_per_study <- p_i - p_c
-  weights <- arm_weights(spec, estimand)
+  rd_per_study <- p_i - p_c  # [n_draws x S]
+
+  # Weights: harmonic mean of arm sizes for ATE/RD/ARR (precision-weighted);
+  # intervention-arm size for ATT.
+  weights <- switch(
+    estimand,
+    ATE = ,
+    RD  = ,
+    ARR = {
+      n_h <- 2 / (1 / spec$n_c + 1 / spec$n_i)
+      n_h / sum(n_h)
+    },
+    ATT = spec$n_i / sum(spec$n_i),
+    rep(1 / S, S)
+  )
+
   apply(rd_per_study, 1, stats::weighted.mean, w = weights)
 }
 
+
+#' Back-transform two-stage pooled log-OR draws to the RD scale.
+#'
+#' When baseline_risk is NULL or "study_mean", the baseline is drawn
+#' per-iteration from a Beta distribution fitted by method-of-moments to the
+#' observed control-arm event rates. This propagates baseline uncertainty into
+#' the posterior RD rather than conditioning on a fixed point estimate.
+#'
+#' When baseline_risk is a user-supplied scalar, that value is used directly
+#' (fixed baseline, equivalent to the old behaviour).
+#'
 #' @noRd
 twostage_rd_draws <- function(fit, spec, estimand) {
-  mu <- extract_pooled_draws(fit)
-  baseline <- resolve_baseline(spec)
+  mu      <- extract_pooled_draws(fit)
+  n_draws <- length(mu)
+
+  baseline <- resolve_baseline_draws(spec, n_draws)
+
   or <- exp(mu)
   p1 <- baseline * or / (1 - baseline + baseline * or)
   p1 - baseline
 }
 
-#' @noRd
-resolve_baseline <- function(spec) {
-  br <- spec$baseline_risk
-  if (is.null(br) || identical(br, "study_mean")) {
-    rates <- spec$outcome_ctrl / spec$n_c
-    return(mean(rates, na.rm = TRUE))
-  }
-  br
-}
 
+#' Resolve baseline risk as a vector of length n_draws.
+#'
+#' Fixed scalar  -> replicated to n_draws (no uncertainty propagated).
+#' NULL / "study_mean" -> method-of-moments Beta fitted to observed control
+#'   rates; one draw per posterior iteration so baseline uncertainty is
+#'   propagated through to the RD posterior.
+#'
 #' @noRd
-arm_weights <- function(spec, estimand) {
-  if (estimand == "ATT") return(spec$n_i / sum(spec$n_i))
-  rep(1 / spec$S, spec$S)
+resolve_baseline_draws <- function(spec, n_draws) {
+  br <- spec$baseline_risk
+
+  # User-supplied fixed scalar: replicate as-is (old behaviour preserved)
+  if (is.numeric(br) && length(br) == 1L) {
+    return(rep(br, n_draws))
+  }
+
+  # Fit a Beta to the observed control-arm rates by method of moments,
+  # then draw one baseline per posterior iteration.
+  rates <- spec$outcome_ctrl / spec$n_c
+  m     <- mean(rates, na.rm = TRUE)
+  v     <- stats::var(rates, na.rm = TRUE)
+
+  # Clamp variance so alpha and beta are strictly positive
+  v_max <- m * (1 - m) * 0.99
+  v     <- min(v, v_max)
+
+  common <- m * (1 - m) / v - 1
+  alpha  <- m * common
+  beta_p <- (1 - m) * common
+
+  stats::rbeta(n_draws, shape1 = alpha, shape2 = beta_p)
 }
 
 #' @noRd
@@ -246,5 +325,51 @@ summarise_marginal <- function(draws) {
     lower  = stats::quantile(draws, 0.025, names = FALSE),
     upper  = stats::quantile(draws, 0.975, names = FALSE),
     p_gt_0 = mean(draws > 0)
+  )
+}
+
+#' Compute a prediction interval for a new study on the marginal estimand scale.
+#'
+#' For binomial one-stage models: applies `mu_new` (the Stan-generated predicted
+#' new study log-OR) at the per-draw average baseline logit across the existing
+#' studies, then back-transforms to the marginal (ARR/RD) scale.
+#'
+#' For other likelihoods or when `mu_new` is unavailable: returns the log-OR
+#' prediction interval as-is (same as the default `pred_interval`).
+#'
+#' @noRd
+compute_marginal_pred_interval <- function(fit, spec, marginal_draws) {
+  cs_fit <- if (inherits(fit, "bayesma_fit")) fit$fit else fit
+
+  mu_new_draws <- tryCatch(
+    as.numeric(posterior::as_draws_matrix(cs_fit$draws("mu_new"))),
+    error = function(e) NULL
+  )
+
+  if (is.null(mu_new_draws)) return(NULL)
+
+  if (spec$likelihood == "binomial") {
+    gamma_rep <- if (spec$stage == "one_stage") {
+      gamma_draws <- try_extract_arm_draws(cs_fit, "gamma")
+      if (!is.null(gamma_draws)) as.numeric(rowMeans(gamma_draws)) else NULL
+    } else {
+      p_ctrl <- spec$outcome_ctrl / spec$n_c
+      p_ctrl <- pmax(pmin(p_ctrl, 1 - 1e-6), 1e-6)
+      rep(mean(stats::qlogis(p_ctrl)), length(mu_new_draws))
+    }
+    if (!is.null(gamma_rep)) {
+      pred_arr <- stats::plogis(gamma_rep + mu_new_draws) - stats::plogis(gamma_rep)
+      return(tibble::tibble(
+        estimate = stats::median(pred_arr),
+        lower    = stats::quantile(pred_arr, 0.025, names = FALSE),
+        upper    = stats::quantile(pred_arr, 0.975, names = FALSE)
+      ))
+    }
+  }
+
+  tibble::tibble(
+    estimate = stats::median(mu_new_draws),
+    lower    = stats::quantile(mu_new_draws, 0.025, names = FALSE),
+    upper    = stats::quantile(mu_new_draws, 0.975, names = FALSE)
   )
 }

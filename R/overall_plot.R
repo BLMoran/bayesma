@@ -4,7 +4,11 @@
 #' (\eqn{\tau}), and/or prediction distribution from a fitted bayesma model.
 #'
 #' @param model A \code{bayesma} object.
-#' @param measure Character string for effect measure ("OR", "RR", "HR", "IRR", "MD", "SMD").
+#' @param estimand Character string for the effect measure or marginal estimand.
+#'   Relative-effect: \code{"OR"}, \code{"HR"}, \code{"RR"}, \code{"IRR"},
+#'   \code{"MD"}, \code{"SMD"}. Marginal: \code{"RD"}/\code{"ARR"}, \code{"ATE"},
+#'   \code{"ATT"}, \code{"CATE"}. For marginal estimands the pooled posterior is
+#'   drawn from \code{model$marginal$draws}.
 #' @param add_tau Logical, whether to include the heterogeneity (tau) plot.
 #' @param add_mu_prior Logical, whether to include the prior distribution for mu.
 #' @param add_tau_prior Logical, whether to include the prior distribution for tau.
@@ -51,7 +55,7 @@
 #' @importFrom scales pretty_breaks
 #'
 overall_plot <- function(model,
-                         measure,
+                         estimand,
                          add_tau = FALSE,
                          add_mu_prior = FALSE,
                          add_tau_prior = FALSE,
@@ -84,6 +88,7 @@ overall_plot <- function(model,
                          font = NULL,
                          plot_arrangement = "vertical") {
 
+  measure <- estimand
 
   # Validate model class
 
@@ -100,7 +105,8 @@ overall_plot <- function(model,
   x_label <- props$x_label
 
   # Set tau x-axis label
-  tau_x_label <- if (measure %in% c("MD", "SMD")) {
+  tau_x_label <- if (measure %in% c("MD", "SMD") ||
+                     (is_marginal_estimand(measure) && model$meta$likelihood == "gaussian")) {
     "Standard Deviation"
   } else {
     "Standard Deviation (Log Scale)"
@@ -122,7 +128,19 @@ overall_plot <- function(model,
   # ========================================================================
   is_re <- has_random_effects(model)
 
-  mu_samples <- as.numeric(model$draws[["mu"]])
+  mu_samples <- if (is_marginal_estimand(measure)) {
+    if (is.null(model$marginal)) {
+      cli::cli_abort(
+        c(
+          "Marginal estimand {.val {measure}} requires {.code $marginal} draws.",
+          "i" = "Re-fit the model with {.code estimand = {.val {measure}}} to attach marginal draws."
+        )
+      )
+    }
+    model$marginal$draws
+  } else {
+    as.numeric(model$draws[["mu"]])
+  }
   tau_samples <- if (is_re && "tau" %in% names(model$draws)) {
     as.numeric(model$draws[["tau"]])
   } else {
