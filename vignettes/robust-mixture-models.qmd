@@ -1,5 +1,5 @@
 ---
-title: "RoBMA"
+title: "RE mixture models for heterogeneity"
 vignette: >
   %\VignetteIndexEntry{robust-mixture-models}
   %\VignetteEngine{quarto::html}
@@ -8,16 +8,110 @@ vignette: >
 
 ## Introduction
 
-RoBMA (Robust Bayesian Meta-Analysis) performs model averaging
-across multiple bias-adjusted meta-analysis models.
+The standard Gaussian random-effects model assumes that true study effects follow a single normal distribution. This assumption breaks down when the effect distribution is bimodal — for example, when two qualitatively distinct subpopulations of studies exist (e.g., patient subgroups, different operationalisations of the intervention) — or when a small number of studies produce effects so discrepant that they distort the pooled estimate.
 
-Instead of choosing a single model, RoBMA averages posterior
-distributions weighted by model probabilities.
+**bayesma** provides two random-effects mixture models to handle these situations:
 
-\[
-p(\theta|y) =
-\sum_k p(\theta|y, M_k) p(M_k|y)
-\]
+1. **Two-component Gaussian mixture**: models the random-effects distribution as a mixture of two normal components with different means and variances.
+2. **Robust outlier mixture**: identifies individual outlier studies without requiring them to belong to a separate substantive subpopulation. See [Robust Outlier Mixture (Cruz)](robma.html).
 
-This approach integrates uncertainty about publication bias
-and model specification.
+This vignette covers the two-component mixture. For the outlier variant see [Robust Outlier Mixture (Cruz)](robma.html).
+
+## Two-component Gaussian mixture model
+
+### Model specification
+
+The true-effect distribution is a mixture of two Gaussians:
+
+$$
+p(\theta_i) = \pi \cdot \mathcal{N}(\theta_i \mid \mu_1,\; \tau_1^2) + (1-\pi) \cdot \mathcal{N}(\theta_i \mid \mu_2,\; \tau_2^2)
+$$
+
+Marginalising over $\theta_i$ gives the integrated observation-level likelihood:
+
+$$
+p(y_i \mid \mu_1, \mu_2, \tau_1, \tau_2, \pi) = \pi \cdot \mathcal{N}(y_i \mid \mu_1,\; \tau_1^2 + s_i^2) + (1-\pi) \cdot \mathcal{N}(y_i \mid \mu_2,\; \tau_2^2 + s_i^2)
+$$
+
+The two components have means $\mu_1 < \mu_2$ (an ordering constraint resolves label switching) and heterogeneities $\tau_1$, $\tau_2$.
+
+### Priors
+
+$$
+\pi \sim \text{Beta}(2,\; 2)
+$$
+
+$$
+\mu_1, \mu_2 \sim \mathcal{N}(0,\; 1) \quad \text{with constraint } \mu_1 \leq \mu_2
+$$
+
+$$
+\tau_1, \tau_2 \sim \text{Half-Cauchy}(0,\; 0.5)
+$$
+
+The Beta(2, 2) prior on the mixing proportion favours balanced mixtures slightly over degenerate ones (all mass in one component), while still allowing unequal mixtures.
+
+## Fitting the model
+
+```r
+#| eval: false
+fit_mix <- bayesma(data, model = "re_mixture")
+
+summary(fit_mix)
+```
+
+`summary()` reports posteriors for $\mu_1$, $\mu_2$, $\tau_1$, $\tau_2$, and $\pi$.
+
+## Key estimands
+
+### Component means $\mu_1$ and $\mu_2$
+
+The two means characterise the two subpopulations of studies. If the posteriors for $\mu_1$ and $\mu_2$ substantially overlap, the data do not support a bimodal structure.
+
+### Mixing proportion $\pi$
+
+$\pi$ is the estimated fraction of studies in the first (lower-effect) component. A posterior for $\pi$ concentrated near 0 or 1 indicates near-degenerate mixing — the data are consistent with a single Gaussian. Intermediate values (e.g., 0.2–0.8) suggest genuine bimodality.
+
+### Weighted pooled effect
+
+The model-averaged pooled effect is
+
+$$
+\bar{\mu} = \pi \mu_1 + (1-\pi)\mu_2
+$$
+
+This is reported as `b_Intercept` in the output and serves as the overall summary when reporting a single number is required.
+
+## Assessing whether the mixture is supported
+
+Compare the mixture model against the standard Gaussian RE model using WAIC or LOO:
+
+```r
+#| eval: false
+fit_re  <- bayesma(data)
+fit_mix <- bayesma(data, model = "re_mixture")
+
+compare_models(fit_re, fit_mix, labels = c("Gaussian RE", "RE mixture"),
+               criterion = "loo")
+```
+
+A substantially lower LOO for the mixture model indicates that the two-component structure fits meaningfully better. If the improvement is small, the standard RE model is adequate and more parsimonious.
+
+## Interpreting a well-separated mixture
+
+When $\mu_1$ and $\mu_2$ are well-separated (credible intervals non-overlapping), investigate moderators that distinguish the two study clusters. The mixture model can then motivate a meta-regression with the suspected moderator:
+
+```r
+#| eval: false
+fit_reg <- meta_reg(data, moderators = ~ patient_type)
+```
+
+See [Meta-Regression](meta-regression.html).
+
+## Limitations
+
+- Label switching: despite the $\mu_1 \leq \mu_2$ constraint, MCMC chains can occasionally swap component labels for extreme values of $\pi$. Check trace plots for both components.
+- Identifiability degrades with small $k$: the mixture adds three extra parameters ($\mu_2$, $\tau_2$, $\pi$) and requires enough studies for both components to be adequately informed.
+- The two-component model cannot capture more complex multimodal structures. Three-component mixtures are available but rarely warranted in practice.
+
+For the Stan code underlying this model, see [Stan Code — RE Mixture Model](stan-re-mixture-model.html).
