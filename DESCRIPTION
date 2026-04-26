@@ -1,0 +1,64 @@
+Package: bayesma
+Type: Package
+Title: Bayesian Meta Analyses in R
+Description: Provides Bayesian models for meta-analysis, including
+    common-effect and random-effects models, one-stage and two-stage
+    approaches, and models to adjust for small sample (publication) bias including bias-correction models, selection models, mixture models and PET-PEESE.
+Version: 0.0.0.9000
+Authors@R: c(
+    person(
+      "Benjamin", "Moran",
+      email = "ben.moran@newcastle.edu.au",
+      comment = c(ORCID = "0000-0002-6515-6722"),
+      role = c("aut", "cre")),
+    person(
+      "Thomas", "Payne",
+      email = "tompayne302@gmail.com",
+      comment = c(ORCID = "0000-0002-5530-3717"),
+      role = c("aut", "ctb")))
+License: AGPL-3
+URL: https://blmoran.github.io/bayesma, https://github.com/BLMoran/bayesma
+BugReports: https://github.com/BLMoran/bayesma/issues
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.3
+Depends: R (>= 4.5.0)
+Imports:
+    bayesplot,
+    bridgesampling,
+    brms,
+    cli,
+    data.table,
+    digest,
+    distributional,
+    dplyr,
+    fontawesome,
+    forcats,
+    ggdist,
+    ggplot2,
+    ggrepel,
+    glue,
+    gt,
+    loo,
+    mirai,
+    paletteer,
+    patchwork,
+    posterior,
+    purrr (>= 1.0.0),
+    RColorBrewer,
+    rlang,
+    scales,
+    stringr,
+    tibble,
+    tidybayes,
+    tidyr
+Suggests:
+    cmdstanr,
+    quarto,
+    testthat (>= 3.0.0),
+    tidyverse,
+    withr
+Additional_repositories:
+    https://stan-dev.r-universe.dev
+VignetteBuilder: quarto
+LazyData: true

@@ -1,0 +1,118 @@
+---
+title: "Stan code — Copas selection model"
+vignette: >
+  %\VignetteIndexEntry{stan-copas}
+  %\VignetteEngine{quarto::html}
+  %\VignetteEncoding{UTF-8}
+---
+
+## Model description
+
+The Copas selection model (Copas & Shi, 2001) models publication probability as a function of study precision (sample size). Smaller studies — which have higher standard errors — are less likely to be published than larger studies. The model estimates both the pooled effect and the selection mechanism jointly.
+
+## Mathematical specification
+
+**Outcome model:**
+
+$$
+y_i = \mu + \epsilon_i, \quad \epsilon_i \sim \mathcal{N}(0,\, s_i^2 + \tau^2)
+$$
+
+**Selection mechanism:**
+
+$$
+P(\text{published}_i \mid \gamma) = \Phi\!\left(\gamma_0 + \frac{\gamma_1}{s_i}\right)
+$$
+
+where $\Phi$ is the standard normal CDF, $\gamma_0$ controls the baseline publication probability, and $\gamma_1$ controls the association between precision ($1/s_i$) and publication.
+
+**Joint bivariate model:**
+
+The outcome $y_i$ and the selection indicator $\delta_i = 1$ are jointly modelled as a bivariate normal:
+
+$$
+\begin{pmatrix} y_i \\ \delta_i^* \end{pmatrix} \sim \mathcal{N}_2\!\left(\begin{pmatrix} \mu \\ \gamma_0 + \gamma_1/s_i \end{pmatrix}, \begin{pmatrix} s_i^2 + \tau^2 & \rho \sigma_y \\ \rho \sigma_y & 1 \end{pmatrix}\right)
+$$
+
+where $\rho$ is the correlation between the true outcome and the latent propensity to publish, and $\delta_i^* > 0 \Rightarrow \delta_i = 1$.
+
+The observed-data likelihood (conditioning on $\delta_i = 1$) is:
+
+$$
+p(y_i \mid \delta_i = 1) \propto \phi\!\left(\frac{y_i - \mu}{\sigma_i}\right) \cdot \Phi\!\left(\frac{\gamma_0 + \gamma_1/s_i + \rho(y_i - \mu)/\sigma_i}{\sqrt{1 - \rho^2}}\right)
+$$
+
+where $\sigma_i^2 = s_i^2 + \tau^2$.
+
+**Priors:**
+
+$$
+\mu \sim \mathcal{N}(0,\, 1), \qquad \tau \sim \text{Half-Cauchy}(0,\, 0.5), \qquad \gamma_0 \sim \mathcal{N}(0,\, 1), \qquad \gamma_1 \sim \text{Half-Normal}(0,\, 1), \qquad \rho \sim \text{Uniform}(-1,\, 1)
+$$
+
+## Stan code
+
+```stan
+data {
+  int<lower=1> N;
+  vector[N] y;
+  vector<lower=0>[N] se;
+}
+
+parameters {
+  real mu;
+  real<lower=0> tau;
+  real gamma0;
+  real<lower=0> gamma1;
+  real<lower=-1, upper=1> rho;
+}
+
+model {
+  target += normal_lpdf(mu     | 0, 1);
+  target += cauchy_lpdf(tau    | 0, 0.5);
+  target += normal_lpdf(gamma0 | 0, 1);
+  target += normal_lpdf(gamma1 | 0, 1);
+  target += uniform_lpdf(rho   | -1, 1);
+
+  for (i in 1:N) {
+    real sigma_i = sqrt(square(se[i]) + square(tau));
+    real z_sel   = gamma0 + gamma1 / se[i];
+    real z_adj   = (z_sel + rho * (y[i] - mu) / sigma_i) / sqrt(1 - square(rho));
+
+    target += normal_lpdf(y[i] | mu, sigma_i) + normal_lcdf(z_adj | 0, 1)
+            - normal_lcdf(z_sel | 0, 1);
+  }
+}
+
+generated quantities {
+  real b_Intercept = mu;
+}
+```
+
+## How bayesma calls this model
+
+```r
+bayesma(
+  data,
+  model_type = "selection_copas",
+  gamma_prior = list(gamma0 = normal(0, 1), gamma1 = half_normal(0, 1))
+)
+```
+
+## Parameterisation notes
+
+- $\gamma_1 > 0$ enforces the direction constraint: larger studies (smaller $s_i$) are more likely to be published.
+- $\rho$ captures the relationship between effect magnitude and publication. Positive $\rho$ means larger effects are more likely to be published (a common publication bias mechanism).
+- The normalising denominator `normal_lcdf(z_sel | 0, 1)` corrects for the fact that only published studies are observed.
+
+## Sensitivity analysis
+
+The Copas model is not identified without prior information on either $\gamma_0$ or $\rho$. **bayesma** provides a sensitivity plot over a grid of $(\gamma_0, \gamma_1)$ values:
+
+```r
+sensitivity_plot(fit_copas, type = "copas_grid")
+```
+
+## Known sampling difficulties
+
+The Copas likelihood is non-convex and can have multiple local modes in the $(\mu, \rho)$ space. Use at least 4 chains, inspect all traces, and run with `adapt_delta = 0.99`.

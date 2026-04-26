@@ -1,0 +1,45 @@
+---
+title: "Bias-corrected meta-analysis model"
+vignette: >
+  %\VignetteIndexEntry{bias-corrected-jung-verde}
+  %\VignetteEngine{quarto::html}
+  %\VignetteEncoding{UTF-8}
+---
+
+## Introduction
+
+The bias-corrected model accounts for systematic bias in some studies.
+
+This approach extends the model proposed by Verde and later developed by Jung.
+
+## Model
+
+The observed effect is
+
+\[
+y_i \sim \mathcal{N}(\theta_i^B, s_i^2)
+\]
+
+where
+
+\[
+\theta_i^B =
+(1 - I_i)\theta_i + I_i(\theta_i + \beta_i)
+\]
+
+- \(I_i\) indicates whether study \(i\) is biased
+- \(\beta_i\) represents the bias magnitude
+
+## Hierarchical structure
+
+\[
+\theta_i \sim \mathcal{N}(\mu, \tau^2)
+\]
+
+\[
+\beta_i \sim \mathcal{N}(\mu_\beta, \tau_\beta^2)
+\]
+
+### Interpretation
+
+The model separates **true effects** from **bias effects**.

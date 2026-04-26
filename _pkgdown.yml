@@ -1,0 +1,468 @@
+url: https://blmoran.github.io/bayesma/
+
+template:
+  bootstrap: 5
+  bslib:
+    primary:   "#3191bf"
+    secondary: "#4F6D8A"
+    success:   "#9FD8F5"
+    info:      "#EAF4FB"
+    warning:   "#E8D9A8"
+    danger:    "#2E3A4A"
+    light:     "#F7FBFF"
+    dark:      "#2E3A4A"
+
+    bg: "#FFFFFF"
+    fg: "#2E3A4A"
+
+    base_font:
+      google: "Open Sans"
+    heading_font:
+      google: "Montserrat"
+    code_font:
+      google: "Source Code Pro"
+
+    navbar-bg: "#4F6D8A"
+    navbar-light-color: "#EAF4FB"
+    navbar-light-hover-color: "#FFFFFF"
+    navbar-light-active-color: "#FFFFFF"
+
+navbar:
+  bg: primary
+  type: dark
+  structure:
+    left:
+      - getting-started
+      - model-basics
+      - advanced-models
+      - bias-heterogeneity
+      - stan-code
+      - workflow
+      - reference
+    right:
+      - search
+      - github
+      - bluesky
+  components:
+    getting-started:
+      text: Getting Started
+      href: articles/index.html
+
+    model-basics:
+      text: Model Basics
+      menu:
+        - text: One-Stage vs Two-Stage Models
+          href: articles/one-stage-two-stage-binary-jackson.html
+        - text: "---"
+        - text: Common-Effect Model
+          href: articles/common-effect-model.html
+        - text: "---"
+        - text: Random-Effects Models
+        - text: Gaussian RE (default)
+          href: articles/common-effect-random-effect.html
+        - text: Alternative RE Distributions
+          href: articles/random-effects-distributions.html
+        - text: Assessment of RE Distributions
+          href: articles/re-distribution-assessment.html
+        - text: "---"
+        - text: Small-Sample Adjustments
+          href: articles/small-sample-adjustments.html
+        - text: "---"
+        - text: Multiarm Models
+          href: articles/multiarm-models.html
+        - text: "---"
+        - text: Model Comparison & Diagnostics
+          href: articles/model-comparison-diagnostics.html
+
+    advanced-models:
+      text: Advanced Models
+      menu:
+        - text: Multivariate Meta-Analysis
+          href: articles/multivariate-meta-analysis.html
+        - text: Longitudinal Meta-Analysis
+          href: articles/longitudinal-meta-analysis.html
+        - text: Meta-Regression
+          href: articles/meta-regression.html
+        - text: "---"
+        - text: Custom Models
+          href: articles/custom-models.html
+
+    bias-heterogeneity:
+      text: Bias & Heterogeneity
+      menu:
+        - text: Small-Sample & Publication Bias
+        - text: Assessment — Bayesian Egger's Test
+          href: articles/bayesian-egger-test.html
+        - text: Assessment — Funnel Plots
+          href: articles/funnel-plots.html
+        - text: PET-PEESE
+          href: articles/pet-peese.html
+        - text: Selection Weight Models
+          href: articles/selection-models-copas-weightfunction.html
+        - text: BC-BNP Model (Verde & Rosner 2025)
+          href: articles/bc-bnp-model.html
+        - text: Mixture Model (Maier)
+          href: articles/mixture-model-maier.html
+        - text: "---"
+        - text: Heterogeneity
+        - text: RE Mixture Models
+          href: articles/robust-mixture-models.html
+        - text: Robust Outlier Mixture
+          href: articles/robma.html
+        - text: "---"
+        - text: Other Bias
+        - text: INSPECT-SR Assessment
+          href: articles/inspect_sr.html
+        - text: Risk of Bias Assessment
+          href: articles/risk-of-bias.html
+        - text: Bias-Adjusted Models (Jung & Aloe 2026)
+          href: articles/bias-corrected-jung-verde.html
+        - text: Bias-Adjusted Models (Verde 2021)
+          href: articles/bias-adjusted-verde.html
+
+    stan-code:
+      text: Stan Code
+      menu:
+        - text: Overview & Conventions
+          href: articles/stan-overview.html
+        - text: "---"
+        - text: Common-Effect Model
+          href: articles/stan-common-effect.html
+        - text: "---"
+        - text: Random-Effects Models
+        - text: Gaussian RE
+          href: articles/stan-re-gaussian.html
+        - text: Student-t RE
+          href: articles/stan-re-t.html
+        - text: Skew-Normal RE
+          href: articles/stan-re-skewnormal.html
+        - text: Mixture RE
+          href: articles/stan-re-mixture.html
+        - text: "---"
+        - text: Small-Sample Adjustments
+          href: articles/stan-small-sample.html
+        - text: Multiarm Model
+          href: articles/stan-multiarm.html
+        - text: Multivariate Model
+          href: articles/stan-multivariate.html
+        - text: Longitudinal Model
+          href: articles/stan-longitudinal.html
+        - text: Meta-Regression
+          href: articles/stan-meta-regression.html
+        - text: "---"
+        - text: Publication Bias Models
+        - text: PET-PEESE
+          href: articles/stan-pet-peese.html
+        - text: Vevea-Hedges Selection Model
+          href: articles/stan-vevea-hedges.html
+        - text: Copas Selection Model
+          href: articles/stan-copas.html
+        - text: BC-BNP Model
+          href: articles/stan-bc-bnp.html
+        - text: Mixture Model (Maier)
+          href: articles/stan-mixture-maier.html
+        - text: "---"
+        - text: Heterogeneity Models
+        - text: RE Mixture Model
+          href: articles/stan-re-mixture-model.html
+        - text: Robust Outlier Mixture
+          href: articles/stan-robust-outlier.html
+        - text: "---"
+        - text: Bias-Adjusted Models
+        - text: Verde (2021)
+          href: articles/stan-bias-adjusted-verde.html
+        - text: Jung & Aloe (2026)
+          href: articles/stan-bias-adjusted-jung.html
+
+    workflow:
+      text: The Meta-Analysis Workflow
+      menu:
+        - text: Overview & Workflow Diagram
+          href: articles/workflow-guide.html
+        - text: "---"
+        - text: INSPECT-SR
+          href: articles/inspect_sr.html
+        - text: PRIMED
+          href: articles/primed.html
+        - text: "---"
+        - text: Prior Predictive Checks
+          href: articles/prior-predictive-checks.html
+        - text: Model Fitting & Convergence Diagnostics
+          href: articles/convergence-diagnostics.html
+        - text: Posterior Predictive Checks
+          href: articles/posterior-predictive-checks.html
+        - text: "---"
+        - text: Sensitivity Analysis
+          href: articles/sensitivity-analysis.html
+        - text: Model Comparison (WAIC / LOO)
+          href: articles/model-comparison-waic-loo.html
+        - text: "---"
+        - text: Reporting Checklist
+          href: articles/reporting-checklist.html
+
+    reference:
+      text: Reference
+      menu:
+        - text: Function Reference
+          href: reference/index.html
+        - text: Bibliography
+          href: articles/bibliography.html
+        - text: Changelog
+          href: news/index.html
+
+    github:
+      icon: fab fa-github
+      href: https://github.com/BLMoran/bayesma
+
+    bluesky:
+      icon: fab fa-bluesky
+      href: https://bsky.app/profile/benmoran.bsky.social
+      aria-label: Bluesky
+
+home:
+  sidebar:
+    structure:
+      - links
+      - license
+      - community
+      - citation
+      - authors
+      - dev
+
+articles:
+  - title: Getting Started
+    navbar: ~
+    contents:
+      - index
+
+  - title: Model Basics
+    navbar: ~
+    contents:
+      - one-stage-two-stage-binary-jackson
+      - common-effect-model
+      - common-effect-random-effect
+      - random-effects-distributions
+      - re-distribution-assessment
+      - small-sample-adjustments
+      - multiarm-models
+      - model-comparison-diagnostics
+
+  - title: Advanced Models
+    navbar: ~
+    contents:
+      - multivariate-meta-analysis
+      - longitudinal-meta-analysis
+      - meta-regression
+      - custom-models
+
+  - title: "Bias & Heterogeneity — Small-Sample & Publication Bias"
+    navbar: ~
+    contents:
+      - bayesian-egger-test
+      - funnel-plots
+      - pet-peese
+      - selection-models-copas-weightfunction
+      - bc-bnp-model
+      - mixture-model-maier
+
+  - title: "Bias & Heterogeneity — Heterogeneity"
+    navbar: ~
+    contents:
+      - robust-mixture-models
+      - robma
+
+  - title: "Bias & Heterogeneity — Other Bias"
+    navbar: ~
+    contents:
+      - risk-of-bias
+      - bias-corrected-jung-verde
+      - bias-adjusted-verde
+
+  - title: Stan Code
+    navbar: ~
+    contents:
+      - stan-overview
+      - stan-common-effect
+      - stan-re-gaussian
+      - stan-re-t
+      - stan-re-skewnormal
+      - stan-re-mixture
+      - stan-small-sample
+      - stan-multiarm
+      - stan-multivariate
+      - stan-longitudinal
+      - stan-meta-regression
+      - stan-pet-peese
+      - stan-vevea-hedges
+      - stan-copas
+      - stan-bc-bnp
+      - stan-mixture-maier
+      - stan-re-mixture-model
+      - stan-robust-outlier
+      - stan-bias-adjusted-verde
+      - stan-bias-adjusted-jung
+
+  - title: The Meta-Analysis Workflow
+    navbar: ~
+    contents:
+      - workflow-guide
+      - inspect_sr
+      - primed
+      - prior-predictive-checks
+      - convergence-diagnostics
+      - posterior-predictive-checks
+      - sensitivity-analysis
+      - model-comparison-waic-loo
+      - reporting-checklist
+      - report-generation
+
+  - title: Reference
+    navbar: ~
+    contents:
+      - bibliography
+
+reference:
+  - title: Core meta-analysis pipeline
+    desc: One-call and modular pipeline functions for common-effect and random-effects models.
+    contents:
+      - bayesma
+      - bayesma_spec
+      - bayesma_stan_code
+      - bayesma_stan_data
+      - bayesma_fit
+      - bayesma_extract
+      - bayesma_output
+      - bayesma_marginal
+      - bayesma_report
+
+  - title: Multivariate meta-analysis pipeline
+    contents:
+      - bayesma_mv
+      - bayesma_mv_spec
+      - bayesma_mv_stan_code
+      - bayesma_mv_stan_data
+      - bayesma_mv_fit
+      - bayesma_mv_extract
+      - bayesma_mv_output
+
+  - title: Egger's test
+    contents:
+      - egger
+      - egger_spec
+      - egger_stan_code
+      - egger_stan_data
+      - egger_fit
+      - egger_extract
+      - egger_output
+      - egger_plot
+
+  - title: Meta-regression
+    contents:
+      - meta_reg
+      - meta_reg_spec
+      - meta_reg_stan_code
+      - meta_reg_stan_data
+      - meta_reg_fit
+      - meta_reg_extract
+      - meta_reg_output
+      - coefficient_evidence
+      - metareg_mod_plot
+      - bubble_plot
+      - multi_bubble_plots
+
+  - title: Model comparison
+    contents:
+      - compare_models
+      - compare_table
+      - compare_plot
+
+  - title: RoBMA
+    contents:
+      - robma
+      - robma_spec
+      - robma_stan_code
+      - robma_stan_data
+      - robma_fit
+      - robma_extract
+      - robma_output
+      - robma_table
+      - robma_sensitivity
+      - robma_default_priors
+      - attach_robma_sensitivity
+      - has_robma_sensitivity
+
+  - title: Prior constructors
+    desc: Functions for specifying prior distributions.
+    contents:
+      - normal
+      - half_normal
+      - half_cauchy
+      - half_student_t
+      - exponential
+      - uniform
+      - dirichlet
+      - beta
+      - scaled_inv_chi_sq
+      - lkj
+      - prior_bias
+      - prior_no_bias
+      - prior_copas
+      - prior_jung
+      - prior_peese
+      - prior_pet
+      - prior_weight_function
+
+  - title: INSPECT-SR
+    desc: Tools for assessing the trustworthiness of included trials.
+    contents:
+      - inspect_sr
+      - inspect_sr_table
+      - inspect_plot
+      - inspect_summary_plot
+      - filter_trustworthy
+      - bayes_carlisle_test
+      - bayes_grim_test
+      - bayes_verify_pvalue
+      - carlisle_test
+      - grim_test
+      - verify_pvalue
+      - check_n_consistency
+      - check_statistics_consistency
+      - inspect_sr_example
+
+  - title: PRIMED
+    desc: Preliminary investigation of meta-analytic data structure.
+    contents:
+      - primed
+
+  - title: Sensitivity analysis
+    contents:
+      - sensitivity_plot
+      - render_sensitivity_patchwork
+      - sens_add_null
+      - sens_add_plot_width
+      - sens_add_probs
+      - sens_add_titles
+      - sens_add_x_lim
+
+  - title: Diagnostics
+    contents:
+      - diagnostics
+      - pp_check
+
+  - title: Visualisations
+    contents:
+      - bayes_forest
+      - overall_plot
+      - funnel_plot
+      - rob_plot
+      - ecdf_model_plot
+      - ecdf_prior_plot
+
+  - title: Utilities
+    contents:
+      - stan_code
+      - interpret
+
+news:
+  one_page: true

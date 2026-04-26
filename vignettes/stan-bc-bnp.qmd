@@ -1,0 +1,118 @@
+---
+title: "Stan code — BC-BNP model"
+vignette: >
+  %\VignetteIndexEntry{stan-bc-bnp}
+  %\VignetteEngine{quarto::html}
+  %\VignetteEncoding{UTF-8}
+---
+
+## Model description
+
+The bias-corrected Bayesian non-parametric (BC-BNP) model (Verde & Rosner, 2025) represents the distribution of true effects non-parametrically via a Dirichlet process mixture. Publication bias is corrected by estimating the selection probability as a function of effect size and precision.
+
+See [BC-BNP model](bc-bnp-model.html) for the statistical rationale.
+
+## Mathematical specification
+
+**Likelihood (marginalised over latent component assignment):**
+
+$$
+p(y_i \mid G, \pi) = \int \mathcal{N}(y_i \mid \theta, s_i^2) \cdot \pi(s_i, \theta) \cdot dG(\theta) \bigg/ C(\pi, G)
+$$
+
+**Dirichlet process approximation (truncated stick-breaking):**
+
+$$
+G \approx \sum_{h=1}^{H} \pi_h \cdot \delta_{\mu_h}, \qquad \pi_h = v_h \prod_{l < h}(1 - v_l), \qquad v_h \sim \text{Beta}(1, \alpha_0)
+$$
+
+**Component distributions:**
+
+$$
+\mu_h \sim \mathcal{N}(0,\, \sigma_h^2), \qquad \sigma_h \sim \text{Half-Cauchy}(0,\, 0.5)
+$$
+
+**Selection probability:**
+
+$$
+\pi(s_i, \theta) = \text{logistic}(\lambda_0 + \lambda_1 / s_i)
+$$
+
+## Stan code
+
+```stan
+data {
+  int<lower=1> N;
+  int<lower=1> H;             // truncation level for DP
+  vector[N] y;
+  vector<lower=0>[N] se;
+}
+
+parameters {
+  vector[H] mu_h;
+  vector<lower=0>[H] sigma_h;
+  vector<lower=0, upper=1>[H] v;
+  real<lower=0> alpha0;
+  real lambda0;
+  real lambda1;
+}
+
+transformed parameters {
+  simplex[H] weights;
+  {
+    real remaining = 1.0;
+    for (h in 1:(H - 1)) {
+      weights[h] = v[h] * remaining;
+      remaining -= weights[h];
+    }
+    weights[H] = remaining;
+  }
+}
+
+model {
+  target += gamma_lpdf(alpha0  | 1, 1);
+  target += normal_lpdf(lambda0 | 0, 1);
+  target += normal_lpdf(lambda1 | 0, 1);
+  target += normal_lpdf(mu_h    | 0, 1);
+  target += cauchy_lpdf(sigma_h | 0, 0.5);
+  target += beta_lpdf(v         | 1, alpha0);
+
+  for (i in 1:N) {
+    real sel_i = inv_logit(lambda0 + lambda1 / se[i]);
+    vector[H] log_liks;
+    for (h in 1:H) {
+      log_liks[h] = log(weights[h])
+                  + normal_lpdf(y[i] | mu_h[h], sqrt(square(se[i]) + square(sigma_h[h])))
+                  + log(sel_i);
+    }
+    target += log_sum_exp(log_liks);
+  }
+}
+
+generated quantities {
+  real b_Intercept = dot_product(weights, mu_h);
+}
+```
+
+## How bayesma calls this model
+
+```r
+bayesma(
+  data,
+  model_type   = "bc_bnp",
+  alpha_prior  = gamma(1, 1),
+  p_bias_prior = beta(1, 1)
+)
+```
+
+The truncation level $H$ defaults to 10; larger values allow more distributional flexibility but increase computation.
+
+## Parameterisation notes
+
+- The stick-breaking construction approximates the infinite Dirichlet process with $H$ components. $H = 10$ is sufficient for most meta-analytic data sets.
+- `b_Intercept` is the DP mixture mean: the expected true effect averaged over the non-parametric component distribution.
+- The `log_sum_exp` in the likelihood marginalises over component assignment, avoiding discrete sampling.
+
+## Known sampling difficulties
+
+The BC-BNP model is computationally expensive. With $N = 30$ studies and $H = 10$, expect roughly 5–10× longer sampling than the standard RE model. Use `parallel_chains = 4` and allow longer warmup (`iter_warmup = 2000`). Divergences near the stick-breaking boundaries are rare with the Beta(1, alpha0) prior but may occur when alpha0 is very small.

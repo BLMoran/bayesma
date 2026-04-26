@@ -1,0 +1,101 @@
+# Risk of bias assessment
+
+## Introduction
+
+Risk of bias (RoB) assessment evaluates the internal validity of
+individual studies. A meta-analysis that pools high- and low-bias
+studies without adjustment may produce estimates that do not reflect the
+truth in the target population. **bayesma** integrates RoB information
+in two ways: as a visualisation tool and as a moderator in bias-adjusted
+models.
+
+## Supported tools
+
+**bayesma** accepts RoB ratings from the most widely used tools:
+
+| Tool                   | Abbreviation | Domains   |
+|------------------------|--------------|-----------|
+| Cochrane RoB 2         | RoB2         | 5 domains |
+| ROBINS-I               | ROBINS-I     | 7 domains |
+| Newcastle-Ottawa Scale | NOS          | 8 stars   |
+| GRADE                  | —            | 5 domains |
+
+Ratings can be entered as domain-level strings (`"low"`,
+`"some concerns"`, `"high"`) or as aggregate scores.
+
+## Visualising risk of bias
+
+[`rob_plot()`](https://blmoran.github.io/bayesma/reference/rob_plot.md)
+produces a traffic-light display of domain-level RoB ratings, one row
+per study.
+
+``` r
+rob_plot(
+  data,
+  domains = c("randomisation", "deviations", "missing_data",
+              "measurement", "selection"),
+  tool    = "rob2"
+)
+```
+
+A summary bar chart showing the proportion of studies at each risk level
+across domains can be added with `summary = TRUE`.
+
+## Incorporating RoB as a moderator
+
+The simplest approach treats aggregate RoB as a study-level moderator in
+meta-regression:
+
+``` r
+fit_rob <- meta_reg(
+  data,
+  formula    = ~ rob_score,
+  model_type = "random_effect"
+)
+
+coefficient_evidence(fit_rob)
+```
+
+A negative $`\hat{\beta}`$ for `rob_score` (coded so higher values =
+higher risk) would indicate that high-risk studies report larger
+effects, consistent with bias inflating estimates.
+
+## Sensitivity analysis by RoB subgroup
+
+A targeted sensitivity analysis restricts the meta-analysis to low-risk
+studies only:
+
+``` r
+low_risk <- dplyr::filter_out(data, rob_overall != "low")
+
+fit_full    <- bayesma(data,      model_type = "random_effect")
+fit_lowrisk <- bayesma(low_risk,  model_type = "random_effect")
+
+compare_models(full = fit_full, low_risk = fit_lowrisk)
+```
+
+If the low-risk estimate is substantially smaller than the full
+estimate, high-risk studies may be inflating the pooled effect.
+
+## Bias-adjusted models
+
+For a model-based adjustment that does not discard high-risk studies,
+see:
+
+- [Bias-adjusted models (Jung & Aloe
+  2026)](https://blmoran.github.io/bayesma/articles/bias-corrected-jung-verde.md)
+- [Bias-adjusted models (Verde
+  2021)](https://blmoran.github.io/bayesma/articles/bias-adjusted-verde.md)
+
+These models embed RoB domain ratings as study-level indicators of
+potential bias, allowing the model to partially adjust for RoB while
+retaining all studies.
+
+## Limitations
+
+- RoB ratings are themselves subjective and may be unreliable across
+  raters.
+- The relationship between RoB ratings and effect size inflation is not
+  fixed and varies across domains and interventions.
+- Restricting to low-risk studies substantially reduces $`k`$ and
+  increases uncertainty; the sensitivity analysis may have low power.

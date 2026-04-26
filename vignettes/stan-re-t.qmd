@@ -1,0 +1,107 @@
+---
+title: "Stan code — Student-t random-effects model"
+vignette: >
+  %\VignetteIndexEntry{stan-re-t}
+  %\VignetteEngine{quarto::html}
+  %\VignetteEncoding{UTF-8}
+---
+
+## Model description
+
+The Student-$t$ random-effects model replaces the Gaussian distribution for study-level effects with a $t_\nu$ distribution. The degrees-of-freedom parameter $\nu$ is estimated from the data and controls tail heaviness: small $\nu$ (e.g., $\nu = 3$) allows extreme study effects with much higher probability than the Gaussian, reducing the influence of outlier studies on the pooled estimate.
+
+## Mathematical specification
+
+**Likelihood:**
+
+$$
+y_i \mid \theta_i \sim \mathcal{N}(\theta_i,\, s_i^2)
+$$
+
+**Random effects:**
+
+$$
+\theta_i \sim t_\nu(\mu,\, \tau^2)
+$$
+
+Equivalently in a scale-mixture representation:
+
+$$
+\theta_i = \mu + \tau \cdot \frac{z_i}{\sqrt{v_i / \nu}}, \quad z_i \sim \mathcal{N}(0,1), \quad v_i \sim \chi^2_\nu
+$$
+
+**Priors:**
+
+$$
+\mu \sim \mathcal{N}(0,\, 1), \qquad \tau \sim \text{Half-Cauchy}(0,\, 0.5), \qquad \nu \sim \text{Gamma}(2,\, 0.1)
+$$
+
+## Stan code
+
+```stan
+data {
+  int<lower=1> N;
+  int<lower=1> K;
+  vector[N] y;
+  vector<lower=0>[N] se;
+  array[N] int<lower=1> study;
+}
+
+parameters {
+  real mu;
+  real<lower=0> tau;
+  real<lower=2> nu;
+  vector[K] z;
+  vector<lower=0>[K] v;
+}
+
+transformed parameters {
+  vector[K] u = tau * z ./ sqrt(v / nu);
+}
+
+model {
+  target += normal_lpdf(mu   | 0, 1);
+  target += cauchy_lpdf(tau  | 0, 0.5);
+  target += gamma_lpdf(nu    | 2, 0.1);
+  target += std_normal_lpdf(z);
+  target += chi_square_lpdf(v | nu);
+
+  target += normal_lpdf(y | mu + u[study], se);
+}
+
+generated quantities {
+  real b_Intercept = mu;
+}
+```
+
+## How bayesma calls this model
+
+Selected by `model_type = "random_effect"` with `re_dist = "t"`. The `nu_prior` argument sets the prior on $\nu$:
+
+```r
+bayesma(
+  data,
+  model_type = "random_effect",
+  re_dist    = "t",
+  nu_prior   = gamma(2, 0.1)
+)
+```
+
+The `Gamma(2, 0.1)` prior places most mass on $\nu \in (5, 40)$, allowing substantial flexibility between near-Gaussian ($\nu \approx 30$) and heavy-tailed ($\nu \approx 5$) behaviour.
+
+## Parameterisation notes
+
+The scale-mixture representation samples $\nu$ and the auxiliary $v_i$ jointly. This is preferable to directly sampling from a $t$ distribution in Stan because it avoids the non-standard $t$ log-density computation and produces more efficient sampling.
+
+The constraint `real<lower=2> nu` ensures the variance of the $t$ distribution is finite. For most meta-analytic applications, $\nu < 2$ is not meaningful.
+
+## Identifiability
+
+The degrees-of-freedom parameter $\nu$ is poorly identified when $k < 15$. With few studies, the data are consistent with a wide range of $\nu$ values, and the posterior for $\nu$ is largely prior-driven. In this case:
+
+- Set $\nu$ to a fixed value (e.g., $\nu = 5$) via a tight prior: `gamma(50, 10)`.
+- Report the sensitivity of the pooled estimate to the assumed $\nu$.
+
+## Known sampling difficulties
+
+The joint sampling of $\nu$ and $v_i$ can be slow when $\nu$ is large (near-Gaussian tail). Increasing the number of chains or iterations helps. Persistent divergences near $\tau = 0$ are handled by the NCP as in the Gaussian model.

@@ -1,0 +1,23 @@
+---
+title: "RoBMA"
+vignette: >
+  %\VignetteIndexEntry{robma}
+  %\VignetteEngine{quarto::html}
+  %\VignetteEncoding{UTF-8}
+---
+
+## Introduction
+
+RoBMA (Robust Bayesian Meta-Analysis) performs model averaging
+across multiple bias-adjusted meta-analysis models.
+
+Instead of choosing a single model, RoBMA averages posterior
+distributions weighted by model probabilities.
+
+\[
+p(\theta|y) =
+\sum_k p(\theta|y, M_k) p(M_k|y)
+\]
+
+This approach integrates uncertainty about publication bias
+and model specification.

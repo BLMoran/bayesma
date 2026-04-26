@@ -1,0 +1,325 @@
+---
+title: "INSPECT-SR: Assessing the Trustworthiness of RCTs"
+vignette: >
+  %\VignetteIndexEntry{inspect_sr}
+  %\VignetteEngine{quarto::html}
+  %\VignetteEncoding{UTF-8}
+subtitle: "A structured workflow for detecting problematic trials in systematic reviews"
+author: "Your Name"
+date: today
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    code-fold: show
+    theme: cosmo
+    fig-width: 10
+    fig-height: 6
+execute:
+  warning: false
+  message: false
+---
+
+```{r}
+#| label: setup
+#| include: false
+
+library(bayesma)
+```
+
+# Introduction
+
+A systematic review is only as trustworthy as the primary studies it includes. Risk of bias tools assess whether a trial was *conducted* properly — they are not designed to detect whether the reported data are *real*.
+
+**INSPECT-SR** (INveStigating ProblEmatic Clinical Trials in Systematic Reviews; Wilkinson et al., 2025) is a structured 21-item tool for assessing the *trustworthiness* of RCTs included in a systematic review. `bayesma` implements the full workflow in four steps:
+
+1. **`inspect_sr()`** — run the assessment (frequentist or Bayesian)
+2. **`inspect_sr_table()`** — inspect per-check details
+3. **`inspect_plot()` / `inspect_summary_plot()`** — visualise
+4. **`filter_trustworthy()`** — filter for meta-analysis
+
+# The four INSPECT-SR domains
+
+| Domain | Items | Focus |
+|--------|-------|-------|
+| **D1** | 3 | Post-publication notices (retractions, expressions of concern) |
+| **D2** | 5 | Conduct, governance, and transparency |
+| **D3** | 2 | Text and publication details |
+| **D4** | 11 | Results in the study (statistical anomalies) |
+
+Each domain receives **No concerns**, **Some concerns**, or **Serious concerns**. The overall judgement is the most severe domain. `bayesma` automates checks **4.3** (Carlisle), **4.6** (N consistency), **4.8** (GRIM), and **4.9** (p-value verification); the remaining 17 items are read from the input data frame.
+
+# The input data frame
+
+`inspect_sr()` expects a single data frame with **one row per study**:
+
+| Column(s) | Purpose |
+|---|---|
+| `study` | Study identifier (required, unique) |
+| `n_randomised_int`, `n_randomised_ctrl`, `n_randomised_total`, `n_analysed_int`, `n_analysed_ctrl`, `n_lost_int`, `n_lost_ctrl` | CONSORT flow numbers → check 4.6 |
+| `d1_1` … `d4_11` | Judgement for each item. Automated items (`d4_3`, `d4_6`, `d4_8`, `d4_9`) are overwritten |
+| `d1_1_comment` … `d4_11_comment` | Optional free-text justification |
+| `baseline` | **List-column** of Table 1 data frames → GRIM (4.8) and Carlisle (4.3) |
+| `statistics` | **List-column** of reported test statistics → p-value check (4.9) |
+| `outcome_estimate`, `outcome_ci_lower`, `outcome_ci_upper`, `outcome_se`, `outcome_log_scale` | Optional primary outcome |
+
+# Worked example
+
+The package ships `inspect_sr_example`, an eight-trial simulated review:
+
+```{r}
+#| label: load-data
+
+data(inspect_sr_example)
+
+# One row per study — manual items as columns, variable-length data as list-columns
+dplyr::glimpse(dplyr::select(inspect_sr_example, study, d1_1, d2_1, d3_1, d4_1))
+```
+
+```{r}
+#| label: peek-listcols
+
+# Baseline data for the first study
+inspect_sr_example$baseline[[1]]
+
+# Test statistics for a study with two tests
+inspect_sr_example$statistics[[2]]
+```
+
+The eight trials span a range of profiles:
+
+| Study | Expected |
+|-------|----------|
+| Callahan, Peek, Clayton, Singer | Clean |
+| Underwood | Manual D2 "Some concerns" (late registration) |
+| Rosa | Carlisle flags too-perfect baseline balance |
+| Doe | Retracted; four GRIM failures |
+| Kint | CONSORT arithmetic inconsistency |
+
+## Step 1 — `inspect_sr()`
+
+```{r}
+#| label: freq-assess
+
+freq_results <- inspect_sr(inspect_sr_example, studyvar = study)
+```
+
+The `studyvar` argument uses tidyeval (unquoted), consistent with `bayesma()` and `bayes_forest()`.
+
+## Step 2 — `inspect_sr_table()`
+
+```{r}
+#| label: checks-table
+
+# All automated check details
+inspect_sr_table(freq_results)
+```
+
+```{r}
+#| label: checks-failed
+
+# Only failures
+inspect_sr_table(freq_results, only_failed = TRUE)
+```
+
+
+```{r}
+#| label: checks-per-study
+#| eval: false
+
+# Individual Tables
+# E.g. Callaghan study
+inspect_sr_table(freq_results, study = "Callaghan (1994)")
+
+```
+
+::: {.panel-tabset}
+
+```{r}
+#| results: asis
+
+for (s in unique(attr(freq_results, "data")$study)) {
+  cat("\n## ", s, "\n\n")
+  print(inspect_sr_table(freq_results, study = s))
+}
+```
+
+:::
+
+
+The table is grouped by study with thick separators. Failures are highlighted in red; passes in green.
+
+## Step 3 — Visualise
+
+### Traffic-light plot
+
+```{r}
+#| label: traffic-light
+#| fig-width: 12
+#| fig-height: 6
+
+inspect_plot(
+  freq_results,
+  add_legend = TRUE,
+  title    = "INSPECT-SR Trustworthiness Assessment",
+  subtitle = "EEG-guided anaesthesia and postoperative delirium"
+)
+```
+
+Sort by severity:
+
+```{r}
+#| label: sorted-plot
+#| fig-width: 10
+#| fig-height: 5
+
+inspect_plot(freq_results, sort_studies_by = "overall",
+             title = "INSPECT-SR Assessment (sorted by concern level)")
+```
+
+### Expanded per-item view
+
+Set `incl_checks = TRUE` to see every INSPECT-SR item (1.1 … 4.11) grouped under domain spanner headers, with a per-domain Overall column and a final study-level Overall. The four Domain 4 cells filled in by the automated pipeline (4.3 Carlisle, 4.6 N-consistency, 4.8 GRIM, 4.9 p-value) appear alongside the manual items.
+
+```{r}
+#| label: incl-checks-plot
+#| #fig-width: 16
+#| #fig-height: 5
+
+inspect_plot(freq_results, incl_checks = TRUE,
+             title = "INSPECT-SR per-item view")
+```
+
+### Summary bar chart
+
+```{r}
+#| label: summary-bar
+#| fig-width: 8
+#| fig-height: 5
+
+inspect_summary_plot(freq_results,
+                     title = "Distribution of Trustworthiness Judgements")
+```
+
+## Step 4 — Filter for meta-analysis
+
+```{r}
+#| label: filter
+#| eval: false
+
+# Primary analysis: exclude Serious concerns
+data_primary <- filter_trustworthy(
+  my_meta_data, freq_results,
+  studyvar = study, exclude = "serious"
+)
+
+# Sensitivity: also exclude Some concerns
+data_strict <- filter_trustworthy(
+  my_meta_data, freq_results,
+  studyvar = study, exclude = "some"
+)
+
+attr(data_primary, "excluded_studies")
+```
+
+# The Bayesian extension
+
+Pass `bayes = TRUE` to get Bayes factors instead of pass/fail:
+
+```{r}
+#| label: bayes-assess
+
+bayes_results <- inspect_sr(inspect_sr_example, studyvar = study, bayes = TRUE)
+```
+
+The per-check BFs are visible in the table:
+
+```{r}
+#| label: bayes-table
+
+inspect_sr_table(bayes_results, only_failed = TRUE)
+```
+
+## Sensitivity to the prior
+
+```{r}
+#| label: prior-sensitivity
+
+r90 <- inspect_sr(inspect_sr_example, studyvar = study, bayes = TRUE,
+                  prior_prob_trustworthy = 0.90, verbose = FALSE)
+r75 <- inspect_sr(inspect_sr_example, studyvar = study, bayes = TRUE,
+                  prior_prob_trustworthy = 0.75, verbose = FALSE)
+r50 <- inspect_sr(inspect_sr_example, studyvar = study, bayes = TRUE,
+                  prior_prob_trustworthy = 0.50, verbose = FALSE)
+
+data.frame(
+  Study   = r90$Study,
+  Post_90 = round(r90$Posterior, 3),
+  Post_75 = round(r75$Posterior, 3),
+  Post_50 = round(r50$Posterior, 3)
+)
+```
+
+# The automated checks
+
+## GRIM test (check 4.8)
+
+The mean of $n$ integer observations must equal $k/n$ for some integer $k$. A reported mean that fails this is mathematically impossible.
+
+```{r}
+#| label: grim-demo
+
+grim_test(3.45, n = 20)   # consistent
+grim_test(3.47, n = 20)   # impossible
+grim_test(2.45, n = 90)   # impossible (x.x5 at n=90)
+```
+
+Bayesian version:
+
+```{r}
+#| label: bayes-grim-demo
+
+bayes_grim_test(2.45, n = 90)
+```
+
+## P-value verification (check 4.9)
+
+```{r}
+#| label: pvalue-demo
+
+verify_pvalue("chi_sq", statistic = 4.12, df = 1, reported_p = 0.04)
+verify_pvalue("chi_sq", statistic = 3.84, df = 1, reported_p = 0.004)
+```
+
+## Carlisle's test (check 4.3)
+
+```{r}
+#| label: carlisle-demo
+
+carlisle_test(c(0.45, 0.12, 0.78, 0.33, 0.91))
+carlisle_test(c(0.93, 0.81, 0.95, 0.94, 0.85, 0.95))
+```
+
+## Participant number consistency (check 4.6)
+
+```{r}
+#| label: n-demo
+
+check_n_consistency(
+  n_randomised_int = 150, n_randomised_ctrl = 150,
+  n_analysed_int = 142, n_analysed_ctrl = 138,
+  n_lost_int = 5, n_lost_ctrl = 8
+)
+```
+
+# Reporting
+
+> We assessed the trustworthiness of all included RCTs using INSPECT-SR (Wilkinson et al., 2025). Domain 4 checks were automated using the `bayesma` R package (GRIM test, p-value verification, Carlisle's test, participant number consistency). Domains 1–3 were assessed manually by two independent reviewers. Studies with **Serious concerns** were excluded; **Some concerns** studies were retained in a sensitivity analysis.
+
+# References {.unnumbered}
+
+Brown NJL, Heathers JAJ (2017). The GRIM test. *Social Psychological and Personality Science*, 8(4), 363–369.
+
+Carlisle JB (2017). Data fabrication and other reasons for non-random sampling in 5,087 RCTs. *Anaesthesia*, 72(8), 944–952.
+
+Wilkinson J, Heal C, Flemyng E, et al. (2025). INSPECT-SR: a tool for assessing trustworthiness of randomised controlled trials. *BMJ*, 389, e082938.

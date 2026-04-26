@@ -1,0 +1,86 @@
+---
+title: "Multiarm models"
+vignette: >
+  %\VignetteIndexEntry{multiarm-models}
+  %\VignetteEngine{quarto::html}
+  %\VignetteEncoding{UTF-8}
+---
+
+## Introduction
+
+A multiarm (or multi-treatment) trial assigns participants to three or more arms — typically a control and two or more active interventions. Including multiarm studies in a pairwise meta-analysis raises two problems:
+
+1. **Unit of analysis error.** Using each active arm as a separate comparison to control double-counts the shared control arm, inflating precision and producing correlated residuals.
+2. **Missing comparisons.** If only one arm-pair is extracted, information from the other arms is discarded.
+
+The one-stage approach in **bayesma** handles both problems by modelling the full multiarm data structure jointly.
+
+## Model specification
+
+Let study $i$ have $A_i$ arms. Arm $j$ in study $i$ contributes $r_{ij}$ events out of $n_{ij}$ participants (binary outcome). The treatment indicator for arm $j$ is $t_{ij} \in \{0, 1, \ldots, T\}$ where $T$ is the number of active treatments.
+
+$$
+r_{ij} \sim \text{Binomial}(n_{ij},\, \pi_{ij})
+$$
+
+$$
+\text{logit}(\pi_{ij}) = \gamma_i + \sum_{t=1}^{T} \theta_t \cdot \mathbb{1}[t_{ij} = t] + \epsilon_{ij}
+$$
+
+where:
+
+- $\gamma_i$ is the study-specific baseline log-odds (control arm)
+- $\theta_t$ is the pooled log-OR for treatment $t$ vs control
+- $\epsilon_{ij}$ is a study-by-treatment random effect capturing heterogeneity
+
+The $\epsilon_{ij}$ for arms within the same study are correlated. **bayesma** uses an LKJ prior on the correlation matrix $\Omega$ among random effects:
+
+$$
+\boldsymbol{\epsilon}_i \sim \mathcal{N}(\mathbf{0},\, \text{diag}(\boldsymbol{\tau}) \cdot \Omega \cdot \text{diag}(\boldsymbol{\tau}))
+$$
+
+$$
+\Omega \sim \text{LKJ}(\eta)
+$$
+
+The LKJ prior with $\eta = 1$ is uniform over correlation matrices. Larger $\eta$ concentrates mass near the identity (i.e., independent arms).
+
+## Continuous outcomes
+
+For continuous outcomes the model is analogous with a normal likelihood:
+
+$$
+y_{ij} \sim \mathcal{N}(\gamma_i + \sum_t \theta_t \cdot \mathbb{1}[t_{ij} = t] + \epsilon_{ij},\, \sigma^2)
+$$
+
+## Why the one-stage approach avoids unit-of-analysis error
+
+In the one-stage model the control arm appears once per study ($\gamma_i$), and each active arm contributes an additional $\theta_t + \epsilon_{ij}$ term. The shared control arm enters the likelihood a single time, so its contribution to precision is not double-counted. The within-study correlation between arm-level estimates is handled through the covariance structure of $\boldsymbol{\epsilon}_i$.
+
+## Fitting multiarm models
+
+```r
+fit <- bayesma(
+  data,
+  model_type = "random_effect",
+  stage      = "one_stage",
+  multiarm   = TRUE,
+  rho_prior  = lkj(eta = 1)
+)
+```
+
+The `multiarm = TRUE` flag activates the correlated random-effects structure. The data must include a `arm` column identifying each arm and a `treatment` column coding the treatment label.
+
+## Estimands from multiarm models
+
+`bayesma()` returns a posterior for each $\theta_t$ (treatment vs control). Pairwise treatment contrasts $\theta_a - \theta_b$ can be derived from the joint posterior:
+
+```r
+bayesma_extract(fit, contrast = c("treatment_a", "treatment_b"))
+```
+
+## Limitations
+
+- The LKJ prior on $\Omega$ has limited influence when the number of multiarm studies is small ($< 5$). In this setting the within-study correlation is poorly estimated and the model reduces approximately to independent arm-level analyses.
+- Models with many treatments ($T > 4$) may be better handled by network meta-analysis frameworks (e.g., `gemtc`, `multinma`).
+- Multiarm models are computationally heavier than pairwise models due to the correlation matrix. Increase `adapt_delta` (default 0.95 for multiarm) if divergent transitions occur.

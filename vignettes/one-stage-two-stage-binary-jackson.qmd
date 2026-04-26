@@ -1,0 +1,61 @@
+---
+title: "One-stage and two-stage models for binary outcomes"
+vignette: >
+  %\VignetteIndexEntry{one-stage-two-stage-binary-jackson}
+  %\VignetteEngine{quarto::html}
+  %\VignetteEncoding{UTF-8}
+---
+
+## Introduction
+
+Binary outcome meta-analyses can be performed using either
+**two-stage** or **one-stage** approaches.
+
+The two-stage method first computes study-level effect sizes,
+then performs meta-analysis.
+
+The one-stage method models the original likelihood directly.
+
+## Two-stage model
+
+First compute the log odds ratio:
+
+\[
+y_i = \log(OR_i)
+\]
+
+Then perform random-effects meta-analysis:
+
+\[
+y_i \sim \mathcal{N}(\theta_i, s_i^2)
+\]
+
+\[
+\theta_i \sim \mathcal{N}(\mu, \tau^2)
+\]
+
+## One-stage model (Jackson et al.)
+
+For study \(i\) and arm \(j\):
+
+\[
+e_{ij} \sim \text{Binomial}(n_{ij}, \pi_{ij})
+\]
+
+with logit link
+
+\[
+\text{logit}(\pi_{ij}) = \gamma_i + j\theta + z_{ij}\epsilon_i
+\]
+
+where
+
+- \(\gamma_i\) = baseline risk
+- \(\theta\) = treatment effect
+- \(\epsilon_i\) = heterogeneity term
+
+### Assumptions
+
+- binomial likelihood
+- logit link
+- study-specific baseline risks

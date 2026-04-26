@@ -1,0 +1,109 @@
+---
+title: "Meta-regression"
+vignette: >
+  %\VignetteIndexEntry{meta-regression}
+  %\VignetteEngine{quarto::html}
+  %\VignetteEncoding{UTF-8}
+---
+
+## Introduction
+
+Meta-regression extends the random-effects model by relating between-study variation in true effects to study-level covariates (moderators). It is the primary tool for investigating *why* effects vary across studies.
+
+Common moderators include:
+
+- participant characteristics (mean age, proportion female, disease severity)
+- intervention characteristics (dose, duration, delivery mode)
+- study characteristics (year, risk of bias, country income level)
+- outcome characteristics (follow-up duration, outcome instrument)
+
+## Model specification
+
+Let $x_{ij}$ denote the $j$-th moderator for study $i$. The meta-regression model is
+
+$$
+y_i \mid \theta_i \sim \mathcal{N}(\theta_i,\, s_i^2)
+$$
+
+$$
+\theta_i = \mu + \sum_{j=1}^{p} \beta_j x_{ij} + u_i, \qquad u_i \sim \mathcal{N}(0, \tau^2)
+$$
+
+where:
+
+- $\mu$ is the intercept (effect when all moderators are at their reference values)
+- $\beta_j$ is the moderating effect of variable $j$
+- $\tau$ is the residual between-study heterogeneity unexplained by the moderators
+
+Priors:
+
+$$
+\mu \sim \mathcal{N}(0, 1), \qquad \beta_j \sim \mathcal{N}(0, 0.5), \qquad \tau \sim \text{Half-Cauchy}(0, 0.5)
+$$
+
+The default $\beta$ prior is weakly informative. Domain-specific priors can be specified via `beta_priors`.
+
+## Fitting meta-regression
+
+```r
+fit_mr <- meta_reg(
+  data,
+  formula     = ~ intervention_duration + mean_age + risk_of_bias,
+  model_type  = "random_effect",
+  center      = TRUE,
+  scale       = TRUE
+)
+```
+
+The `formula` argument uses standard R formula syntax. `center = TRUE` centres continuous moderators at their mean; `scale = TRUE` scales them to unit standard deviation. Centering is strongly recommended to improve sampling efficiency and interpretability of the intercept.
+
+## Interpreting coefficients
+
+`coefficient_evidence()` returns the posterior median, 95% credible interval, and a Bayes factor against the null hypothesis $\beta_j = 0$:
+
+```r
+coefficient_evidence(fit_mr)
+```
+
+A $\beta_j$ credible interval that excludes zero indicates evidence for moderation. The Bayes factor quantifies the evidence in favour of $H_1 : \beta_j \neq 0$ relative to $H_0 : \beta_j = 0$.
+
+## Visualisation
+
+```r
+metareg_mod_plot(fit_mr, moderator = "intervention_duration")
+bubble_plot(fit_mr, moderator = "mean_age")
+```
+
+`metareg_mod_plot()` plots the posterior regression line and credible band against each moderator. `bubble_plot()` produces a bubble plot where bubble size represents study precision.
+
+## Categorical moderators
+
+Categorical moderators are dummy-coded automatically. The reference category is the first level of the factor. Effect sizes for each category relative to the reference are the $\beta_j$ posteriors for the corresponding dummy variables.
+
+```r
+fit_mr_cat <- meta_reg(
+  data,
+  formula = ~ intervention_type,
+  model_type = "random_effect"
+)
+```
+
+## Residual heterogeneity
+
+A meta-regression model with moderators should be compared to the intercept-only random-effects model:
+
+- If $\tau$ decreases substantially after adding moderators, the moderators explain a meaningful proportion of heterogeneity.
+- $R^2_\tau = 1 - \hat{\tau}^2_\text{adjusted} / \hat{\tau}^2_\text{unadjusted}$ quantifies the proportion of heterogeneity explained.
+
+If $\tau$ is still large after adding all measured moderators, substantial unexplained heterogeneity remains.
+
+## Ecological fallacy
+
+Meta-regression estimates the association between study-level moderators and study-level effects. This is an ecological association: it does not identify causal patient-level effects. An intervention that works better in studies with older mean age does not necessarily work better for older individuals within any study.
+
+## Common pitfalls
+
+- **Overfitting.** With $k < 10$ per moderator, regression estimates are unreliable. As a rough rule, allow $k/10$ moderators.
+- **Multiple testing.** Testing many moderators inflates false discovery rates. Report all tested moderators, not only significant ones.
+- **Confounding.** Study-level moderators may be correlated. Interpret individual $\beta_j$ estimates cautiously when moderators share variance.
+- **Missing data.** Studies with missing moderator values are dropped by default. Imputation or sensitivity analysis is needed when missingness is substantial.

@@ -1,0 +1,511 @@
+---
+title: "`r params$title`"
+subtitle: "`r params$subtitle`"
+author: "`r params$author`"
+date: today
+format:
+  html:
+    embed-resources: true
+    toc: true
+    toc-location: left
+    toc-depth: 4
+    number-sections: true
+execute:
+  echo: false
+  warning: false
+  message: false
+params:
+  title: "Bayesian meta-analysis report"
+  subtitle: "Generated with bayesma"
+  author: ""
+  prospero_id: ""
+  outcome_name: "the primary outcome"
+  estimand: "OR"
+  cate_covariate: ""
+  baseline_risk: ~
+  null_value: 1
+  null_range: !expr c(0.9, 1.1)
+  bundle_path: ""
+  studyvar: "Author"
+  yearvar: "Year"
+  event_ctrl: ""
+  event_int: ""
+  mean_ctrl: ""
+  mean_int: ""
+  sd_ctrl: ""
+  sd_int: ""
+  n_ctrl: ""
+  n_int: ""
+  background: ""
+  hypothesis: ""
+  inclusion_criteria: !expr character()
+  exclusion_criteria: !expr character()
+  quality_tool: "Cochrane RoB 2"
+  software_note: ""
+  run_inspect_sr: false
+  run_rob: false
+  run_egger: true
+  run_robma: true
+  run_metareg: false
+  run_subgroup: false
+  run_sensitivity_priors: true
+  moderators: !expr character()
+  subgroup_var: !expr character()
+  primary_model: "auto"
+  re_min_k: ~
+---
+
+```{r setup}
+library(bayesma)
+library(dplyr)
+library(ggplot2)
+
+bundle    <- readRDS(params$bundle_path)
+data      <- bundle$data
+rob_data  <- bundle$rob_data
+priors_in <- bundle$priors
+
+likelihood <- if (nzchar(params$event_ctrl)) {
+  if (params$estimand == "IRR") "poisson" else "binomial"
+} else "gaussian"
+
+is_relative_estimand <- params$estimand %in% c("OR", "RR", "HR", "IRR")
+null_range_log <- if (is_relative_estimand) log(params$null_range) else params$null_range
+
+scale_label <- params$estimand
+
+fit_args <- list(
+  data       = data,
+  studyvar   = params$studyvar,
+  likelihood = likelihood
+)
+if (likelihood %in% c("binomial", "poisson")) {
+  fit_args$event_ctrl <- params$event_ctrl
+  fit_args$event_int  <- params$event_int
+  fit_args$n_ctrl     <- params$n_ctrl
+  fit_args$n_int      <- params$n_int
+} else {
+  fit_args$mean_ctrl <- params$mean_ctrl
+  fit_args$mean_int  <- params$mean_int
+  fit_args$sd_ctrl   <- params$sd_ctrl
+  fit_args$sd_int    <- params$sd_int
+  fit_args$n_ctrl    <- params$n_ctrl
+  fit_args$n_int     <- params$n_int
+}
+
+priors_default <- list(
+  mu_prior  = bayesma::normal(0, 1),
+  tau_prior = bayesma::half_student_t(3, 0, 0.5)
+)
+
+priors_sens <- priors_in %||% list(
+  vague = list(
+    mu_prior  = bayesma::normal(0, 10),
+    tau_prior = bayesma::half_student_t(3, 0, 5)
+  ),
+  weak_reg = list(
+    mu_prior  = bayesma::normal(0, 1),
+    tau_prior = bayesma::half_student_t(3, 0, 0.5)
+  ),
+  informative = list(
+    mu_prior  = bayesma::normal(0, 0.3),
+    tau_prior = bayesma::half_normal(0, 0.3)
+  )
+)
+```
+
+```{r helpers}
+bullet_list <- function(items) {
+  if (!length(items)) return("")
+  paste0("- ", items, collapse = "\n")
+}
+```
+
+# Introduction
+
+## Background
+
+`r if (nzchar(params$background)) paste(params$background, collapse = "\n\n") else paste0("This report presents a Bayesian meta-analysis of ", params$outcome_name, ".")`
+
+# Methods
+
+## Hypothesis and Aims
+
+`r if (nzchar(params$hypothesis)) params$hypothesis else paste0("The primary aim is to estimate the pooled effect on ", params$outcome_name, " using Bayesian meta-analysis.")`
+
+## Trial Design
+
+`r if (nzchar(params$prospero_id)) paste0("The protocol was registered at PROSPERO (", params$prospero_id, ").") else ""`
+
+### Inclusion Criteria
+
+`r bullet_list(params$inclusion_criteria)`
+
+### Exclusion Criteria
+
+`r bullet_list(params$exclusion_criteria)`
+
+## Primary Outcome
+
+The primary outcome is `r params$outcome_name`, analysed on the `r scale_label` scale.
+
+## Quality Assessment
+
+Risk of bias was assessed using the `r params$quality_tool` tool.
+
+## Statistical Analysis
+
+### Modelling Strategy
+
+Multiple Bayesian meta-analytic models are fitted and compared via leave-one-study-out cross-validation (LOSO-CV). The candidate suite spans:
+
+- **Effect structure**: common-effect ($\tau = 0$) versus random-effects ($\tau > 0$).
+- **Staging**: one-stage (likelihood on arm-level data) versus two-stage (study-level effect estimates).
+- **Small-sample adjustment**: with versus without Hartung--Knapp--Sidik--Jonkman (HKSJ).
+- **Random-effects distribution**: Gaussian versus mixture (for heterogeneity sensitivity).
+
+The primary model is selected on ELPD difference, convergence diagnostics, and Pareto-$k$ reliability.
+
+### Prior Specifications
+
+Effects use weakly-regularising priors by default (Normal(0, 1) on the pooled effect, Half-Student-t(3, 0, 0.5) on $\tau$). A prior sensitivity analysis varies these specifications across vague, weakly-regularising, and informative settings.
+
+### Estimands and Decision Framework
+
+For each model, we report the posterior median, 95% credible interval, and the posterior probability that the effect lies in the null range `r paste0("[", params$null_range[1], ", ", params$null_range[2], "]")` on the `r scale_label` scale.
+
+```{r meta-reg-methods, eval=params$run_metareg, results='asis'}
+cat("### Meta-Regression\n\n")
+cat("Pre-specified moderators:", paste(params$moderators, collapse = ", "), ".\n\n")
+```
+
+```{r subgroup-methods, eval=params$run_subgroup, results='asis'}
+cat("### Subgroup Analyses\n\n")
+cat("Pre-specified subgroup variable(s):",
+    paste(params$subgroup_var, collapse = ", "), ".\n\n")
+```
+
+```{r robma-methods, eval=params$run_robma, results='asis'}
+cat("### Bias-Adjusted Models\n\n")
+cat("A panel of single-component bias-adjusted models is fitted alongside the \\
+primary analysis: the parametric bias-correction of Verde (2021), the \\
+Bias-Corrected Bayesian Non-Parametric (BC-BNP) extension of Verde (2025), \\
+the Robust Bayesian Copas selection model of Bai et al. (2020), the \\
+Vevea-Hedges weight-function selection model, PET-PEESE small-study \\
+adjustment, and a Bayesian meta-analytic mixture model (Maier 2024).\n\n")
+cat("Robust Bayesian Model Averaging (RoBMA) is then used to combine evidence \\
+across heterogeneity, effect, and publication-bias model components.\n\n")
+```
+
+```{r egger-methods, eval=params$run_egger, results='asis'}
+cat("### Small-Study Effects\n\n")
+cat("A Bayesian Egger regression assesses asymmetry in the effect-by-precision \\
+relationship as an indicator of small-study or publication bias.\n\n")
+```
+
+```{r inspect-methods, eval=params$run_inspect_sr, results='asis'}
+cat("### INSPECT-SR Trustworthiness\n\n")
+cat("Studies are screened against the INSPECT-SR domains for trustworthiness \\
+(consistency, plausibility, statistical integrity).\n\n")
+```
+
+### Software
+
+`r if (nzchar(params$software_note)) params$software_note else paste0("All analyses were performed in R using the bayesma package (version ", utils::packageVersion("bayesma"), "), with cmdstanr as the Stan backend.")`
+
+# Results
+
+## Trial Characteristics
+
+```{r trial-characteristics}
+data |>
+  dplyr::select(dplyr::any_of(c(params$studyvar, params$yearvar))) |>
+  gt::gt() |>
+  gt::tab_header(title = "Included studies")
+```
+
+## Candidate Models
+
+```{r fit-candidates}
+make_fit <- function(extra) {
+  do.call(
+    bayesma::bayesma,
+    c(fit_args, extra, list(
+      mu_prior      = priors_default$mu_prior,
+      tau_prior     = priors_default$tau_prior,
+      re_min_k      = params$re_min_k,
+      estimand      = params$estimand,
+      cate_covariate = if (nzchar(params$cate_covariate)) params$cate_covariate else NULL,
+      baseline_risk  = params$baseline_risk,
+      quiet         = TRUE
+    ))
+  )
+}
+
+candidate_fits <- list(
+  one_stage_ce = make_fit(list(model_type = "common_effect", stage = "one_stage")),
+  two_stage_ce = make_fit(list(model_type = "common_effect", stage = "two_stage")),
+  one_stage_re = make_fit(list(model_type = "random_effect", stage = "one_stage")),
+  two_stage_re = make_fit(list(model_type = "random_effect", stage = "two_stage")),
+  two_stage_re_hksj = make_fit(list(
+    model_type = "random_effect", stage = "two_stage", small_sample = "hjsk"
+  )),
+  two_stage_re_mixture = make_fit(list(
+    model_type = "random_effect", stage = "two_stage", re_dist = "mixture"
+  ))
+)
+
+names(candidate_fits) <- c(
+  "One-stage CE", "Two-stage CE", "One-stage RE", "Two-stage RE",
+  "Two-stage RE (HKSJ)", "Two-stage RE (mixture)"
+)
+```
+
+### Model Comparison
+
+```{r model-comparison}
+comparison <- bayesma::compare_models(candidate_fits)
+bayesma::compare_table(comparison)
+```
+
+```{r model-comparison-plot}
+bayesma::compare_plot(comparison)
+```
+
+### Primary Model
+
+```{r primary-model}
+primary <- if (params$primary_model == "auto") {
+  best <- comparison$summary$model[1]
+  candidate_fits[[best]]
+} else {
+  key <- switch(
+    params$primary_model,
+    one_stage_ce         = "One-stage CE",
+    two_stage_ce         = "Two-stage CE",
+    one_stage_re         = "One-stage RE",
+    two_stage_re         = "Two-stage RE",
+    two_stage_re_hksj    = "Two-stage RE (HKSJ)",
+    two_stage_re_mixture = "Two-stage RE (mixture)",
+    params$primary_model
+  )
+  candidate_fits[[key]]
+}
+```
+
+```{r primary-summary}
+bayesma::bayesma_output(primary)
+```
+
+### Forest Plot
+
+```{r forest}
+bayesma::bayes_forest(
+  model    = primary,
+  data     = data,
+  measure  = scale_label,
+  studyvar = params$studyvar
+)
+```
+
+```{r marginal-estimand, eval=!is_relative_estimand, results='asis'}
+cat(sprintf("### Marginal estimand: %s\n\n", params$estimand))
+print(primary$marginal$summary)
+```
+
+### Posterior Distribution
+
+```{r overall-plot}
+bayesma::overall_plot(primary, null_value = params$null_value)
+```
+
+### Diagnostics
+
+```{r diagnostics}
+bayesma::diagnostics(primary)
+```
+
+```{r inspect-section, eval=params$run_inspect_sr, results='asis'}
+cat("## INSPECT-SR Trustworthiness\n\n")
+```
+
+```{r inspect, eval=params$run_inspect_sr}
+inspect_fit <- bayesma::inspect_sr(data, studyvar = params$studyvar)
+bayesma::inspect_sr_table(inspect_fit)
+bayesma::inspect_summary_plot(inspect_fit)
+```
+
+```{r rob-section, eval=params$run_rob, results='asis'}
+cat("## Risk of Bias\n\n")
+```
+
+```{r rob-plot, eval=params$run_rob}
+rob_input <- rob_data %||% data
+if (any(grepl("^rob_", names(rob_input))) || !is.null(rob_data)) {
+  bayesma::rob_plot(rob_input)
+} else {
+  cli::cli_inform("Skipping RoB plot: no rob_data or rob_* columns detected.")
+}
+```
+
+```{r egger-section, eval=params$run_egger, results='asis'}
+cat("## Egger's Regression for Small-Study Effects\n\n")
+```
+
+```{r egger, eval=params$run_egger}
+egger_fit <- do.call(bayesma::egger, c(fit_args, list(quiet = TRUE)))
+bayesma::egger_output(egger_fit)
+bayesma::egger_plot(egger_fit, data = data, measure = scale_label)
+```
+
+```{r funnel, eval=params$run_egger}
+bayesma::funnel_plot(primary, data = data, measure = scale_label)
+```
+
+```{r subgroup-section, eval=params$run_subgroup, results='asis'}
+cat("## Subgroup Analyses\n\n")
+```
+
+```{r subgroup, eval=params$run_subgroup, results='asis'}
+fit_subgroup <- function(var) {
+  lvls <- unique(data[[var]])
+  fits <- purrr::map(lvls, function(lvl) {
+    sub_args <- fit_args
+    sub_args$data <- dplyr::filter(data, .data[[var]] == lvl)
+    do.call(
+      bayesma::bayesma,
+      c(sub_args, list(
+        model_type = "random_effect", stage = "two_stage",
+        mu_prior   = priors_default$mu_prior,
+        tau_prior  = priors_default$tau_prior,
+        re_min_k   = params$re_min_k,
+        quiet      = TRUE
+      ))
+    )
+  }) |> rlang::set_names(lvls)
+  fits
+}
+
+purrr::walk(params$subgroup_var, function(var) {
+  cat("\n\n###", var, "\n\n")
+  fits <- fit_subgroup(var)
+  purrr::iwalk(fits, function(fit, lvl) {
+    cat("\n\n####", lvl, "\n\n")
+    print(bayesma::bayesma_output(fit))
+  })
+})
+```
+
+```{r metareg-section, eval=params$run_metareg, results='asis'}
+cat("## Meta-Regression\n\n")
+cat("Moderators:", paste(params$moderators, collapse = ", "), "\n\n")
+```
+
+```{r metareg, eval=params$run_metareg}
+mr_fit <- do.call(
+  bayesma::meta_reg,
+  c(fit_args, list(moderators = params$moderators, quiet = TRUE))
+)
+bayesma::meta_reg_output(mr_fit)
+bayesma::metareg_mod_plot(mr_fit)
+if (length(params$moderators) > 1) bayesma::multi_bubble_plots(mr_fit)
+```
+
+```{r bias-models-section, eval=params$run_robma, results='asis'}
+cat("## Publication-Bias Adjusted Models\n\n")
+cat("Single-component models that adjust for small-study or selection bias.\n\n")
+```
+
+```{r bias-models, eval=params$run_robma}
+bias_fits <- list(
+  bias_corrected   = make_fit(list(model_type = "bias_corrected",   stage = "two_stage")),
+  bc_bnp           = make_fit(list(model_type = "bc_bnp",           stage = "two_stage")),
+  selection_copas  = make_fit(list(model_type = "selection_copas",  stage = "two_stage", re_dist = "t")),
+  selection_weight = make_fit(list(model_type = "selection_weight", stage = "two_stage")),
+  pet_peese        = make_fit(list(model_type = "pet_peese",        stage = "two_stage")),
+  mixture_model    = make_fit(list(model_type = "mixture_model",    stage = "two_stage", n_components = 2L))
+)
+names(bias_fits) <- c("Bias-corrected (parametric)", "Bias-corrected (BNP)",
+                      "Robust Bayesian Copas", "Selection (weight)",
+                      "PET-PEESE", "Mixture (metamix)")
+
+bayesma::compare_table(bayesma::compare_models(c(
+  list("Primary" = primary),
+  bias_fits
+)))
+```
+
+```{r robma-section, eval=params$run_robma, results='asis'}
+cat("## Robust Bayesian Model Averaging (RoBMA)\n\n")
+```
+
+```{r robma, eval=params$run_robma}
+robma_fit <- do.call(
+  bayesma::robma,
+  c(fit_args, list(null_range = null_range_log, quiet = TRUE))
+)
+bayesma::robma_output(robma_fit)
+bayesma::robma_table(robma_fit)
+```
+
+```{r sens-section, eval=params$run_sensitivity_priors, results='asis'}
+cat("## Prior Sensitivity\n\n")
+```
+
+```{r sens-priors, eval=params$run_sensitivity_priors}
+sens_plot <- bayesma::sensitivity_plot(
+  model    = primary,
+  data     = data,
+  measure  = scale_label,
+  priors   = priors_sens,
+  studyvar = params$studyvar
+)
+print(sens_plot)
+```
+
+## Cumulative Evidence
+
+```{r ecdf}
+bayesma::ecdf_model_plot(primary, null_value = params$null_value)
+```
+
+# Overall Interpretation
+
+## Model Choice
+
+The selected primary model reflects the LOSO-CV ranking together with convergence and Pareto-$k$ diagnostics shown above. Where candidate models disagree materially, the discussion below should cite the relevant alternatives.
+
+## Primary Finding
+
+```{r interpret}
+bayesma::interpret(
+  primary,
+  null_range   = null_range_log,
+  effect_label = scale_label
+)
+```
+
+```{r interpret-subgroup, eval=params$run_subgroup, results='asis'}
+cat("## Subgroup Findings\n\n")
+cat("Edit this section with subgroup-specific clinical interpretation.\n\n")
+```
+
+```{r interpret-sens, eval=params$run_sensitivity_priors, results='asis'}
+cat("## Robustness to Priors\n\n")
+cat("Compare the posterior summaries above across vague / weak / informative \\
+prior settings. Edit this section with the substantive interpretation.\n\n")
+```
+
+```{r interpret-bias, eval=params$run_robma, results='asis'}
+cat("## Publication Bias\n\n")
+cat("RoBMA posterior model probabilities and bias-adjusted effect estimates \\
+are shown above. Edit this section with the substantive interpretation.\n\n")
+```
+
+## Limitations
+
+The interpretation of these results should consider the limitations of the included studies, the assumptions of the modelling strategy, and the prior specifications used. See the prior sensitivity analysis above for robustness to prior choice.
+
+## Conclusion
+
+This Bayesian meta-analysis provides a posterior distribution over the effect of interest on `r params$outcome_name`. Edit this section with study-specific clinical interpretation before publication.

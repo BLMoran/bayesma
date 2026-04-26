@@ -1,0 +1,113 @@
+---
+title: "Reporting checklist"
+vignette: >
+  %\VignetteIndexEntry{reporting-checklist}
+  %\VignetteEngine{quarto::html}
+  %\VignetteEncoding{UTF-8}
+---
+
+## Introduction
+
+Transparent reporting of Bayesian meta-analyses enables readers to evaluate the appropriateness of modelling choices, assess robustness, and reproduce results. This checklist covers the minimum reporting requirements for a **bayesma** analysis intended for publication.
+
+The checklist is structured to follow the order in which items typically appear in a methods or results section.
+
+## Checklist
+
+### Data and eligibility
+
+- [ ] Eligibility criteria for studies, populations, interventions, comparators, and outcomes.
+- [ ] Databases searched, date range, and search strategy.
+- [ ] Number of studies identified, screened, assessed for eligibility, and included (PRISMA flow diagram).
+- [ ] Pre-registration identifier (PROSPERO or equivalent).
+
+### Effect size computation
+
+- [ ] Effect measure used (OR, RR, HR, SMD, MD, etc.) and justification.
+- [ ] For two-stage analysis: software and method used to compute $(y_i, s_i)$.
+- [ ] For one-stage analysis: raw cell counts or means and SDs used directly.
+- [ ] Treatment of multi-arm studies (if applicable).
+
+### Model specification
+
+- [ ] Model type: common-effect or random-effects; one-stage or two-stage.
+- [ ] Random-effects distribution: Gaussian, Student-$t$, skew-normal, or mixture.
+- [ ] Prior distributions for all parameters, with justification.
+- [ ] Source of any informative priors (e.g., Turner et al. 2015 for $\tau$).
+- [ ] Software: `bayesma`, version, and Stan backend (`cmdstanr` version).
+
+### MCMC settings
+
+- [ ] Number of chains, warmup iterations, and sampling iterations.
+- [ ] `adapt_delta` value.
+- [ ] Random seed (for reproducibility).
+
+### Convergence diagnostics
+
+- [ ] Maximum $\hat{R}$ across all parameters (target: $< 1.01$).
+- [ ] Minimum bulk and tail ESS (target: $> 400$).
+- [ ] Number of divergent transitions (target: 0).
+- [ ] Any parameters that required intervention and the resolution.
+
+### Primary results
+
+- [ ] Posterior median and 95% credible interval for the pooled effect $\mu$.
+- [ ] Posterior median and 95% credible interval for between-study heterogeneity $\tau$.
+- [ ] Prediction interval for the effect in a new study.
+- [ ] Back-transformation to natural scale (OR, RR, etc.) where applicable.
+
+### Publication bias assessment
+
+- [ ] Method used (Egger, PET-PEESE, selection model, BC-BNP, mixture, none).
+- [ ] Justification for method choice.
+- [ ] Bias-adjusted pooled estimate and comparison to unadjusted estimate.
+- [ ] Bayes factor or posterior probability for presence of bias (where applicable).
+
+### Sensitivity analysis
+
+- [ ] Prior sensitivity: range of $\tau$ priors tested and whether conclusions changed.
+- [ ] Study-level influence: any studies with substantial influence on the pooled estimate.
+- [ ] Model comparison: criteria used and whether a different model was preferred.
+- [ ] Bias assumption sensitivity (for selection models: sensitivity to selection mechanism).
+
+### Heterogeneity interpretation
+
+- [ ] Estimated $\tau$ and its uncertainty.
+- [ ] $I^2$ (if reported) with accompanying $\tau$ and 95% CrI rather than as a standalone measure.
+- [ ] Prediction interval for a new study (more informative than $I^2$ alone).
+
+### Subgroup and moderation analysis
+
+- [ ] Moderators tested, with justification.
+- [ ] Posterior for each moderator coefficient and Bayes factor against the null.
+- [ ] All tested moderators reported, not only those with significant results.
+
+### Software citation
+
+- [ ] R citation: `citation()`.
+- [ ] bayesma citation: `citation("bayesma")`.
+- [ ] cmdstanr and Stan citations.
+- [ ] Any additional packages used for visualisation or reporting.
+
+## Automated report generation
+
+**bayesma** can produce a fully formatted publication report with all key results, plots, and tables via `bayesma_report()`. See [report-generation.qmd](report-generation.html) for the full workflow.
+
+```r
+bayesma_report(
+  fit,
+  output_file = "meta_analysis_report.qmd",
+  title       = "Bayesian meta-analysis of ...",
+  author      = "Author Name"
+)
+```
+
+## GRADE assessment
+
+The GRADE framework (Grading of Recommendations Assessment, Development and Evaluation) assesses the overall certainty of the evidence. Key domains affected by modelling choices:
+
+- **Inconsistency**: assessed via $\tau$ and the prediction interval.
+- **Publication bias**: assessed via selection models and Egger's test.
+- **Imprecision**: assessed via the width of the 95% credible interval.
+
+Certainty ratings should be applied after bias assessment and sensitivity analysis, not before.

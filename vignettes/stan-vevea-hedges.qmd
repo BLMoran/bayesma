@@ -1,0 +1,104 @@
+---
+title: "Stan code — Vevea-Hedges selection model"
+vignette: >
+  %\VignetteIndexEntry{stan-vevea-hedges}
+  %\VignetteEngine{quarto::html}
+  %\VignetteEncoding{UTF-8}
+---
+
+## Model description
+
+The Vevea-Hedges (1995) selection model adjusts for publication bias by explicitly modelling the probability that a study is published as a function of its $p$-value. Studies in low-significance bins (high $p$-values) are underrepresented in the literature; the model corrects for this by upweighting their contribution to the likelihood.
+
+## Mathematical specification
+
+**$p$-value bins:**
+
+The $p$-value range $[0, 1]$ is divided into intervals $c_0 = 0 < c_1 < \ldots < c_J = 1$. Typical bin boundaries are $\{0.025, 0.05, 0.10, 0.25, 0.50, 1.0\}$.
+
+**Selection weights:**
+
+$$
+w_j = P(\text{published} \mid p_i \in (c_{j-1}, c_j])
+$$
+
+The weights $w_j$ are constrained to $[0, 1]$ and are typically set so $w_1 = 1$ (studies with $p < 0.025$ are always published).
+
+**Weighted likelihood:**
+
+$$
+L(\mu, \tau, \mathbf{w} \mid \mathbf{y}) = \prod_{i=1}^{k} \frac{w_{b(i)} \cdot p(y_i \mid \mu, \tau)}{\sum_{j=1}^{J} w_j \cdot P(p_i \in (c_{j-1}, c_j] \mid \mu, \tau)}
+$$
+
+where $b(i)$ is the bin of study $i$'s $p$-value and $P(p_i \in (c_{j-1}, c_j] \mid \mu, \tau)$ is the probability of falling in each bin under the model.
+
+**Priors:**
+
+$$
+\mu \sim \mathcal{N}(0,\, 1), \qquad \tau \sim \text{Half-Cauchy}(0,\, 0.5), \qquad w_j \sim \text{Beta}(1,\, 1) \text{ for } j > 1
+$$
+
+## Stan code
+
+```stan
+data {
+  int<lower=1> N;
+  int<lower=1> J;
+  vector[N] y;
+  vector<lower=0>[N] se;
+  array[N] int<lower=1> bin;        // p-value bin for each study
+  matrix[N, J] bin_probs;           // P(p in bin j | mu, tau) for each study
+}
+
+parameters {
+  real mu;
+  real<lower=0> tau;
+  simplex[J] w_raw;
+}
+
+transformed parameters {
+  vector[J] w = w_raw;
+  w[1] = 1.0;
+}
+
+model {
+  target += normal_lpdf(mu  | 0, 1);
+  target += cauchy_lpdf(tau | 0, 0.5);
+  for (j in 2:J) {
+    target += beta_lpdf(w[j] | 1, 1);
+  }
+
+  for (i in 1:N) {
+    real denom = dot_product(w, bin_probs[i]);
+    target += log(w[bin[i]]) + normal_lpdf(y[i] | mu, sqrt(square(se[i]) + square(tau)))
+            - log(denom);
+  }
+}
+
+generated quantities {
+  real b_Intercept = mu;
+}
+```
+
+## How bayesma calls this model
+
+```r
+bayesma(
+  data,
+  model_type       = "selection_weight",
+  p_cutoffs        = c(0.025, 0.05, 0.10, 0.25, 0.50, 1.0),
+  selection_priors = list(w2 = beta(1, 1), w3 = beta(1, 1))
+)
+```
+
+`bin_probs` is computed internally by `bayesma_stan_data()` using the normal CDF evaluated at the bin boundaries.
+
+## Parameterisation notes
+
+The normalising denominator in the weighted likelihood is the key computational component. It ensures the model correctly accounts for the fact that only published studies are observed.
+
+The $w_j$ parameterisation treats the first bin (most significant) as the reference with $w_1 = 1$. Weaker significance bins have $w_j \leq 1$ by construction.
+
+## Known sampling difficulties
+
+The normalising denominator $\sum_j w_j P(\ldots)$ depends on both $\mu$ and $\tau$, creating a complex likelihood surface. With many bins and small $k$, the $w_j$ posterior is multimodal. Increasing `adapt_delta` to 0.99 and using `iter_warmup = 2000` is recommended.

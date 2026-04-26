@@ -1,0 +1,122 @@
+# Mixture model (Maier)
+
+## Introduction
+
+The mixture model approach to publication bias adjustment (Maier et al.,
+2023, *metamix*) models the observed distribution of effects as a
+mixture of two components: studies reporting genuine effects and studies
+reflecting publication-bias-inflated estimates.
+
+Unlike selection weight models (which reweight existing studies) or
+PET-PEESE (which adjusts via regression), the mixture model directly
+represents the two-population structure hypothesised under publication
+bias: a component of unbiased studies and a component of overestimates
+that survived the selection filter.
+
+## Model specification
+
+Each study $`i`$ is assigned latent membership $`z_i \in \{0, 1\}`$:
+
+- $`z_i = 0`$: study draws from the unbiased distribution
+- $`z_i = 1`$: study draws from the biased distribution
+
+The likelihood is
+
+``` math
+
+p(y_i \mid \theta, \sigma_\theta, \mu_b, \sigma_b, \pi_b) = (1 - \pi_b) \cdot \mathcal{N}(y_i \mid \theta, \sigma_\theta^2 + s_i^2) + \pi_b \cdot \mathcal{N}(y_i \mid \mu_b, \sigma_b^2 + s_i^2)
+```
+
+where:
+
+- $`\theta`$ is the true pooled effect (unbiased component mean)
+- $`\sigma_\theta`$ is the true between-study heterogeneity (unbiased
+  component SD)
+- $`\mu_b > \theta`$ is the mean of the biased component (constrained to
+  exceed the true effect)
+- $`\sigma_b`$ is the SD of the biased component
+- $`\pi_b`$ is the probability that a published study belongs to the
+  biased component
+
+The constraint $`\mu_b > \theta`$ encodes the assumption that
+publication bias inflates effects upward (positive direction). For
+negative effects, the constraint is $`\mu_b < \theta`$.
+
+## Priors
+
+``` math
+
+\theta \sim \mathcal{N}(0, 1), \qquad \sigma_\theta \sim \text{Half-Cauchy}(0, 0.5)
+```
+
+``` math
+
+\mu_b \sim \mathcal{N}(\theta + \delta_b, \sigma_b^2), \quad \delta_b \sim \text{Half-Normal}(0, 0.5)
+```
+
+``` math
+
+\sigma_b \sim \text{Half-Cauchy}(0, 0.5), \qquad \pi_b \sim \text{Beta}(1, 4)
+```
+
+The $`\text{Beta}(1, 4)`$ prior on $`\pi_b`$ assigns prior mass
+primarily to small proportions of biased studies, encoding the
+assumption that most published studies are genuine.
+
+## Key estimands
+
+- **$`\theta`$**: The bias-corrected pooled effect, estimated from the
+  unbiased component only.
+- **$`\pi_b`$**: The posterior probability that a typical published
+  study is drawn from the biased component.
+- **Mixture-averaged effect**: $`(1 - \pi_b)\theta + \pi_b \mu_b`$ — the
+  effect that would be estimated by a naive meta-analysis ignoring the
+  mixture structure.
+
+## Fitting the mixture model
+
+``` r
+fit_mix <- bayesma(
+  data,
+  model_type   = "mixture_model",
+  p_bias_prior = beta(1, 4)
+)
+
+summary(fit_mix)
+```
+
+## Interpreting results
+
+The posterior for $`\pi_b`$ quantifies the evidence for a biased
+subpopulation. A 95% credible interval for $`\pi_b`$ that excludes zero
+provides evidence for the existence of biased studies. The posterior for
+$`\theta`$ provides the bias-corrected estimate.
+
+| $`\pi_b`$ posterior median | Interpretation |
+|----|----|
+| $`< 0.05`$ | Little evidence of a biased component |
+| $`0.05`$–$`0.20`$ | Moderate evidence; some inflation likely |
+| $`> 0.20`$ | Strong evidence; substantial proportion of biased studies |
+
+## Comparison with selection models
+
+The mixture model and selection weight models (Vevea-Hedges, Copas)
+approach the same problem from different angles:
+
+| Aspect | Mixture model | Selection model |
+|----|----|----|
+| Mechanism | Latent two-population structure | Reweighting by $`p`$-value or precision |
+| Estimand | Effect in unbiased component | Effect corrected for reweighting |
+| Assumption | Biased studies inflate effect magnitude | Studies selected with prob $`w(p_i)`$ |
+| $`k`$ requirement | $`k \geq 10`$ | $`k \geq 5`$ |
+
+When selection is primarily $`p`$-value based, selection models are
+better theoretically motivated. When the selection mechanism is unknown
+or involves factors beyond significance, the mixture model is more
+agnostic.
+
+## Prior sensitivity
+
+The mixture model is sensitive to the prior on $`\pi_b`$. A sensitivity
+analysis comparing $`\text{Beta}(1, 1)`$ (uniform) and
+$`\text{Beta}(1, 9)`$ (strong prior towards no bias) is recommended.

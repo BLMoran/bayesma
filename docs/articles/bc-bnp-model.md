@@ -1,0 +1,129 @@
+# BC-BNP model (Verde & Rosner 2025)
+
+## Introduction
+
+The bias-corrected Bayesian non-parametric (BC-BNP) model of Verde and
+Rosner (2025) is a flexible approach to publication bias adjustment that
+does not impose a parametric form on the selection mechanism. Unlike
+selection weight models (which specify a piecewise constant or smooth
+weight function), or PET-PEESE (which assumes a linear relationship
+between effect and standard error), the BC-BNP model uses a Bayesian
+non-parametric mixture to model the joint distribution of true effects
+and publication indicators.
+
+The key properties of the BC-BNP model are:
+
+- **Non-parametric flexibility**: The distribution of true effects is
+  modelled as an infinite mixture using a Dirichlet process prior. This
+  avoids committing to a parametric form for heterogeneity.
+- **Bias correction**: Publication probabilities are estimated from the
+  data, not fixed in advance.
+- **Coherent uncertainty**: Uncertainty about the selection mechanism
+  propagates into the posterior for the pooled effect.
+
+## Model specification
+
+Let $`(\theta_i, \delta_i)`$ denote the true effect and publication
+indicator for study $`i`$, where $`\delta_i = 1`$ if the study is
+published. Only published studies are observed.
+
+The joint distribution of effects and publication indicators is modelled
+as
+
+``` math
+
+(\theta_i, \delta_i) \sim G
+```
+
+where $`G`$ is drawn from a Dirichlet process:
+
+``` math
+
+G \sim \text{DP}(\alpha_0, G_0)
+```
+
+with concentration parameter $`\alpha_0`$ and base distribution $`G_0`$.
+
+The selection mechanism enters through the publication probability:
+
+``` math
+
+P(\delta_i = 1 \mid \theta_i, s_i) = \pi(s_i, \theta_i)
+```
+
+In the BC-BNP model, $`\pi`$ is estimated non-parametrically as a
+function of the observed precision $`1/s_i`$ and the effect
+$`\theta_i`$.
+
+The likelihood for the observed data is
+
+``` math
+
+p(\mathbf{y} \mid G) = \prod_{i=1}^{k} \int \mathcal{N}(y_i \mid \theta_i, s_i^2) \cdot \pi(s_i, \theta_i) \cdot dG(\theta_i)
+```
+
+## Key estimands
+
+The primary estimand is the marginal distribution of $`\theta`$ under
+$`G`$, averaged over studies:
+
+``` math
+
+\mu_{\text{adj}} = \mathbb{E}_G[\theta]
+```
+
+This is the bias-corrected pooled effect. The BC-BNP model also provides
+a posterior predictive distribution for $`\theta`$ in a new study drawn
+from the same (corrected) distribution.
+
+## Concentration parameter
+
+The Dirichlet process concentration $`\alpha_0`$ controls the prior
+expected number of distinct components in the mixture. Higher
+$`\alpha_0`$ allows more clusters. **bayesma** uses a
+$`\text{Gamma}(1, 1)`$ prior on $`\alpha_0`$ by default.
+
+## Fitting the BC-BNP model
+
+``` r
+fit_bcbnp <- bayesma(
+  data,
+  model_type    = "bc_bnp",
+  alpha_prior   = gamma(1, 1),
+  p_bias_prior  = beta(1, 1)
+)
+```
+
+`p_bias_prior` controls the prior probability that any given study would
+have been suppressed. A $`\text{Beta}(1, 1)`$ prior (uniform) is weakly
+informative.
+
+## Comparison with parametric models
+
+| Property | BC-BNP | Selection model | PET-PEESE |
+|----|----|----|----|
+| Selection mechanism | Non-parametric | Piecewise weight function | Linear in SE |
+| Effect distribution | Dirichlet process | Parametric (Normal, $`t`$) | Normal |
+| Computational cost | High | Moderate | Low |
+| Sensitivity to $`k`$ | High ($`k > 20`$ recommended) | Moderate | Low |
+
+The BC-BNP model is the most flexible of the three. It is most
+informative in large meta-analyses ($`k > 20`$) where the non-parametric
+component can be identified from the data. In smaller meta-analyses, the
+posterior for $`\mu_{\text{adj}}`$ is sensitive to the priors on
+$`\alpha_0`$ and $`\pi`$.
+
+## Prior sensitivity
+
+Because the Dirichlet process prior has a strong influence on the
+posterior when $`k`$ is moderate, a sensitivity analysis over
+$`\alpha_0`$ is recommended. Compare the bias-corrected estimate across:
+
+``` r
+fit_alpha1  <- bayesma(data, model_type = "bc_bnp", alpha_prior = gamma(1, 1))
+fit_alpha5  <- bayesma(data, model_type = "bc_bnp", alpha_prior = gamma(1, 0.2))
+fit_alpha10 <- bayesma(data, model_type = "bc_bnp", alpha_prior = gamma(1, 0.1))
+```
+
+If the bias-corrected estimate is stable across these, the conclusion is
+robust to the non-parametric specification.

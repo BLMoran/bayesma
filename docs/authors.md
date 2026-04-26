@@ -1,0 +1,25 @@
+# Authors and Citation
+
+## Authors
+
+- **Benjamin Moran**. Author, maintainer.
+  [](https://orcid.org/0000-0002-6515-6722)
+
+- **Thomas Payne**. Author, contributor.
+  [](https://orcid.org/0000-0002-5530-3717)
+
+## Citation
+
+Source:
+[`DESCRIPTION`](https://github.com/BLMoran/bayesma/blob/HEAD/DESCRIPTION)
+
+Moran B, Payne T (2026). *bayesma: Bayesian Meta Analyses in R*. R
+package version 0.0.0.9000, <https://blmoran.github.io/bayesma>.
+
+    @Manual{,
+      title = {bayesma: Bayesian Meta Analyses in R},
+      author = {Benjamin Moran and Thomas Payne},
+      year = {2026},
+      note = {R package version 0.0.0.9000},
+      url = {https://blmoran.github.io/bayesma},
+    }

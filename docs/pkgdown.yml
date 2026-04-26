@@ -1,0 +1,63 @@
+pandoc: 3.6.3
+pkgdown: 2.2.0
+pkgdown_sha: ~
+articles:
+  bayesian-egger-test: bayesian-egger-test.html
+  bc-bnp-model: bc-bnp-model.html
+  bias-adjusted-verde: bias-adjusted-verde.html
+  bias-corrected-jung-verde: bias-corrected-jung-verde.html
+  bibliography: bibliography.html
+  common-effect-model: common-effect-model.html
+  common-effect-random-effect: common-effect-random-effect.html
+  convergence-diagnostics: convergence-diagnostics.html
+  custom-models: custom-models.html
+  funnel-plots: funnel-plots.html
+  index: index.html
+  inspect_sr: inspect_sr.html
+  longitudinal-meta-analysis: longitudinal-meta-analysis.html
+  meta-regression: meta-regression.html
+  mixture-model-maier: mixture-model-maier.html
+  model-comparison-diagnostics: model-comparison-diagnostics.html
+  model-comparison-waic-loo: model-comparison-waic-loo.html
+  multiarm-models: multiarm-models.html
+  multivariate-meta-analysis: multivariate-meta-analysis.html
+  one-stage-two-stage-binary-jackson: one-stage-two-stage-binary-jackson.html
+  pet-peese: pet-peese.html
+  posterior-predictive-checks: posterior-predictive-checks.html
+  primed: primed.html
+  prior-predictive-checks: prior-predictive-checks.html
+  random-effects-distributions: random-effects-distributions.html
+  re-distribution-assessment: re-distribution-assessment.html
+  report-generation: report-generation.html
+  reporting-checklist: reporting-checklist.html
+  risk-of-bias: risk-of-bias.html
+  robma: robma.html
+  robust-mixture-models: robust-mixture-models.html
+  selection-models-copas-weightfunction: selection-models-copas-weightfunction.html
+  sensitivity-analysis: sensitivity-analysis.html
+  small-sample-adjustments: small-sample-adjustments.html
+  stan-bc-bnp: stan-bc-bnp.html
+  stan-bias-adjusted-jung: stan-bias-adjusted-jung.html
+  stan-bias-adjusted-verde: stan-bias-adjusted-verde.html
+  stan-common-effect: stan-common-effect.html
+  stan-copas: stan-copas.html
+  stan-longitudinal: stan-longitudinal.html
+  stan-meta-regression: stan-meta-regression.html
+  stan-mixture-maier: stan-mixture-maier.html
+  stan-multiarm: stan-multiarm.html
+  stan-multivariate: stan-multivariate.html
+  stan-overview: stan-overview.html
+  stan-pet-peese: stan-pet-peese.html
+  stan-re-gaussian: stan-re-gaussian.html
+  stan-re-mixture-model: stan-re-mixture-model.html
+  stan-re-mixture: stan-re-mixture.html
+  stan-re-skewnormal: stan-re-skewnormal.html
+  stan-re-t: stan-re-t.html
+  stan-robust-outlier: stan-robust-outlier.html
+  stan-small-sample: stan-small-sample.html
+  stan-vevea-hedges: stan-vevea-hedges.html
+  workflow-guide: workflow-guide.html
+last_built: 2026-04-26T01:18Z
+urls:
+  reference: https://blmoran.github.io/bayesma/reference
+  article: https://blmoran.github.io/bayesma/articles

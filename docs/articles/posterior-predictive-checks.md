@@ -1,0 +1,117 @@
+# Posterior predictive checks
+
+## Introduction
+
+A posterior predictive check (PPC) evaluates whether the fitted model
+can generate data that resembles the observed data. If the model is
+well-specified, datasets simulated from the posterior predictive
+distribution should be statistically indistinguishable from the observed
+dataset.
+
+PPCs complement formal model comparison (LOO-IC, LOSO-CV): model
+comparison tells you which model is better, while PPCs tell you whether
+the best model is actually good.
+
+## Running posterior predictive checks
+
+``` r
+fit <- bayesma(data, model_type = "random_effect")
+pp_check(fit)
+```
+
+[`pp_check()`](https://blmoran.github.io/bayesma/reference/pp_check.md)
+generates $`S`$ replicated datasets from the posterior predictive
+distribution and overlays them against the observed data.
+
+## Types of posterior predictive checks
+
+### Density overlay
+
+The most common PPC plots the density of the observed effect estimates
+against the density of multiple simulated datasets:
+
+``` r
+pp_check(fit, type = "dens_overlay", n_sims = 100)
+```
+
+If the observed density (dark line) is well within the envelope of
+simulated densities (light lines), the model captures the distributional
+shape of the data.
+
+### Quantile comparison
+
+Plots the quantiles of the observed data against the corresponding
+quantiles of the posterior predictive distribution:
+
+``` r
+pp_check(fit, type = "ecdf_overlay")
+```
+
+Systematic deviations at specific quantiles reveal model misfit at
+particular effect sizes (e.g., the model underestimates how many studies
+have very small effects).
+
+### Test statistics
+
+PPCs can be assessed for specific summary statistics: mean, SD, minimum,
+maximum, or user-defined functions. The posterior predictive $`p`$-value
+for a statistic $`T`$ is
+
+``` math
+
+p_\text{PPC} = P(T(\mathbf{y}^\text{rep}) \geq T(\mathbf{y}) \mid \mathbf{y})
+```
+
+Values near 0 or 1 indicate model misfit on the dimension captured by
+$`T`$.
+
+``` r
+pp_check(fit, type = "stat", stat = "mean")
+pp_check(fit, type = "stat", stat = "sd")
+pp_check(fit, type = "stat_2d", stat1 = "mean", stat2 = "sd")
+```
+
+### Leave-one-out predictive check
+
+The LOO predictive check plots the observed $`y_i`$ against the
+leave-one-out posterior predictive median and interval:
+
+``` r
+pp_check(fit, type = "loo_pit_overlay")
+```
+
+The LOO probability integral transform (PIT) should be approximately
+uniform if the predictive distributions are well-calibrated.
+
+## Common failure modes
+
+**Heavy tails.** The model predicts too few extreme effects. Switch to a
+Student-$`t`$ random-effects distribution.
+
+**Skewness.** The observed distribution is asymmetric but the model
+predicts a symmetric distribution. Consider a skew-normal RE
+distribution.
+
+**Bimodality.** The observed distribution has two peaks but the model
+generates a unimodal distribution. A mixture RE model may be more
+appropriate.
+
+**Overdispersion.** The posterior predictive variance is consistently
+smaller than the observed variance. The prior on $`\tau`$ may be too
+tight, or a covariate is needed.
+
+## Posterior predictive checks vs. model comparison
+
+PPCs and model comparison serve different roles:
+
+| Tool             | Question                       |
+|------------------|--------------------------------|
+| PPC              | Is this model adequate?        |
+| LOO-IC / LOSO-CV | Which of these models is best? |
+
+A model can pass a PPC (generate plausible data) but be outperformed by
+another model. Conversely, the best-performing model by LOO-IC may still
+fail a PPC if all competing models are misspecified in the same way.
+
+Both tools should be used: PPCs for model criticism, model comparison
+for model selection.

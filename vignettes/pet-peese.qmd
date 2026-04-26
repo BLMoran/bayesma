@@ -1,0 +1,31 @@
+---
+title: "PET-PEESE model"
+vignette: >
+  %\VignetteIndexEntry{pet-peese}
+  %\VignetteEngine{quarto::html}
+  %\VignetteEncoding{UTF-8}
+---
+
+## Introduction
+
+PET-PEESE is a regression-based method for correcting small-study effects.
+
+## PET
+
+Regression of test statistics on precision:
+
+\[
+t_i = \alpha + \beta \frac{1}{SE_i} + u_i
+\]
+
+## PEESE
+
+Regression of effect size on squared standard error:
+
+\[
+y_i = \alpha + \beta SE_i^2 + u_i
+\]
+
+### Interpretation
+
+The intercept estimates the effect as precision approaches infinity.

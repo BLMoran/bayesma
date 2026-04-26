@@ -1,0 +1,113 @@
+# Stan code — longitudinal model
+
+## Model description
+
+The longitudinal meta-analysis model estimates how the treatment effect
+evolves over time across studies. Studies contribute multiple time-point
+observations; a parametric trajectory describes the population-level
+effect at each time, with study-level random intercepts capturing
+between-study heterogeneity.
+
+This vignette documents the linear trajectory implementation. See
+[Longitudinal
+meta-analysis](https://blmoran.github.io/bayesma/articles/longitudinal-meta-analysis.md)
+for the statistical rationale and alternative trajectory forms.
+
+## Mathematical specification
+
+**Likelihood:**
+
+``` math
+
+y_{it} \mid \theta_{it} \sim \mathcal{N}(\theta_{it},\, s_{it}^2)
+```
+
+**Trajectory:**
+
+``` math
+
+\theta_{it} = (\mu_0 + u_i) + \mu_1 \cdot t_{it} + v_{it}
+```
+
+**Priors:**
+
+``` math
+
+\mu_0 \sim \mathcal{N}(0,\, 1), \qquad \mu_1 \sim \mathcal{N}(0,\, 0.5), \qquad \tau_u \sim \text{Half-Cauchy}(0,\, 0.5), \qquad \tau_v \sim \text{Half-Cauchy}(0,\, 0.5)
+```
+
+## Stan code (linear trajectory)
+
+``` stan
+data {
+  int<lower=1> N;
+  int<lower=1> K;
+  vector[N] y;
+  vector<lower=0>[N] se;
+  vector[N] time;
+  array[N] int<lower=1> study;
+}
+
+parameters {
+  real mu0;
+  real mu1;
+  real<lower=0> tau_u;
+  real<lower=0> tau_v;
+  vector[K] z_u;
+  vector[N] z_v;
+}
+
+transformed parameters {
+  vector[K] u = tau_u * z_u;
+  vector[N] v = tau_v * z_v;
+}
+
+model {
+  target += normal_lpdf(mu0   | 0, 1);
+  target += normal_lpdf(mu1   | 0, 0.5);
+  target += cauchy_lpdf(tau_u | 0, 0.5);
+  target += cauchy_lpdf(tau_v | 0, 0.5);
+  target += std_normal_lpdf(z_u);
+  target += std_normal_lpdf(z_v);
+
+  target += normal_lpdf(y | (mu0 + u[study]) + mu1 * time + v, se);
+}
+
+generated quantities {
+  real b_Intercept = mu0;
+  real b_time      = mu1;
+}
+```
+
+## How bayesma calls this model
+
+``` r
+bayesma(
+  data,
+  model_type = "random_effect",
+  time_col   = "weeks",
+  trajectory = "linear"
+)
+```
+
+The `time` vector in the Stan data is constructed from
+`data[[time_col]]`, centred at the median observation time for
+interpretability.
+
+## Parameterisation notes
+
+- $`u_i`$ is a study-level random intercept (deviation from $`\mu_0`$ at
+  $`t = 0`$).
+- $`v_{it}`$ is a study-by-time residual capturing deviations from the
+  linear trajectory within studies.
+- For the exponential decay trajectory, an additional parameter
+  $`\lambda > 0`$ is required with a $`\text{Half-Normal}(0, 1)`$ prior.
+- `b_time` reports the posterior for the rate of change $`\mu_1`$ per
+  unit of the centred time variable.
+
+## Known sampling difficulties
+
+The residual term $`v_{it}`$ can be weakly identified when each study
+contributes only one or two time-points. In this case, fix
+$`\tau_v = 0`$ (drop the $`v_{it}`$ term) to improve mixing. The model
+then reduces to a random-intercept longitudinal meta-analysis.

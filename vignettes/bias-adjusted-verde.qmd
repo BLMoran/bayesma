@@ -1,0 +1,95 @@
+---
+title: "Bias-adjusted model (Verde 2021)"
+vignette: >
+  %\VignetteIndexEntry{bias-adjusted-verde}
+  %\VignetteEngine{quarto::html}
+  %\VignetteEncoding{UTF-8}
+---
+
+## Introduction
+
+Verde (2021) proposed a Bayesian hierarchical model that explicitly represents the risk of bias at the study level. Unlike a simple RoB subgroup analysis (which discards high-risk studies) or a meta-regression on RoB score (which estimates a correlation, not a causal adjustment), Verde's model treats potential bias as a latent quantity and partially adjusts for it within the model.
+
+The model shares the same hierarchical structure as Verde and Jung (2022; see [Bias-adjusted models (Jung & Aloe 2026)](bias-corrected-jung-verde.html)), but the source and characterisation of the bias parameter differ.
+
+## Model specification
+
+Let $y_i$ be the observed effect from study $i$ and $b_i$ the latent bias in that study. The model decomposes the observed effect into a true effect and a bias component:
+
+$$
+y_i \mid \theta_i, b_i \sim \mathcal{N}(\theta_i + b_i,\, s_i^2)
+$$
+
+$$
+\theta_i \sim \mathcal{N}(\mu,\, \tau^2)
+$$
+
+$$
+b_i \mid \rho_i \sim \mathcal{N}(\rho_i \cdot \xi,\, \sigma_b^2)
+$$
+
+where:
+
+- $\mu$ is the bias-adjusted pooled true effect
+- $\tau$ is the between-study heterogeneity in true effects
+- $b_i$ is the study-specific bias
+- $\rho_i \in [0, 1]$ is an observed risk-of-bias indicator (or composite score)
+- $\xi$ is the mean bias per unit of $\rho_i$
+- $\sigma_b$ is the residual variability in bias across studies with the same $\rho_i$
+
+When $\rho_i = 0$ (low risk of bias), the expected bias is zero and $b_i$ is centred at zero with SD $\sigma_b$. When $\rho_i = 1$ (high risk), the expected bias is $\xi$.
+
+## Prior distributions
+
+$$
+\mu \sim \mathcal{N}(0, 1), \qquad \tau \sim \text{Half-Cauchy}(0, 0.5)
+$$
+
+$$
+\xi \sim \mathcal{N}(0, 0.5), \qquad \sigma_b \sim \text{Half-Normal}(0, 0.5)
+$$
+
+The prior on $\xi$ is weakly informative and centred at zero, allowing the data to determine whether high-risk studies are inflated or deflated relative to low-risk studies.
+
+## Relationship to Verde and Jung (2022)
+
+Verde (2021) and the Jung & Aloe (2026) variant share the same decomposition $y_i = \theta_i + b_i$. The key difference lies in how $b_i$ is parameterised:
+
+| Feature | Verde (2021) | Jung & Aloe (2026) |
+|---|---|---|
+| Bias driver | Observed RoB score $\rho_i$ | Domain-specific binary indicators |
+| Bias mean | $\rho_i \cdot \xi$ | $\sum_d \xi_d \cdot R_{id}$ |
+| Bias variability | $\sigma_b$ | Domain-specific $\sigma_{b_d}$ |
+
+Verde (2021) is more parsimonious; Jung & Aloe (2026) provides domain-specific bias estimates.
+
+## Fitting the model
+
+```r
+fit_verde <- bayesma(
+  data,
+  model_type  = "bias_corrected",
+  bias_source = "verde_2021",
+  rho_col     = "rob_composite_score"
+)
+
+summary(fit_verde)
+```
+
+`rho_col` should name a column in `data` containing the composite risk-of-bias score for each study, scaled to $[0, 1]$.
+
+## Interpreting results
+
+The posterior for $\mu$ is the bias-adjusted pooled effect. The posterior for $\xi$ quantifies the magnitude of bias per unit of the RoB score. A 95% credible interval for $\xi$ that excludes zero provides evidence that high-risk studies report systematically different effects than low-risk studies.
+
+The posterior for $b_i$ gives the estimated bias for each study, which can be plotted alongside the forest plot to show which studies are most affected.
+
+## Sensitivity to RoB scale
+
+The composite RoB score $\rho_i$ is typically constructed from domain ratings. Different aggregation schemes (simple average, weighted, domain-level indicators) yield different values of $\rho_i$ and hence different adjustments. Reporting results under two or more aggregation schemes is recommended.
+
+## Assumptions
+
+- Bias acts additively on the effect scale.
+- The direction of bias is the same across studies (positive $\xi$ means high-risk studies overestimate; negative means they underestimate).
+- The relationship between $\rho_i$ and bias is linear. Non-linear relationships require an extended model.

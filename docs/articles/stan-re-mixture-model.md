@@ -1,0 +1,122 @@
+# Stan code — RE mixture model (heterogeneity)
+
+## Model description
+
+The random-effects mixture model for heterogeneity (distinct from the
+[publication bias mixture
+model](https://blmoran.github.io/bayesma/articles/stan-mixture-maier.md))
+represents the distribution of true study effects as a mixture of two
+Gaussian components. This captures bimodal heterogeneity — for example,
+when two distinct populations of studies exist that produce
+qualitatively different effect sizes.
+
+This is the same model as the [mixture RE
+distribution](https://blmoran.github.io/bayesma/articles/stan-re-mixture.md)
+but framed explicitly as a heterogeneity assessment tool rather than a
+distributional sensitivity analysis.
+
+## Mathematical specification
+
+**Likelihood:**
+
+``` math
+
+y_i \mid \theta_i \sim \mathcal{N}(\theta_i,\, s_i^2)
+```
+
+**Mixture RE prior:**
+
+``` math
+
+p(\theta_i) = \pi \cdot \mathcal{N}(\theta_i \mid \mu_1,\, \tau_1^2) + (1 - \pi) \cdot \mathcal{N}(\theta_i \mid \mu_2,\, \tau_2^2)
+```
+
+**Marginal likelihood (integrated over $`\theta_i`$):**
+
+``` math
+
+p(y_i) = \pi \cdot \mathcal{N}(y_i \mid \mu_1,\, \tau_1^2 + s_i^2) + (1-\pi) \cdot \mathcal{N}(y_i \mid \mu_2,\, \tau_2^2 + s_i^2)
+```
+
+**Priors:**
+
+``` math
+
+\pi \sim \text{Beta}(2,\, 2), \qquad \mu_j \sim \mathcal{N}(0,\, 1), \qquad \tau_j \sim \text{Half-Cauchy}(0,\, 0.5)
+```
+
+with the ordering constraint $`\mu_1 \leq \mu_2`$ to resolve label
+switching.
+
+## Stan code
+
+``` stan
+data {
+  int<lower=1> N;
+  vector[N] y;
+  vector<lower=0>[N] se;
+}
+
+parameters {
+  ordered[2] mu;
+  vector<lower=0>[2] tau;
+  real<lower=0, upper=1> pi_mix;
+}
+
+model {
+  target += beta_lpdf(pi_mix | 2, 2);
+  target += normal_lpdf(mu   | 0, 1);
+  target += cauchy_lpdf(tau  | 0, 0.5);
+
+  for (i in 1:N) {
+    target += log_mix(
+      pi_mix,
+      normal_lpdf(y[i] | mu[1], sqrt(square(tau[1]) + square(se[i]))),
+      normal_lpdf(y[i] | mu[2], sqrt(square(tau[2]) + square(se[i])))
+    );
+  }
+}
+
+generated quantities {
+  real b_Intercept = pi_mix * mu[1] + (1 - pi_mix) * mu[2];
+  real b_pi        = pi_mix;
+}
+```
+
+## How bayesma calls this model
+
+``` r
+bayesma(
+  data,
+  model_type = "random_effect",
+  re_dist    = "mixture"
+)
+```
+
+## Parameterisation notes
+
+The `ordered[2] mu` declaration enforces $`\mu_1 \leq \mu_2`$, which
+fully resolves label switching for the component means. The mixing
+weight $`\pi`$ is still identified up to the relabelling
+$`(\pi, \mu_1, \mu_2) \leftrightarrow (1-\pi, \mu_2, \mu_1)`$, but the
+ordering constraint breaks this symmetry.
+
+`b_Intercept` is the mixture-weighted mean effect — the expected true
+effect for a randomly drawn study.
+
+## Distinguishing from the Maier publication bias mixture
+
+Both the RE mixture and the Maier model use two Gaussian components. The
+key difference is their purpose and constraints:
+
+| Feature        | RE mixture                   | Maier mixture                  |
+|----------------|------------------------------|--------------------------------|
+| Purpose        | Characterise heterogeneity   | Correct publication bias       |
+| Constraint     | $`\mu_1 < \mu_2`$ (ordering) | $`\mu_b > \theta`$ (direction) |
+| Interpretation | Two populations of studies   | Biased vs unbiased studies     |
+
+## Known sampling difficulties
+
+Same as the [mixture RE
+model](https://blmoran.github.io/bayesma/articles/stan-re-mixture.md):
+use `adapt_delta = 0.99` and inspect per-chain traces.

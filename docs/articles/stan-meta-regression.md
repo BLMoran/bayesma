@@ -1,0 +1,129 @@
+# Stan code — meta-regression
+
+## Model description
+
+The meta-regression model extends the random-effects model with a design
+matrix of study-level moderators. Moderator coefficients are estimated
+alongside between-study heterogeneity.
+
+## Mathematical specification
+
+**Likelihood:**
+
+``` math
+
+y_i \mid \theta_i \sim \mathcal{N}(\theta_i,\, s_i^2)
+```
+
+**Regression on moderators:**
+
+``` math
+
+\theta_i = \mu + \mathbf{x}_i^\top \boldsymbol{\beta} + u_i, \quad u_i \sim \mathcal{N}(0,\, \tau^2)
+```
+
+**Priors:**
+
+``` math
+
+\mu \sim \mathcal{N}(0,\, 1), \qquad \beta_j \sim \mathcal{N}(0,\, 0.5), \qquad \tau \sim \text{Half-Cauchy}(0,\, 0.5)
+```
+
+## Stan code
+
+``` stan
+data {
+  int<lower=1> N;
+  int<lower=1> K;
+  int<lower=1> P;
+  vector[N] y;
+  vector<lower=0>[N] se;
+  matrix[N, P] X;
+  array[N] int<lower=1> study;
+}
+
+parameters {
+  real mu;
+  vector[P] beta;
+  real<lower=0> tau;
+  vector[K] z;
+}
+
+transformed parameters {
+  vector[K] u = tau * z;
+}
+
+model {
+  target += normal_lpdf(mu   | 0, 1);
+  target += normal_lpdf(beta | 0, 0.5);
+  target += cauchy_lpdf(tau  | 0, 0.5);
+  target += std_normal_lpdf(z);
+
+  target += normal_lpdf(y | mu + X * beta + u[study], se);
+}
+
+generated quantities {
+  real b_Intercept = mu;
+  vector[P] b      = beta;
+}
+```
+
+## How bayesma calls this model
+
+[`meta_reg()`](https://blmoran.github.io/bayesma/reference/meta_reg.md)
+constructs the design matrix `X` from the user’s formula:
+
+``` r
+fit_mr <- meta_reg(
+  data,
+  formula = ~ duration + mean_age,
+  center  = TRUE,
+  scale   = TRUE
+)
+```
+
+`X` has columns for each term in the formula after model matrix
+expansion (dummy coding for factors, polynomial expansion for
+[`poly()`](https://rdrr.io/r/stats/poly.html) terms). Centring and
+scaling are applied before passing to Stan.
+
+## Per-coefficient priors
+
+The default $`\mathcal{N}(0, 0.5)`$ prior on all $`\beta_j`$ can be
+overridden per coefficient:
+
+``` r
+meta_reg(
+  data,
+  formula      = ~ duration + mean_age,
+  beta_prior   = normal(0, 0.5),
+  beta_priors  = list(duration = normal(0, 0.2), mean_age = normal(0, 1))
+)
+```
+
+`beta_priors` is a named list mapping column names to prior objects.
+Columns not named use `beta_prior`.
+
+## Parameterisation notes
+
+`mu` is the intercept: the expected effect when all continuous
+moderators are at their centred values (typically mean) and categorical
+moderators are at their reference level. This interpretation depends on
+centring; always use `center = TRUE` for interpretable intercepts.
+
+`tau` is the residual between-study SD unexplained by the moderators.
+When $`\tau`$ is substantially smaller than the $`\tau`$ from the
+intercept-only model, the moderators account for a meaningful proportion
+of heterogeneity.
+
+## Known sampling difficulties
+
+Meta-regression posteriors are well-behaved when the moderators are
+uncorrelated and the sample size is adequate. Problems arise when:
+
+- Moderators are highly collinear (VIF \> 5): the joint posterior for
+  $`\boldsymbol{\beta}`$ is elongated and mixing is slow.
+- The design matrix is nearly rank-deficient: Stan will warn of
+  numerical issues in the matrix operations.
+- $`P`$ is large relative to $`k`$: $`\tau`$ is overparameterised and
+  divergences may occur.
