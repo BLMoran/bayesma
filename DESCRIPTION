@@ -27,7 +27,6 @@ Imports:
     bayesplot,
     bridgesampling,
     cli,
-    data.table,
     digest,
     distributional,
     dplyr,

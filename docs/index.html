@@ -162,317 +162,439 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="section level1">
 <div class="page-header">
-<img src="logo.png" class="logo" alt=""><h1 id="bayesma-bayesian-meta-analyses-">bayesma: Bayesian Meta Analyses <a class="anchor" aria-label="anchor" href="#bayesma-bayesian-meta-analyses-"></a>
+<img src="logo.png" class="logo" alt=""><h1 id="bayesma-bayesian-meta-analysis-using-stan-">bayesma: Bayesian Meta-Analysis using Stan <a class="anchor" aria-label="anchor" href="#bayesma-bayesian-meta-analysis-using-stan-"></a>
 </h1>
 </div>
 <!-- badges: start -->
 
+<p><strong>bayesma</strong> is an R package for conducting Bayesian meta-analyses using Stan. It provides a complete, opinionated workflow from data preparation through model fitting, publication bias correction, heterogeneity assessment, and reporting — with sensible defaults and full prior control at every stage.</p>
 <div class="section level2">
-<h2 id="overview">Overview<a class="anchor" aria-label="anchor" href="#overview"></a>
+<h2 id="getting-started">Getting Started<a class="anchor" aria-label="anchor" href="#getting-started"></a>
 </h2>
-<p><code>bayesma</code> is an R package for conducting Bayesian meta-analyses using Stan. It provides a comprehensive framework for model fitting, publication bias adjustment, and visualisation, with support for various likelihoods, heterogeneity structures, and bias-correction methods.</p>
-</div>
-<div class="section level2">
-<h2 id="key-features">Key Features<a class="anchor" aria-label="anchor" href="#key-features"></a>
-</h2>
+<p>If you are new to Bayesian Meta Analysis, it is recommended to read the workflow vignette and other vignettes in addition to these other resources:</p>
 <ul>
-<li>
-<strong>Flexible Model Specification</strong>: One-stage (arm-level) or two-stage (effect size) models with Gaussian, binomial, or Poisson likelihoods</li>
-<li>
-<strong>Heterogeneity Modelling</strong>: Normal, Student-t, skew-normal, and finite mixture random-effects distributions</li>
-<li>
-<strong>Publication Bias Adjustment</strong>: Selection models (Copas, weight-function), regression-based methods (PET-PEESE), and robust Bayesian model averaging (RoBMA)</li>
-<li>
-<strong>Extended Models</strong>: Multi-arm trials, meta-regression, multivariate outcomes, and dose-response analyses</li>
-<li>
-<strong>Comprehensive Diagnostics</strong>: Posterior predictive checks, LOO-CV, WAIC, and convergence diagnostics (R̂, ESS)</li>
-<li>
-<strong>Visualisation</strong>: Forest plots, funnel plots, sensitivity analyses, and risk of bias summaries</li>
-<li>
-<strong>Full Prior Control</strong>: Sensible defaults with user-specified priors on all parameters</li>
+<li><a href="https://bayesian-ma.net" class="external-link">Bayesian Meta-Analysis: A Practical Introduction</a></li>
+<li><a href="https://cran.r-project.org/web/packages/bayesmeta/vignettes/bayesmeta.html" class="external-link">bayesmeta package vignettes</a></li>
+<li><a href="https://vuorre.com/posts/bayesian-meta-analysis/index.html" class="external-link">Matti Vuorre’s Blog: Meta-analysis is a special case of Bayesian multilevel modeling</a></li>
+<li>Solomon Kurz’s blog- Bayesian meta-analysis in brms: <a href="https://solomonkurz.netlify.app/blog/bayesian-meta-analysis/" class="external-link">Part I</a> and <a href="https://solomonkurz.netlify.app/blog/2020-10-16-bayesian-meta-analysis-in-brms-ii/" class="external-link">Part II</a>
+</li>
+<li><a href="https://doing-meta.guide/bayesian-ma" class="external-link">Doing Meta Analysis in R- Chapter 13: Bayesian Meta-Analysis</a></li>
 </ul>
 </div>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
-<p>You can install the development version of <code>bayesma</code> from GitHub:</p>
+<p>Install the development version from GitHub:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu">remotes</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">"BLMoran/bayesma"</span><span class="op">)</span></span></code></pre></div>
-<p><code>bayesma</code> requires <code>cmdstanr</code> and CmdStan:</p>
+<code class="sourceCode R"><span><span class="co"># install.packages("remotes")</span></span>
+<span><span class="fu">remotes</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">"BLMoran/bayesma"</span><span class="op">)</span></span></code></pre></div>
+<p>bayesma uses <a href="https://mc-stan.org/cmdstanr/" class="external-link">cmdstanr</a> as its Stan backend. If you do not already have it:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"cmdstanr"</span>, repos <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"https://stan-dev.r-universe.dev"</span>, <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"repos"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu">cmdstanr</span><span class="fu">::</span><span class="fu"><a href="https://mc-stan.org/cmdstanr/reference/install_cmdstan.html" class="external-link">install_cmdstan</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<p>A C++ toolchain is required: <a href="https://cran.r-project.org/bin/windows/Rtools/" class="external-link">Rtools</a> on Windows, or the Xcode command line tools on macOS (<code>xcode-select --install</code>).</p>
+</div>
+<div class="section level2">
+<h2 id="overview">Overview<a class="anchor" aria-label="anchor" href="#overview"></a>
+</h2>
+<p>bayesma covers the full Bayesian meta-analysis workflow:</p>
+<table class="table">
+<colgroup>
+<col width="50%">
+<col width="50%">
+</colgroup>
+<thead><tr>
+<th>Stage</th>
+<th>What bayesma provides</th>
+</tr></thead>
+<tbody>
+<tr>
+<td><strong>Data</strong></td>
+<td>Structured input for binary, continuous, and count outcomes</td>
+</tr>
+<tr>
+<td><strong>Trustworthiness</strong></td>
+<td>INSPECT-SR assessment with tabular and visual output</td>
+</tr>
+<tr>
+<td><strong>Exploration</strong></td>
+<td>PRIMED: dependence structure, effect-size distribution, moderators</td>
+</tr>
+<tr>
+<td><strong>Risk of bias</strong></td>
+<td>Traffic-light plots for RoB2, ROBINS-I, ROBINS-E, and QUADAS-2</td>
+</tr>
+<tr>
+<td><strong>Specification</strong></td>
+<td>Prior elicitation helpers, prior predictive checks</td>
+</tr>
+<tr>
+<td><strong>Fitting</strong></td>
+<td>One-stage and two-stage models; binomial, Gaussian, and Poisson likelihoods</td>
+</tr>
+<tr>
+<td><strong>Comparison</strong></td>
+<td>LOSO-CV, LOO-IC, CRPS, calibration</td>
+</tr>
+<tr>
+<td><strong>Heterogeneity</strong></td>
+<td>Normal, Student-t, skew-normal, and finite-mixture random effects</td>
+</tr>
+<tr>
+<td><strong>Bias</strong></td>
+<td>Selection models, PET-PEESE, RoBMA</td>
+</tr>
+<tr>
+<td><strong>Moderation</strong></td>
+<td>Continuous and categorical meta-regression</td>
+</tr>
+<tr>
+<td><strong>Sensitivity</strong></td>
+<td>Prior, model, and study-exclusion sensitivity</td>
+</tr>
+<tr>
+<td><strong>Reporting</strong></td>
+<td>Forest plots, overall plots, ECDF plots, posterior summaries</td>
+</tr>
+</tbody>
+</table>
+<p>A full walkthrough of each stage is available in the <a href="https://blmoran.github.io/bayesma/articles/workflow-guide.html">workflow vignette</a>.</p>
+</div>
+<div class="section level2">
+<h2 id="workflow">Workflow<a class="anchor" aria-label="anchor" href="#workflow"></a>
+</h2>
+<!-- workflow diagram below (rendered via the pkgdown site) -->
+<p>#<a href="https://blmoran.github.io/bayesma/articles/workflow-guide.html"><img src="reference/figures/workflow-diagram.png" alt="Workflow diagram"></a></p>
 </div>
 <div class="section level2">
 <h2 id="basic-usage">Basic Usage<a class="anchor" aria-label="anchor" href="#basic-usage"></a>
 </h2>
 <div class="section level3">
-<h3 id="one-stage-common-effect-meta-analysis-binary-outcome">One-Stage Common-Effect Meta-Analysis (Binary Outcome)<a class="anchor" aria-label="anchor" href="#one-stage-common-effect-meta-analysis-binary-outcome"></a>
+<h3 id="fit-a-random-effects-meta-analysis">Fit a random-effects meta-analysis<a class="anchor" aria-label="anchor" href="#fit-a-random-effects-meta-analysis"></a>
 </h3>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="reference/bayesma.html">bayesma</a></span><span class="op">(</span></span>
-<span>  data <span class="op">=</span>  <span class="va">binary_outcome</span>,</span>
-<span>  study      <span class="op">=</span> <span class="st">"Author"</span>,</span>
+<code class="sourceCode R"><span><span class="va">one_stage_re</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/bayesma.html">bayesma</a></span><span class="op">(</span></span>
+<span>  data       <span class="op">=</span> <span class="va">binary_outcome</span>,</span>
+<span>  studyvar   <span class="op">=</span> <span class="st">"Author"</span>,</span>
 <span>  event_ctrl <span class="op">=</span> <span class="st">"Event_Control"</span>,</span>
 <span>  event_int  <span class="op">=</span> <span class="st">"Event_Intervention"</span>,</span>
 <span>  n_ctrl     <span class="op">=</span> <span class="st">"N_Control"</span>,</span>
 <span>  n_int      <span class="op">=</span> <span class="st">"N_Intervention"</span>,</span>
 <span>  likelihood <span class="op">=</span> <span class="st">"binomial"</span>,</span>
-<span>  model_type <span class="op">=</span> <span class="st">"common_effect"</span>,</span>
-<span>  stage <span class="op">=</span> <span class="st">"one_stage"</span>,</span>
-<span>  mu_prior <span class="op">=</span> <span class="fu"><a href="reference/priors.html">normal</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">1</span><span class="op">)</span>,</span>
-<span>  tau_prior <span class="op">=</span> <span class="fu"><a href="reference/priors.html">half_cauchy</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0.5</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<span>  estimand   <span class="op">=</span> <span class="st">"OR"</span>,</span>
+<span>  model_type <span class="op">=</span> <span class="st">"random_effect"</span>,</span>
+<span>  stage      <span class="op">=</span> <span class="st">"one_stage"</span>,</span>
+<span>  mu_prior   <span class="op">=</span> <span class="fu"><a href="reference/priors.html">normal</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span>,</span>
+<span>  tau_prior  <span class="op">=</span> <span class="fu"><a href="reference/priors.html">half_cauchy</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0.5</span><span class="op">)</span></span>
+<span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
-<h3 id="one-stage-random-effect-meta-analysis-binary-outcome">One-Stage Random-Effect Meta-Analysis (Binary Outcome)<a class="anchor" aria-label="anchor" href="#one-stage-random-effect-meta-analysis-binary-outcome"></a>
-</h3>
-</div>
-<div class="section level3">
-<h3 id="model-comparison">Model Comparison<a class="anchor" aria-label="anchor" href="#model-comparison"></a>
+<h3 id="forest-plot">Forest plot<a class="anchor" aria-label="anchor" href="#forest-plot"></a>
 </h3>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">bayesma_model_comp</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/compare_models.html">compare_models</a></span><span class="op">(</span></span>
-<span>  <span class="st">"One-Stage, Common Effect"</span> <span class="op">=</span> <span class="va">bayesma_one_stage_ce</span>,</span>
-<span>  <span class="st">"One-Stage, Random Effect"</span> <span class="op">=</span> <span class="va">bayesma_one_stage_re</span>,</span>
-<span>  <span class="st">"Two-Stage, Common Effect"</span> <span class="op">=</span> <span class="va">bayesma_two_stage_ce</span>,</span>
-<span>  <span class="st">"Two-Stage, Random Effect"</span> <span class="op">=</span> <span class="va">bayesma_two_stage_re</span>,</span>
-<span>  <span class="st">"One-Stage, Random Effect (adj Small Sample)"</span> <span class="op">=</span> <span class="va">bayesma_one_stage_small_samp</span></span>
-<span><span class="op">)</span> </span></code></pre></div>
-</div>
-</div>
-<div class="section level2">
-<h2 id="features">Features<a class="anchor" aria-label="anchor" href="#features"></a>
-</h2>
-<div class="section level3">
-<h3 id="analysis-framework">Analysis Framework<a class="anchor" aria-label="anchor" href="#analysis-framework"></a>
-</h3>
-<table class="table">
-<colgroup>
-<col width="28%">
-<col width="71%">
-</colgroup>
-<thead><tr>
-<th>Stage</th>
-<th>Options</th>
-</tr></thead>
-<tbody>
-<tr>
-<td><strong>Likelihood</strong></td>
-<td>Binomial, Gaussian, Poisson</td>
-</tr>
-<tr>
-<td><strong>Pooling</strong></td>
-<td>Common-effect, random-effects</td>
-</tr>
-<tr>
-<td><strong>Data structure</strong></td>
-<td>One-stage (arm-level) or two-stage (effect sizes)</td>
-</tr>
-</tbody>
-</table>
-</div>
-<div class="section level3">
-<h3 id="heterogeneity-modelling">Heterogeneity Modelling<a class="anchor" aria-label="anchor" href="#heterogeneity-modelling"></a>
-</h3>
-<p>Not all heterogeneity is the same. <code>bayesma</code> offers multiple approaches:</p>
-<ul>
-<li>
-<strong>Distributional flexibility</strong>: Normal, Student-t, skew-normal random effects</li>
-<li>
-<strong>Mixture models</strong>: Finite mixtures for multi-modal effect distributions</li>
-<li>
-<strong>Robust estimation</strong>: Observation-level outlier detection</li>
-<li>
-<strong>Full prior control</strong>: Specify priors on μ, τ, and all auxiliary parameters</li>
-</ul>
-</div>
-<div class="section level3">
-<h3 id="publication-bias-adjustment">Publication Bias Adjustment<a class="anchor" aria-label="anchor" href="#publication-bias-adjustment"></a>
-</h3>
-<p>Three complementary strategies for small-study effects:</p>
-<table class="table">
-<colgroup>
-<col width="33%">
-<col width="33%">
-<col width="33%">
-</colgroup>
-<thead><tr>
-<th>Approach</th>
-<th>Methods</th>
-<th>Use when…</th>
-</tr></thead>
-<tbody>
-<tr>
-<td><strong>Selection models</strong></td>
-<td>Copas, weight-function</td>
-<td>You suspect suppressed non-significant results</td>
-</tr>
-<tr>
-<td><strong>Regression-based</strong></td>
-<td>PET-PEESE</td>
-<td>You want a simple bias-adjusted estimate</td>
-</tr>
-<tr>
-<td><strong>Model averaging</strong></td>
-<td>RoBMA</td>
-<td>Mechanism is uncertain; want robust inference</td>
-</tr>
-</tbody>
-</table>
-</div>
-<div class="section level3">
-<h3 id="extended-models">Extended Models<a class="anchor" aria-label="anchor" href="#extended-models"></a>
-</h3>
-<ul>
-<li>
-<strong>Multi-arm trials</strong>: Proper within-study correlation structure</li>
-<li>
-<strong>Meta-regression</strong>: Covariate-adjusted effects</li>
-<li>
-<strong>Multivariate outcomes</strong>: Correlated endpoints</li>
-<li>
-<strong>Longitudinal</strong>: Time-varying effects</li>
-<li>
-<strong>Dose-response</strong>: Flexible dose-response curves</li>
-</ul>
-</div>
-<div class="section level3">
-<h3 id="visualisation">Visualisation<a class="anchor" aria-label="anchor" href="#visualisation"></a>
-</h3>
-<table class="table">
-<colgroup>
-<col width="50%">
-<col width="50%">
-</colgroup>
-<thead><tr>
-<th>Plot</th>
-<th>Purpose</th>
-</tr></thead>
-<tbody>
-<tr>
-<td><code>forest_plot()</code></td>
-<td>Study effects with pooled estimate and prediction interval</td>
-</tr>
-<tr>
-<td><code><a href="reference/overall_plot.html">overall_plot()</a></code></td>
-<td>Posterior densities for μ, τ, and predictive distribution</td>
-</tr>
-<tr>
-<td><code><a href="reference/funnel_plot.html">funnel_plot()</a></code></td>
-<td>Funnel plot for visual bias assessment</td>
-</tr>
-<tr>
-<td><code><a href="reference/sensitivity_plot.html">sensitivity_plot()</a></code></td>
-<td>Leave-one-out influence diagnostics</td>
-</tr>
-<tr>
-<td><code>ecdf_plot()</code></td>
-<td>Empirical CDF of posterior draws</td>
-</tr>
-<tr>
-<td><code><a href="reference/rob_plot.html">rob_plot()</a></code></td>
-<td>Risk of bias summary (RoB2, ROBINS-I, ROBINS-E, QUADAS-2)</td>
-</tr>
-</tbody>
-</table>
-</div>
-<div class="section level3">
-<h3 id="diagnostics--model-comparison">Diagnostics &amp; Model Comparison<a class="anchor" aria-label="anchor" href="#diagnostics--model-comparison"></a>
-</h3>
-<ul>
-<li>Posterior predictive checks via <code>bayesplot</code>
-</li>
-<li>LOO-CV and WAIC for model comparison</li>
-<li>Bayes R² for explained heterogeneity</li>
-<li>Comprehensive convergence diagnostics (R̂, ESS, divergences)</li>
-</ul>
-</div>
-</div>
-<div class="section level2">
-<h2 id="workflow">Workflow<a class="anchor" aria-label="anchor" href="#workflow"></a>
-</h2>
-<p>A typical <code>bayesma</code> analysis follows this structure:</p>
-</div>
-<div class="section level2">
-<h2 id="prior-specification">Prior Specification<a class="anchor" aria-label="anchor" href="#prior-specification"></a>
-</h2>
-<p>Sensible defaults with full customisation:</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/bayesma.html">bayesma</a></span><span class="op">(</span></span>
-<span>  <span class="va">...</span>,</span>
-<span>  mu_prior <span class="op">=</span> <span class="fu"><a href="reference/priors.html">normal</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span>,</span>
-<span>  tau_prior <span class="op">=</span> <span class="fu"><a href="reference/priors.html">half_cauchy</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0.5</span><span class="op">)</span>,</span>
-<span>  gamma_prior <span class="op">=</span> <span class="fu"><a href="reference/priors.html">normal</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">10</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="reference/forest.html">forest</a></span><span class="op">(</span></span>
+<span>  model    <span class="op">=</span> <span class="va">one_stage_re</span>,</span>
+<span>  data     <span class="op">=</span> <span class="va">binary_outcome</span>,</span>
+<span>  estimand <span class="op">=</span> <span class="st">"OR"</span>,</span>
+<span>  studyvar <span class="op">=</span> <span class="va">Author</span>,</span>
+<span>  xlim     <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.1</span>, <span class="fl">2.5</span><span class="op">)</span>,</span>
+<span>  add_pred <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p>Available distributions: <code><a href="reference/priors.html">normal()</a></code>, <code><a href="reference/priors.html">half_normal()</a></code>, <code><a href="reference/priors.html">half_cauchy()</a></code>, <code><a href="reference/priors.html">half_student_t()</a></code>, <code><a href="reference/priors.html">exponential()</a></code>, <code><a href="reference/priors.html">uniform()</a></code>, <code><a href="reference/priors.html">beta()</a></code>, <code><a href="reference/priors.html">dirichlet()</a></code>.</p>
+<p><img src="reference/figures/forest_plot_binary.png"></p>
+</div>
+<div class="section level3">
+<h3 id="subgroup-analysis">Subgroup analysis<a class="anchor" aria-label="anchor" href="#subgroup-analysis"></a>
+</h3>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="reference/forest.html">forest</a></span><span class="op">(</span></span>
+<span>  model        <span class="op">=</span> <span class="va">one_stage_re</span>,</span>
+<span>  data         <span class="op">=</span> <span class="va">binary_outcome</span>,</span>
+<span>  estimand     <span class="op">=</span> <span class="st">"OR"</span>,</span>
+<span>  studyvar     <span class="op">=</span> <span class="va">Author</span>,</span>
+<span>  subgroup_var <span class="op">=</span> <span class="va">Surgery</span>,</span>
+<span>  xlim         <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.1</span>, <span class="fl">3.5</span><span class="op">)</span>,</span>
+<span>  add_pred     <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p><img src="reference/figures/forest_plot_subgroup.png"></p>
+</div>
+<div class="section level3">
+<h3 id="risk-of-bias-columns">Risk of bias columns<a class="anchor" aria-label="anchor" href="#risk-of-bias-columns"></a>
+</h3>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="reference/forest.html">forest</a></span><span class="op">(</span></span>
+<span>  model        <span class="op">=</span> <span class="va">one_stage_re</span>,</span>
+<span>  data         <span class="op">=</span> <span class="va">binary_outcome</span>,</span>
+<span>  estimand     <span class="op">=</span> <span class="st">"OR"</span>,</span>
+<span>  studyvar     <span class="op">=</span> <span class="va">Author</span>,</span>
+<span>  subgroup_var <span class="op">=</span> <span class="va">Surgery</span>,</span>
+<span>  xlim         <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.1</span>, <span class="fl">3.5</span><span class="op">)</span>,</span>
+<span>  add_pred     <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  add_rob      <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p><img src="reference/figures/forest_plot_rob.png"></p>
+</div>
+<div class="section level3">
+<h3 id="standalone-risk-of-bias-plot">Standalone risk of bias plot<a class="anchor" aria-label="anchor" href="#standalone-risk-of-bias-plot"></a>
+</h3>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="reference/rob_plot.html">rob_plot</a></span><span class="op">(</span></span>
+<span>  data           <span class="op">=</span> <span class="va">binary_outcome</span>,</span>
+<span>  rob_tool       <span class="op">=</span> <span class="st">"rob2"</span>,</span>
+<span>  add_rob_legend <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p><img src="reference/figures/rob_viz.png"></p>
+</div>
+<div class="section level3">
+<h3 id="bayesian-egger-regression-and-funnel-plot">Bayesian Egger regression and funnel plot<a class="anchor" aria-label="anchor" href="#bayesian-egger-regression-and-funnel-plot"></a>
+</h3>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">egger_fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/egger.html">egger</a></span><span class="op">(</span></span>
+<span>  data       <span class="op">=</span> <span class="va">binary_outcome</span>,</span>
+<span>  studyvar   <span class="op">=</span> <span class="st">"Author"</span>,</span>
+<span>  event_ctrl <span class="op">=</span> <span class="st">"Event_Control"</span>,</span>
+<span>  event_int  <span class="op">=</span> <span class="st">"Event_Intervention"</span>,</span>
+<span>  n_ctrl     <span class="op">=</span> <span class="st">"N_Control"</span>,</span>
+<span>  n_int      <span class="op">=</span> <span class="st">"N_Intervention"</span>,</span>
+<span>  likelihood <span class="op">=</span> <span class="st">"binomial"</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="reference/egger_plot.html">egger_plot</a></span><span class="op">(</span><span class="va">egger_fit</span>, type <span class="op">=</span> <span class="st">"both"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="reference/figures/egger_plot.png"></p>
+</div>
+<div class="section level3">
+<h3 id="overall-posterior-plot">Overall posterior plot<a class="anchor" aria-label="anchor" href="#overall-posterior-plot"></a>
+</h3>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="reference/overall_plot.html">overall_plot</a></span><span class="op">(</span></span>
+<span>  data             <span class="op">=</span> <span class="va">binary_outcome</span>,</span>
+<span>  model            <span class="op">=</span> <span class="va">one_stage_re</span>,</span>
+<span>  estimand         <span class="op">=</span> <span class="st">"OR"</span>,</span>
+<span>  studyvar         <span class="op">=</span> <span class="st">"Author"</span>,</span>
+<span>  incl_tau         <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  incl_mu_prior    <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  incl_tau_prior   <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  mu_xlim          <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.1</span>, <span class="fl">3.5</span><span class="op">)</span>,</span>
+<span>  tau_xlim         <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span>,</span>
+<span>  plot_arrangement <span class="op">=</span> <span class="st">"vertical"</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p><img src="reference/figures/overall_plot.png"></p>
+</div>
+<div class="section level3">
+<h3 id="sensitivity-analysis">Sensitivity analysis<a class="anchor" aria-label="anchor" href="#sensitivity-analysis"></a>
+</h3>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="reference/sensitivity_plot.html">sensitivity_plot</a></span><span class="op">(</span></span>
+<span>  model           <span class="op">=</span> <span class="va">one_stage_re</span>,</span>
+<span>  data            <span class="op">=</span> <span class="va">binary_outcome</span>,</span>
+<span>  estimand        <span class="op">=</span> <span class="st">"OR"</span>,</span>
+<span>  studyvar        <span class="op">=</span> <span class="va">Author</span>,</span>
+<span>  rob_var         <span class="op">=</span> <span class="va">Overall</span>,</span>
+<span>  exclude_high_rob <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  incl_pet_peese  <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  incl_mixture    <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  incl_bma        <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  model_bma       <span class="op">=</span> <span class="va">robma_fits_bin</span>,</span>
+<span>  priors          <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>    vague       <span class="op">=</span> <span class="fu"><a href="reference/priors.html">normal</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">10</span><span class="op">)</span>,</span>
+<span>    weakreg     <span class="op">=</span> <span class="fu"><a href="reference/priors.html">normal</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span>,</span>
+<span>    informative <span class="op">=</span> <span class="fu"><a href="reference/priors.html">normal</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0.5</span><span class="op">)</span></span>
+<span>  <span class="op">)</span>,</span>
+<span>  xlim            <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.25</span>, <span class="fl">1.5</span><span class="op">)</span>,</span>
+<span>  add_null_range  <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p><img src="reference/figures/sens_plot.png"></p>
+</div>
+<div class="section level3">
+<h3 id="ecdf-plot">ECDF plot<a class="anchor" aria-label="anchor" href="#ecdf-plot"></a>
+</h3>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">ecdf_plot</span><span class="op">(</span></span>
+<span>  model            <span class="op">=</span> <span class="va">one_stage_re</span>,</span>
+<span>  data             <span class="op">=</span> <span class="va">binary_outcome</span>,</span>
+<span>  estimand         <span class="op">=</span> <span class="st">"OR"</span>,</span>
+<span>  studyvar         <span class="op">=</span> <span class="va">Author</span>,</span>
+<span>  rob_var          <span class="op">=</span> <span class="va">Overall</span>,</span>
+<span>  exclude_high_rob <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  incl_pet_peese   <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  incl_mixture     <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  incl_bma         <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  model_bma        <span class="op">=</span> <span class="va">robma_fits_bin</span>,</span>
+<span>  priors           <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>weakreg <span class="op">=</span> <span class="fu"><a href="reference/priors.html">normal</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  xlim             <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.25</span>, <span class="fl">1.5</span><span class="op">)</span>,</span>
+<span>  add_null_range   <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  prob_reference   <span class="op">=</span> <span class="st">"null"</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p><img src="reference/figures/ecdf_plot.png"></p>
+</div>
 </div>
 <div class="section level2">
-<h2 id="requirements">Requirements<a class="anchor" aria-label="anchor" href="#requirements"></a>
+<h2 id="data-requirements">Data Requirements<a class="anchor" aria-label="anchor" href="#data-requirements"></a>
 </h2>
+<p>bayesma expects a tidy data frame with one row per study.</p>
+<p><strong>Binary outcomes</strong> (<code>likelihood = "binomial"</code>)</p>
+<table class="table">
+<thead><tr>
+<th>Column</th>
+<th>Description</th>
+</tr></thead>
+<tbody>
+<tr>
+<td><code>Author</code></td>
+<td>Study label</td>
+</tr>
+<tr>
+<td><code>Event_Control</code></td>
+<td>Events in control arm</td>
+</tr>
+<tr>
+<td><code>Event_Intervention</code></td>
+<td>Events in intervention arm</td>
+</tr>
+<tr>
+<td><code>N_Control</code></td>
+<td>Total in control arm</td>
+</tr>
+<tr>
+<td><code>N_Intervention</code></td>
+<td>Total in intervention arm</td>
+</tr>
+<tr>
+<td><code>Surgery</code></td>
+<td>Subgroup variable</td>
+</tr>
+<tr>
+<td>
+<code>D1</code>–<code>D5</code>, <code>Overall</code>
+</td>
+<td>Risk of bias domains</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Continuous outcomes</strong> (<code>likelihood = "gaussian"</code>)</p>
+<table class="table">
+<colgroup>
+<col width="50%">
+<col width="50%">
+</colgroup>
+<thead><tr>
+<th>Column</th>
+<th>Description</th>
+</tr></thead>
+<tbody>
+<tr>
+<td><code>Author</code></td>
+<td>Study label</td>
+</tr>
+<tr>
+<td>
+<code>Mean_Control</code>, <code>SD_Control</code>, <code>N_Control</code>
+</td>
+<td>Control arm summary statistics</td>
+</tr>
+<tr>
+<td>
+<code>Mean_Intervention</code>, <code>SD_Intervention</code>, <code>N_Intervention</code>
+</td>
+<td>Intervention arm summary statistics</td>
+</tr>
+<tr>
+<td><code>Int_Type</code></td>
+<td>Subgroup variable</td>
+</tr>
+<tr>
+<td>
+<code>D1</code>–<code>D5</code>, <code>Overall</code>
+</td>
+<td>Risk of bias domains</td>
+</tr>
+</tbody>
+</table>
+<p>Example datasets (<code>binary_outcome</code> and <code>cont_outcome</code>) are included in the package.</p>
+</div>
+<div class="section level2">
+<h2 id="dependencies">Dependencies<a class="anchor" aria-label="anchor" href="#dependencies"></a>
+</h2>
+<p><strong>Core</strong></p>
 <ul>
-<li>R ≥ 4.5.0</li>
 <li>
-<a href="https://mc-stan.org/cmdstanr/" class="external-link">cmdstanr</a> and <a href="https://mc-stan.org/users/interfaces/cmdstan" class="external-link">CmdStan</a>
-</li>
-<li>A C++ toolchain (<a href="https://cran.r-project.org/bin/windows/Rtools/" class="external-link">Rtools</a> on Windows, Xcode CLI on macOS)</li>
+<a href="https://mc-stan.org/cmdstanr/" class="external-link">cmdstanr</a> + <a href="https://mc-stan.org/users/interfaces/cmdstan" class="external-link">CmdStan</a> — Stan interface for MCMC sampling</li>
 </ul>
-</div>
-<div class="section level2">
-<h2 id="related-packages">Related Packages<a class="anchor" aria-label="anchor" href="#related-packages"></a>
-</h2>
-<p><a href="https://www.metafor-project.org/" class="external-link">metafor</a> | Comprehensive frequentist meta-analysis |<br><a href="https://paul-buerkner.github.io/brms/" class="external-link">brms</a> | General Bayesian regression |<br><a href="https://fbartos.github.io/RoBMA/" class="external-link">RoBMA</a> | Robust Bayesian model averaging |<br><a href="https://cran.r-project.org/package=bayesmeta" class="external-link">bayesmeta</a> | Bayesian random-effects meta-analysis |<br><a href="https://cran.r-project.org/package=meta" class="external-link">meta</a> | General frequentist meta-analysis |</p>
+<p><strong>Modelling</strong></p>
+<ul>
+<li>
+<a href="https://mc-stan.org/posterior/" class="external-link">posterior</a> — MCMC summaries and draws</li>
+<li>
+<a href="https://mc-stan.org/loo/" class="external-link">loo</a> — leave-one-out cross-validation</li>
+<li>
+<a href="https://cran.r-project.org/package=bridgesampling" class="external-link">bridgesampling</a> — Bayes factor computation</li>
+<li>
+<a href="https://pkg.mitchelloharawild.com/distributional/" class="external-link">distributional</a> — prior distribution objects</li>
+</ul>
+<p><strong>Visualisation</strong></p>
+<ul>
+<li>
+<a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a> — base plotting</li>
+<li>
+<a href="https://mjskay.github.io/ggdist/" class="external-link">ggdist</a> — posterior density plotting</li>
+<li>
+<a href="https://patchwork.data-imaginist.com" class="external-link">patchwork</a> — multi-panel figures</li>
+<li>
+<a href="https://mc-stan.org/bayesplot/" class="external-link">bayesplot</a> — posterior predictive checks</li>
+<li>
+<a href="https://ggrepel.slowkow.com" class="external-link">ggrepel</a> — label positioning</li>
+<li>
+<a href="https://emilhvitfeldt.github.io/paletteer/" class="external-link">paletteer</a>, <a href="https://cran.r-project.org/package=RColorBrewer" class="external-link">RColorBrewer</a> — colour palettes</li>
+<li>
+<a href="https://rstudio.github.io/fontawesome/" class="external-link">fontawesome</a> — risk of bias icons</li>
+</ul>
+<p><strong>Data manipulation</strong></p>
+<ul>
+<li>
+<a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a>, <a href="https://tidyr.tidyverse.org" class="external-link">tidyr</a>, <a href="https://purrr.tidyverse.org" class="external-link">purrr</a>, <a href="https://tibble.tidyverse.org" class="external-link">tibble</a>, <a href="https://forcats.tidyverse.org" class="external-link">forcats</a> — tidyverse data tools</li>
+<li>
+<a href="https://stringr.tidyverse.org" class="external-link">stringr</a>, <a href="https://glue.tidyverse.org" class="external-link">glue</a> — string handling</li>
+<li>
+<a href="https://scales.r-lib.org" class="external-link">scales</a> — axis and colour scale transformations</li>
+</ul>
+<p><strong>Output</strong></p>
+<ul>
+<li>
+<a href="https://gt.rstudio.com" class="external-link">gt</a> — formatted summary tables</li>
+<li>
+<a href="https://cli.r-lib.org" class="external-link">cli</a>, <a href="https://rlang.r-lib.org" class="external-link">rlang</a> — messages and tidy evaluation</li>
+</ul>
+<p><strong>Parallel</strong></p>
+<ul>
+<li>
+<a href="https://mirai.r-lib.org" class="external-link">mirai</a> — parallel MCMC chain execution</li>
+</ul>
 </div>
 <div class="section level2">
 <h2 id="citation">Citation<a class="anchor" aria-label="anchor" href="#citation"></a>
 </h2>
 <p>If you use bayesma in your research, please cite:</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="sc">@</span>Manual{,</span>
-<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>  title <span class="ot">=</span> {bayesma<span class="sc">:</span> Bayesian Meta Analysis using Stan <span class="cf">in</span> R},</span>
-<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>  author <span class="ot">=</span> {[Benjamin Moran and Thomas Payne]},</span>
-<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a>  year <span class="ot">=</span> {<span class="dv">2026</span>},</span>
-<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a>  note <span class="ot">=</span> {R package version <span class="dv">0</span>.<span class="dv">0</span>.<span class="fl">0.9000</span>},</span>
-<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a>  url <span class="ot">=</span> {https<span class="sc">:</span><span class="er">//</span>github.com<span class="sc">/</span>BLMoran<span class="sc">/</span>bayesma},</span>
-<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a>}</span></code></pre></div>
+<div class="sourceCode" id="cb12"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a><span class="sc">@</span>Manual{,</span>
+<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a>  title  <span class="ot">=</span> {bayesma<span class="sc">:</span> Bayesian Meta<span class="sc">-</span>Analysis using Stan <span class="cf">in</span> R},</span>
+<span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a>  author <span class="ot">=</span> {Benjamin Moran and Thomas Payne},</span>
+<span id="cb12-4"><a href="#cb12-4" tabindex="-1"></a>  year   <span class="ot">=</span> {<span class="dv">2026</span>},</span>
+<span id="cb12-5"><a href="#cb12-5" tabindex="-1"></a>  note   <span class="ot">=</span> {R package version <span class="dv">0</span>.<span class="dv">0</span>.<span class="fl">0.9000</span>},</span>
+<span id="cb12-6"><a href="#cb12-6" tabindex="-1"></a>  url    <span class="ot">=</span> {https<span class="sc">:</span><span class="er">//</span>github.com<span class="sc">/</span>BLMoran<span class="sc">/</span>bayesma},</span>
+<span id="cb12-7"><a href="#cb12-7" tabindex="-1"></a>}</span></code></pre></div>
 </div>
 <div class="section level2">
-<h2 id="dependencies">Dependencies<a class="anchor" aria-label="anchor" href="#dependencies"></a>
+<h2 id="feedback-issues-and-contributing">Feedback, Issues, and Contributing<a class="anchor" aria-label="anchor" href="#feedback-issues-and-contributing"></a>
 </h2>
-<p>bayesma depends on several R packages:</p>
-<ul>
-<li>
-<a href="https://gt.rstudio.com" class="external-link">gt</a> for creating tables</li>
-<li>
-<a href="https://gt.rstudio.com" class="external-link">gt</a> for creating tables</li>
-<li>
-<a href="https://patchwork.data-imaginist.com" class="external-link">patchwork</a> for combining plots</li>
-<li>
-<a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a> for plotting</li>
-<li>
-<a href="https://mjskay.github.io/ggdist/" class="external-link">ggdist</a> for density plotting</li>
-<li>
-<a href="https://mjskay.github.io/tidybayes/index.html" class="external-link">tidybayes</a> for tidy workflow</li>
-<li>
-<a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a>, <a href="https://tidyr.tidyverse.org" class="external-link">tidyr</a>, <a href="https://purrr.tidyverse.org" class="external-link">purrr</a> for data manipulation</li>
-<li>
-<a href="https://emilhvitfeldt.github.io/paletteer/" class="external-link">paletteer</a> for colour palettes</li>
-<li>
-<a href="https://rstudio.github.io/fontawesome/" class="external-link">fontawesome</a> for risk of bias icons</li>
-</ul>
-</div>
-<div class="section level2">
-<h2 id="feedback-issues-and-contributing">Feedback, Issues and Contributing<a class="anchor" aria-label="anchor" href="#feedback-issues-and-contributing"></a>
-</h2>
-<p>We welcome feedback, suggestions, issues and contributions. Please feel free to contact either <a href="mailto:ben.moran@newcastle.edu.au">Ben</a> or <a href="mailto:tompayne302@gmail.com">Tom</a> with any feedback. For any bugs, please file it <a href="https://github.com/BLMoran/bayesma/issues" class="external-link">here</a> with a minimal code example to reproduce the issue. Pull requests can be made <a href="https://github.com/BLMoran/bayesma/pulls" class="external-link">here</a>. Please note that the bayesma project is released with a <a href="https://github.com/BLMoran/bayesma/CODE_OF_CONDUCT.html" class="external-link">Contributor Code of Conduct</a>. By contributing to this project, you agree to abide by its terms.</p>
+<p>We welcome feedback, suggestions, and contributions. Contact <a href="mailto:ben.moran@newcastle.edu.au">Ben</a> or <a href="mailto:tompayne302@gmail.com">Tom</a> with any feedback. Please file bugs <a href="https://github.com/BLMoran/bayesma/issues" class="external-link">here</a> with a minimal reproducible example. Pull requests are welcome <a href="https://github.com/BLMoran/bayesma/pulls" class="external-link">here</a>. This project is released with a <a href="https://github.com/BLMoran/bayesma/CODE_OF_CONDUCT.html" class="external-link">Contributor Code of Conduct</a>; by contributing you agree to abide by its terms.</p>
 </div>
 <div class="section level2">
 <h2 id="license">License<a class="anchor" aria-label="anchor" href="#license"></a>
 </h2>
-<p>This package is licensed under the GPL-3 License.</p>
+<p>AGPL-3</p>
 </div>
 <div class="section level2">
 <h2 id="acknowledgments">Acknowledgments<a class="anchor" aria-label="anchor" href="#acknowledgments"></a>
 </h2>
-<p>bayesma builds upon the excellent work of the <a href="https://gt.rstudio.com" class="external-link">gt</a>, <a href="https://patchwork.data-imaginist.com" class="external-link">patchwork</a>, <a href="https://mjskay.github.io/ggdist/" class="external-link">ggdist</a>, <a href="https://mjskay.github.io/tidybayes/index.html" class="external-link">tidybayes</a> and the <a href="https://www.tidyverse.org" class="external-link">tidyverse</a> suite of packages. Without the work of the Stan and R community and their contributions, bayesma would not be possible. # bayesma</p>
+<p>bayesma builds on the excellent work of the <a href="https://mc-stan.org" class="external-link">Stan</a> team and the broader R ecosystem, in particular <a href="https://mc-stan.org/cmdstanr/" class="external-link">cmdstanr</a>, <a href="https://mc-stan.org/posterior/" class="external-link">posterior</a>, <a href="https://mc-stan.org/loo/" class="external-link">loo</a>, <a href="https://mjskay.github.io/ggdist/" class="external-link">ggdist</a>, <a href="https://mjskay.github.io/tidybayes/" class="external-link">tidybayes</a>, and the <a href="https://www.tidyverse.org" class="external-link">tidyverse</a>. Without the collective effort of the Stan and R communities, bayesma would not be possible.</p>
 </div>
 </div>
   </main><aside class="col-md-3"><div class="links">

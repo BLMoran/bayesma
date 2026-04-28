@@ -1,4 +1,4 @@
-﻿Author,Year,Subgroup,Mean_Control,SD_Control,N_Control,Mean_Intervention,SD_Intervention,N_Intervention,D1,D2,D3,D4,D5,Overall
+﻿Author,Year,Int_Type,Mean_Control,SD_Control,N_Control,Mean_Intervention,SD_Intervention,N_Intervention,D1,D2,D3,D4,D5,Overall
 Strode,1978,Control,4.2,0.9,16,4.3,2.9,16,Low,Low,High,High,Low,High
 Tasker,1994,Control,6,5.2,10,2.1,3.2,10,High,High,High,Low,High,High
 Beaubeirdre,2022,Control,5.5,0.5,16,3,0.5,16,Low,Low,Some concerns,Low,Low,Low

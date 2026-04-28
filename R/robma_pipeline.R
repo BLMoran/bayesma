@@ -646,7 +646,7 @@ robma_fit_bridge <- function(spec, code, stan_data,
     fit <- comp$fit
     if (is.null(fit)) return(-Inf)
 
-    fit_id <- format(data.table::address(fit))
+    fit_id <- rlang::obj_address(fit)
     if (exists(fit_id, envir = bs_cache)) return(get(fit_id, envir = bs_cache))
 
     log_ml_val <- tryCatch({
