@@ -24,7 +24,6 @@ egger(
   d_prior = NULL,
   tau_prior = NULL,
   credible_level = 0.9,
-  return_stage = c("full", "spec", "code", "data", "fit"),
   chains = 4,
   iter_warmup = 2000,
   iter_sampling = 4000,
@@ -59,26 +58,21 @@ means and SDs (Gaussian likelihood).}
 
 \item{beta_prior}{Prior on the slope (the Egger coefficient).}
 
-\item{kappa_prior}{Prior on the multiplicative heterogeneity
-coefficient.}
+\item{kappa_prior}{Prior on the multiplicative heterogeneity coefficient.}
 
 \item{gamma_prior}{Prior on the dispersion parameter.}
 
 \item{d_prior}{Prior on the overdispersion parameter.}
 
-\item{tau_prior}{Prior on the between-study SD for the additive
-heterogeneity parameterisation.}
+\item{tau_prior}{Prior on the between-study SD for additive heterogeneity.}
 
-\item{credible_level}{Numeric in \verb{(0, 1)}. Credible-interval level for
-the summary. Default \code{0.90}.}
-
-\item{return_stage}{Character. One of \code{"full"} (default), \code{"spec"},
-\code{"code"}, \code{"data"}, or \code{"fit"}.}
+\item{credible_level}{Numeric in \verb{(0, 1)}. Credible-interval level.
+Default \code{0.90}.}
 
 \item{chains, iter_warmup, iter_sampling, adapt_delta, seed}{MCMC settings.}
 
-\item{custom_model}{Optional character scalar of Stan code overriding
-the generated program.}
+\item{custom_model}{Optional character scalar of Stan code overriding the
+generated program.}
 
 \item{custom_data}{Optional named list merged into the Stan data list.}
 
@@ -88,7 +82,5 @@ the generated program.}
 An object of class \code{c("bayesma_egger", "bayesma")}.
 }
 \description{
-Thin orchestrator over the six-stage pipeline:
-\code{\link[=egger_spec]{egger_spec()}}, \code{\link[=egger_stan_code]{egger_stan_code()}}, \code{\link[=egger_stan_data]{egger_stan_data()}}, \code{\link[=egger_fit]{egger_fit()}},
-\code{\link[=egger_extract]{egger_extract()}}, \code{\link[=egger_output]{egger_output()}}.
+Egger's Regression Test for Small-Study Effects (Bayesian)
 }

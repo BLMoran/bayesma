@@ -71,10 +71,9 @@ list(
 )
 ```
 
-Internally
-[`bayesma_stan_data()`](https://blmoran.github.io/bayesma/reference/bayesma_stan_data.md)
-computes $`y_i`$ and $`s_i`$ from the raw outcome columns (events,
-means, SDs, sample sizes) before passing them to Stan.
+Internally `bayesma_stan_data()` computes $`y_i`$ and $`s_i`$ from the
+raw outcome columns (events, means, SDs, sample sizes) before passing
+them to Stan.
 
 ## Parameterisation notes
 

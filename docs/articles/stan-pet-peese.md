@@ -81,8 +81,7 @@ bias.
   as standard error increases.
 - `tau` captures residual between-study heterogeneity not explained by
   the precision-effect relationship.
-- `b_Intercept = alpha` is the estimand reported by
-  [`bayesma_output()`](https://blmoran.github.io/bayesma/reference/bayesma_output.md).
+- `b_Intercept = alpha` is the estimand reported by `bayesma_output()`.
 
 ## Identifiability
 

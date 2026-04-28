@@ -50,7 +50,7 @@ bayesma(
   cate_covariate = NULL,
   baseline_risk = NULL,
   re_min_k = NULL,
-  return_stage = c("full", "spec", "code", "data", "fit"),
+  sample_prior = FALSE,
   chains = 4,
   iter_warmup = 1000,
   iter_sampling = 1000,
@@ -172,31 +172,22 @@ number of unique studies is below \code{re_min_k}. Default \code{NULL} (no
 enforcement). Useful for subgroup analyses where some strata have too few
 studies for stable random-effects estimation.}
 
-\item{return_stage}{Character. One of \code{"full"} (default), \code{"spec"}, \code{"code"},
-\code{"data"}, or \code{"fit"}. Returns the intermediate pipeline object instead of
-the final \code{bayesma} object.}
+\item{sample_prior}{Logical. If \code{TRUE}, samples from the prior predictive
+distribution by fitting the model without conditioning on the data
+likelihood. The result can be passed to \code{\link[=pp_check]{pp_check()}} to verify that the
+prior places mass on plausible observable values. Use this for prior
+elicitation and sanity-checking — not for calibrating priors against the
+analysis dataset itself (which would be circular). Default \code{FALSE}.}
 
 \item{chains, iter_warmup, iter_sampling, adapt_delta, seed}{MCMC settings.}
 
 \item{...}{Passed to \code{cmdstanr::sample()}.}
 }
 \value{
-A list of class \code{"bayesma"} (or the intermediate stage object when
-\code{return_stage} is not \code{"full"}).
+A list of class \code{"bayesma"}.
 }
 \description{
-\code{bayesma()} is a thin orchestrator over a six-stage pipeline. Each stage is
-exported so users can pause for inspection or plug in their own Stan program
-via the \code{custom_model} argument.
-}
-\details{
-The pipeline:
-\enumerate{
-\item \code{\link[=bayesma_spec]{bayesma_spec()}} -- validate arguments, extract data, resolve priors.
-\item \code{\link[=bayesma_stan_code]{bayesma_stan_code()}} -- generate Stan code as named blocks.
-\item \code{\link[=bayesma_stan_data]{bayesma_stan_data()}} -- build the Stan data list.
-\item \code{\link[=bayesma_fit]{bayesma_fit()}} -- compile and sample.
-\item \code{\link[=bayesma_extract]{bayesma_extract()}} -- extract tidy effect components.
-\item \code{\link[=bayesma_output]{bayesma_output()}} -- assemble the final \code{bayesma} object.
-}
+Fits a Bayesian meta-analysis model via Stan. Use \code{stan_code(model)} to
+inspect the generated Stan program after fitting. Supply \code{custom_model} to
+use your own Stan program instead.
 }

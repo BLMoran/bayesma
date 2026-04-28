@@ -138,8 +138,7 @@ summary(fit_outlier)
 
 The `generated quantities` block computes `p_outlier[i]` — the posterior
 probability that study $`i`$ belongs to the outlier component. These are
-extracted and reported by
-[`bayesma_output()`](https://blmoran.github.io/bayesma/reference/bayesma_output.md).
+extracted and reported by `bayesma_output()`.
 
 ## Identifying outlier studies
 

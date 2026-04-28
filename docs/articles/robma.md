@@ -123,8 +123,7 @@ robma_output(fit_robma)
 robma_table(fit_robma)
 ```
 
-[`robma_output()`](https://blmoran.github.io/bayesma/reference/robma_output.md)
-prints the model-averaged summary.
+`robma_output()` prints the model-averaged summary.
 [`robma_table()`](https://blmoran.github.io/bayesma/reference/robma_table.md)
 returns a `gt` table with posterior model probabilities, the Bayes
 factors for heterogeneity and bias, and the model-averaged posterior for

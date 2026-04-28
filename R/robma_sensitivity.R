@@ -79,7 +79,7 @@
 #' model <- attach_robma_sensitivity(model, robma_sens)
 #'
 #' # Now sensitivity_plot can use the pre-computed RoBMA fits
-#' sensitivity_plot(model, data, priors, measure = "OR", incl_robma = TRUE)
+#' sensitivity_plot(model, data, priors, estimand = "OR", incl_robma = TRUE)
 #' }
 #'
 #' @export

@@ -1,12 +1,6 @@
 # Egger's Regression Test for Small-Study Effects (Bayesian)
 
-Thin orchestrator over the six-stage pipeline:
-[`egger_spec()`](https://blmoran.github.io/bayesma/reference/egger_spec.md),
-[`egger_stan_code()`](https://blmoran.github.io/bayesma/reference/egger_stan_code.md),
-[`egger_stan_data()`](https://blmoran.github.io/bayesma/reference/egger_stan_data.md),
-[`egger_fit()`](https://blmoran.github.io/bayesma/reference/egger_fit.md),
-[`egger_extract()`](https://blmoran.github.io/bayesma/reference/egger_extract.md),
-[`egger_output()`](https://blmoran.github.io/bayesma/reference/egger_output.md).
+Egger's Regression Test for Small-Study Effects (Bayesian)
 
 ## Usage
 
@@ -31,7 +25,6 @@ egger(
   d_prior = NULL,
   tau_prior = NULL,
   credible_level = 0.9,
-  return_stage = c("full", "spec", "code", "data", "fit"),
   chains = 4,
   iter_warmup = 2000,
   iter_sampling = 4000,
@@ -96,18 +89,11 @@ egger(
 
 - tau_prior:
 
-  Prior on the between-study SD for the additive heterogeneity
-  parameterisation.
+  Prior on the between-study SD for additive heterogeneity.
 
 - credible_level:
 
-  Numeric in `(0, 1)`. Credible-interval level for the summary. Default
-  `0.90`.
-
-- return_stage:
-
-  Character. One of `"full"` (default), `"spec"`, `"code"`, `"data"`, or
-  `"fit"`.
+  Numeric in `(0, 1)`. Credible-interval level. Default `0.90`.
 
 - chains, iter_warmup, iter_sampling, adapt_delta, seed:
 

@@ -8,7 +8,7 @@ ecdf_model_plot(
   model,
   data,
   prior,
-  measure,
+  estimand,
   rob_var = NULL,
   exclude_high_rob = FALSE,
   incl_common_effect = FALSE,
@@ -50,7 +50,7 @@ ecdf_model_plot(
 \code{incl_robma = FALSE}, defaults to "User-specified prior".}
 }}
 
-\item{measure}{Effect measure string (e.g., "OR", "RR", "HR", "IRR", "MD", "SMD").}
+\item{estimand}{Effect estimand string (e.g., "OR", "RR", "HR", "IRR", "MD", "SMD").}
 
 \item{rob_var}{Optional. Name of the risk-of-bias variable (unquoted).}
 
@@ -80,12 +80,12 @@ probability axis labels. Either \code{"null"} (compare to
 \code{null_value}) or \code{"null_range"} (compare to
 \code{null_range} boundaries). Default is \code{"null"}.}
 
-\item{null_value}{Null hypothesis value. If NULL, uses measure default.}
+\item{null_value}{Null hypothesis value. If NULL, uses estimand default.}
 
 \item{null_range}{Numeric vector of length 2 giving null range bounds.}
 
 \item{add_null_range}{Logical. If TRUE and \code{null_range} is NULL,
-uses measure-appropriate defaults.}
+uses estimand-appropriate defaults.}
 
 \item{color_null_range}{Fill colour for the null range band.
 Default \code{"#77bb41"}.}
@@ -148,7 +148,7 @@ priors <- list(
 ecdf_model_plot(
   model = model,
   data = dat,
-  measure = "OR",
+  estimand = "OR",
   prior = priors$weak_reg,
   incl_random_effect = TRUE,
   incl_pet_peese = TRUE
@@ -157,7 +157,7 @@ ecdf_model_plot(
 ecdf_model_plot(
   model = model,
   data = dat,
-  measure = "OR",
+  estimand = "OR",
   prior = priors$weak_reg,
   incl_robma = TRUE
 )

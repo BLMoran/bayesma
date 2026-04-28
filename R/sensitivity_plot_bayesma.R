@@ -103,7 +103,7 @@ bayesma_future_pmap_dfr <- function(.l, .f, parallel = FALSE, workers = NULL, se
 # ============================================================================
 #' @noRd
 robma_to_sensitivity_draws <- function(robma_fit,
-                                       measure,
+                                       estimand,
                                        prior,
                                        prior_label,
                                        section_label = "RoBMA") {
@@ -138,8 +138,7 @@ robma_to_sensitivity_draws <- function(robma_fit,
 
   x <- as.numeric(x)
 
-  # RoBMA returns mu on log scale for ratio measures in your implementation
-  if (measure %in% c("OR", "RR", "HR", "IRR")) {
+  if (estimand %in% c("OR", "RR", "HR", "IRR")) {
     x <- exp(x)
   }
 

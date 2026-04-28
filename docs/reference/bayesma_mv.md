@@ -1,12 +1,6 @@
 # Run a Multivariate Bayesian Meta-Analysis in Stan
 
-Thin orchestrator over the six-stage pipeline:
-[`bayesma_mv_spec()`](https://blmoran.github.io/bayesma/reference/bayesma_mv_spec.md),
-[`bayesma_mv_stan_code()`](https://blmoran.github.io/bayesma/reference/bayesma_mv_stan_code.md),
-[`bayesma_mv_stan_data()`](https://blmoran.github.io/bayesma/reference/bayesma_mv_stan_data.md),
-[`bayesma_mv_fit()`](https://blmoran.github.io/bayesma/reference/bayesma_mv_fit.md),
-[`bayesma_mv_extract()`](https://blmoran.github.io/bayesma/reference/bayesma_mv_extract.md),
-[`bayesma_mv_output()`](https://blmoran.github.io/bayesma/reference/bayesma_mv_output.md).
+Run a Multivariate Bayesian Meta-Analysis in Stan
 
 ## Usage
 
@@ -35,7 +29,6 @@ bayesma_mv(
   rho_between_prior = NULL,
   custom_model = NULL,
   custom_data = NULL,
-  return_stage = c("full", "spec", "code", "data", "fit"),
   chains = 4,
   iter_warmup = 1000,
   iter_sampling = 1000,
@@ -122,11 +115,6 @@ bayesma_mv(
 - custom_data:
 
   Optional named list merged into the Stan data list.
-
-- return_stage:
-
-  Character. One of `"full"` (default), `"spec"`, `"code"`, `"data"`, or
-  `"fit"`.
 
 - chains, iter_warmup, iter_sampling, adapt_delta, seed:
 

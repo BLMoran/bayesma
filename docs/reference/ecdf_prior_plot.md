@@ -14,7 +14,7 @@ ecdf_prior_plot(
   model,
   data,
   priors,
-  measure,
+  estimand,
   model_types = "random_effect",
   prior_order = NULL,
   prob_reference = "null",
@@ -51,9 +51,9 @@ ecdf_prior_plot(
   at least `mu_prior` and optionally `tau_prior`, and may include `name`
   for display labels.
 
-- measure:
+- estimand:
 
-  Effect measure string (e.g., "OR", "RR", "HR", "IRR", "MD", "SMD").
+  Effect estimand string (e.g., "OR", "RR", "HR", "IRR", "MD", "SMD").
 
 - model_types:
 
@@ -77,7 +77,7 @@ ecdf_prior_plot(
 
 - null_value:
 
-  Null hypothesis value. If NULL, uses measure default.
+  Null hypothesis value. If NULL, uses estimand default.
 
 - null_range:
 
@@ -85,7 +85,7 @@ ecdf_prior_plot(
 
 - add_null_range:
 
-  Logical. If TRUE and `null_range` is NULL, uses measure-appropriate
+  Logical. If TRUE and `null_range` is NULL, uses estimand-appropriate
   defaults.
 
 - color_null_range:

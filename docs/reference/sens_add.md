@@ -30,7 +30,7 @@ sens_add_plot_width(x, plot_width)
 - range:
 
   Numeric vector of length 2 giving the null/ROPE range, or `NULL` to
-  use the default for the model's measure.
+  use the default for the model's estimand.
 
 - color_null_range:
 

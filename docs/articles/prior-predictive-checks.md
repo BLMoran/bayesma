@@ -1,106 +1,152 @@
-# Prior predictive checks
+# Prior Predictive Checks
 
-## Introduction
+## What is a prior predictive check?
 
 A prior predictive check simulates data from the model using only the
-prior distributions — before any observed data are incorporated. The
-resulting prior predictive distribution tells you what data the model
-considers plausible before seeing the evidence.
+prior distributions — before any observed data are incorporated. Because
+the likelihood is bypassed entirely, the draws reflect what the model
+considers plausible *a priori*, under nothing but the priors and the
+assumed data-generating process.
 
-Prior predictive checks serve two purposes:
+The resulting distribution, $`p(y_\text{rep})`$, answers the question:
+*if I knew nothing beyond my prior beliefs and this model structure,
+what data would I expect to see?*
 
-1.  **Prior calibration**: Does the prior predictive distribution cover
-    the range of effects that would be scientifically meaningful? Are
-    the implied effects absurdly large or implausibly small?
-2.  **Model plausibility**: Before fitting, does the model structure
-    make sense? Can it generate data that looks anything like what you
-    expect to observe?
+## What prior predictive checks are for
 
-## Running prior predictive checks
+Prior predictive checks have two legitimate uses.
 
-``` r
-fit_prior <- bayesma(
-  data,
-  model_type    = "random_effect",
-  sample_prior  = TRUE
-)
+**Sanity-checking on the observable scale.** Priors are typically
+specified on a transformed scale (log-OR, log-RR, Cohen’s $`d`$). It is
+easy to choose a prior that looks reasonable in those units but implies
+absurd data — e.g. a `normal(0, 10)` prior on log-OR implies that
+studies routinely report ORs in the thousands. The prior predictive
+translates the prior back into the scale of the actual data, making such
+problems immediately visible.
 
-ecdf_prior_plot(fit_prior)
-```
+**Encoding external knowledge.** When domain expertise or independent
+reference data inform the prior — for example, empirical estimates of
+between-study heterogeneity from a previous systematic review — the
+prior predictive lets you verify the prior is consistent with that
+knowledge before analysis begins.
 
-`sample_prior = TRUE` draws from the prior predictive distribution. No
-data are used in the likelihood; the `data` argument only provides the
-standard errors $`s_i`$ for the simulation scale.
+## What prior predictive checks are not for
 
-## What to look for
+It is tempting to adjust priors iteratively until $`y_\text{rep}`$
+resembles the observed data. **This is circular.** Doing so smuggles the
+analysis dataset into the prior, so both the prior and the likelihood
+carry information from the same data. The resulting posterior will be
+overconfident: it appears to be updated by the data, but the data have
+already shaped the prior.
 
-**Effect scale.** On the log-OR scale, effects above 2 or below −2 are
-unusual in most clinical literatures. If the prior predictive
-distribution assigns substantial probability to $`|\mu| > 3`$, the prior
-on $`\mu`$ is too vague.
+Priors must be specified from sources that are genuinely independent of
+the analysis dataset:
 
-**Heterogeneity scale.** A prior that generates $`\tau > 2`$ on the
-log-OR scale implies studies differ by more than 4 log-ORs — implausible
-in most applications. Tighten the $`\tau`$ prior if the prior predictive
-places more than 10% of mass above $`\tau = 1`$.
+- Domain expertise and subject-matter knowledge
+- Empirical estimates from previous meta-analyses or independent cohorts
+- General plausibility constraints (effect sizes cannot be infinite;
+  event rates must lie in $`[0, 1]`$)
 
-**Study-level effects.** The prior predictive for individual study
-effects ($`\theta_i`$) should span a plausible range without being
-dominated by the prior tails.
+The prior predictive check is then used to *verify* the chosen prior is
+coherent — not to *select* it by matching the observed data.
 
-## Interpreting the ECDF prior plot
+## Running a prior predictive check
 
-[`ecdf_prior_plot()`](https://blmoran.github.io/bayesma/reference/ecdf_prior_plot.md)
-overlays the empirical CDF of the observed effects with the prior
-predictive CDF. If the observed CDF falls far outside the prior
-predictive band, the priors are inconsistent with the data — the
-posterior will be dominated by the likelihood pulling against the prior,
-which can cause slow mixing and poor calibration.
-
-## Adjusting priors
-
-If the prior predictive check reveals that priors are too vague or too
-tight:
+Pass `sample_prior = TRUE` to
+[`bayesma()`](https://blmoran.github.io/bayesma/reference/bayesma.md).
+The model is compiled and sampled in the usual way, but the likelihood
+contribution is excluded from the model block so the MCMC explores the
+prior distribution. The `data` argument is still required: arm sizes and
+standard errors are used to keep the simulation on the same observable
+scale as the real data.
 
 ``` r
-fit_adj <- bayesma(
-  data,
-  model_type   = "random_effect",
-  mu_prior     = normal(0, 0.5),
-  tau_prior    = half_normal(0, 0.25),
+prior_fit <- bayesma(
+  data       = my_data,
+  studyvar   = "study",
+  event_ctrl = "events_c",
+  event_int  = "events_i",
+  n_ctrl     = "n_c",
+  n_int      = "n_i",
+  likelihood = "binomial",
+  model_type = "random_effect",
+  mu_prior   = normal(0, 1),
+  tau_prior  = half_cauchy(0, 0.5),
   sample_prior = TRUE
 )
 
-ecdf_prior_plot(fit_adj)
+pp_check(prior_fit)
 ```
 
-Iterate until the prior predictive covers the plausible effect range
-without being dominated by the tails.
+The plot overlays the observed data $`y`$ (dark line) with draws from
+$`p(y_\text{rep})`$ (light lines). The observed data are shown for
+reference — to orient you on the scale of the data — not as a
+calibration target.
 
-## Informative priors from external data
+## What to look for
 
-Empirically-derived priors on $`\tau`$ are available from Turner et
-al. (2015) (medical treatments, binary outcomes) and Rhodes et
-al. (2015) (psychological interventions, continuous outcomes). Using
-domain-calibrated priors avoids the need to rely entirely on prior
-predictive simulation:
+Evaluate the prior predictive against *domain knowledge*, not against
+the observed data.
+
+**Effect scale.** On the log-OR scale, values of $`|\mu| > 2`$
+correspond to ORs above ~7 or below ~0.14. If the prior predictive
+assigns substantial mass to effects of this magnitude, ask whether that
+is defensible for the clinical context. Most pharmacological
+interventions fall in the range $`|\text{log-OR}|
+< 1.5`$; a prior placing 30% of its mass outside this range is very
+vague.
+
+**Heterogeneity scale.** A $`\tau > 1`$ on the log-OR scale implies
+studies differ by more than 2 log-ORs — unusual in most literatures.
+Check whether the prior predictive for $`\tau`$ is consistent with the
+degree of between-study variation you would expect from independent
+knowledge of the intervention area.
+
+**Study-level effects.** The prior predictive for individual study
+effects $`\theta_i`$ should cover a plausible range. Very heavy tails
+(studies implying ORs \> 100) suggest the prior is too diffuse.
+
+## Specifying priors from external knowledge
+
+Empirically-derived priors for $`\tau`$ are available from Turner et
+al. (2015) for pharmacological and non-pharmacological interventions on
+binary outcomes, and from Rhodes et al. (2015) for psychological
+interventions on continuous outcomes. These are calibrated from large
+collections of meta-analyses and provide a principled starting point
+that is independent of any single analysis:
 
 ``` r
+# Turner et al. (2015) median tau for pharmacological treatments (binary)
 bayesma(
   data,
   model_type = "random_effect",
-  tau_prior  = half_normal(0, 0.32)  # Turner et al. median for pharmacological treatments
+  mu_prior   = normal(0, 1),
+  tau_prior  = half_normal(0, 0.32)
 )
 ```
 
-## Prior predictive checks for publication bias models
+Using externally-calibrated priors removes the temptation to tune
+against the analysis data and grounds the prior in the broader evidence
+base for the intervention class.
 
-For models with selection mechanisms (selection weight, Copas), prior
-predictive checks should verify that the implied selection probabilities
-are plausible. A prior that generates weight functions concentrated near
-zero (no selection) or near one (all studies published regardless of
-result) is uninformative.
+## Comparing prior and posterior
+
+Once the model has been fitted to the data,
+[`ecdf_prior_plot()`](https://blmoran.github.io/bayesma/reference/ecdf_prior_plot.md)
+overlays the prior predictive ECDF with the posterior ECDF. This is a
+diagnostic for **prior-data conflict**: if the posterior sits far in the
+tail of the prior predictive, the priors were inconsistent with what the
+data showed. Moderate conflict is expected and healthy — it means the
+data are updating the prior. Severe conflict may indicate a prior that
+is too tight, a model misspecification, or anomalous data.
 
 ``` r
-ecdf_prior_plot(fit_selection_prior, parameter = "selection_weights")
+# Fit with the prior predictive
+prior_fit    <- bayesma(data, ..., sample_prior = TRUE)
+
+# Fit the full model
+posterior_fit <- bayesma(data, ...)
+
+# Compare
+ecdf_prior_plot(posterior_fit)
 ```

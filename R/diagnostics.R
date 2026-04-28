@@ -30,8 +30,8 @@
 #'
 #' @examples
 #' \dontrun{
-#' fit <- bayesma(data, likelihood = "binomial", measure = "OR", ...)
-#' bayesma_diagnostics(fit)
+#' fit <- bayesma(data, likelihood = "binomial", ...)
+#' diagnostics(fit)
 #' }
 #'
 #' @export

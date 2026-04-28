@@ -31,7 +31,6 @@ meta_reg(
   beta_priors = NULL,
   custom_model = NULL,
   custom_data = NULL,
-  return_stage = c("full", "spec", "code", "data", "fit"),
   chains = 4,
   iter_warmup = 1000,
   iter_sampling = 1000,
@@ -48,8 +47,7 @@ meta_reg(
 \item{yi, vi}{Character. Column names of pre-computed effect sizes and
 their sampling variances (two-stage only).}
 
-\item{mods}{One-sided formula specifying moderators
-(e.g. \code{~ age + dose}).}
+\item{mods}{One-sided formula specifying moderators (e.g. \code{~ age + dose}).}
 
 \item{event_ctrl, event_int}{Character. Column names of event counts for
 binomial / Poisson likelihoods.}
@@ -59,42 +57,34 @@ means and SDs for the Gaussian likelihood.}
 
 \item{n_ctrl, n_int}{Character. Column names of arm sample sizes.}
 
-\item{likelihood}{Character. One of \code{"binomial"}, \code{"gaussian"},
-\code{"poisson"}.}
+\item{likelihood}{Character. One of \code{"binomial"}, \code{"gaussian"}, \code{"poisson"}.}
 
-\item{model_type}{Character. \code{"random_effect"} (default) or
-\code{"common_effect"}.}
+\item{model_type}{Character. \code{"random_effect"} (default) or \code{"common_effect"}.}
 
 \item{stage}{Character. \code{"two_stage"} (default) or \code{"one_stage"}.}
 
 \item{center}{Logical. Mean-centre continuous moderators. Default \code{TRUE}.}
 
-\item{scale}{Logical. Scale continuous moderators to unit SD. Default
-\code{FALSE}.}
+\item{scale}{Logical. Scale continuous moderators to unit SD. Default \code{FALSE}.}
 
-\item{small_sample}{Character. Small-sample adjustment for two-stage
-models: \code{"none"}, \code{"t_approx"}, or \code{"hjsk"}.}
+\item{small_sample}{Character. Small-sample adjustment for two-stage models:
+\code{"none"}, \code{"t_approx"}, or \code{"hjsk"}.}
 
-\item{mu_prior}{Prior on the intercept (pooled effect at the reference
-moderator values).}
+\item{mu_prior}{Prior on the intercept.}
 
 \item{tau_prior}{Prior on the between-study SD (random-effects models).}
 
-\item{gamma_prior}{Prior on the Gaussian arm-level intercept
-(one-stage only).}
+\item{gamma_prior}{Prior on the Gaussian arm-level intercept (one-stage only).}
 
 \item{beta_prior}{Default prior for every regression coefficient.}
 
 \item{beta_priors}{Named list of coefficient-specific priors, overriding
 \code{beta_prior} for those coefficients.}
 
-\item{custom_model}{Optional character scalar of Stan code overriding
-the generated program.}
+\item{custom_model}{Optional character scalar of Stan code overriding the
+generated program.}
 
 \item{custom_data}{Optional named list merged into the Stan data list.}
-
-\item{return_stage}{Character. One of \code{"full"} (default), \code{"spec"},
-\code{"code"}, \code{"data"}, or \code{"fit"}.}
 
 \item{chains, iter_warmup, iter_sampling, adapt_delta, seed}{MCMC settings.}
 
@@ -104,7 +94,5 @@ the generated program.}
 An object of class \code{c("bayesma_metareg", "bayesma")}.
 }
 \description{
-Thin orchestrator over the six-stage pipeline:
-\code{\link[=meta_reg_spec]{meta_reg_spec()}}, \code{\link[=meta_reg_stan_code]{meta_reg_stan_code()}}, \code{\link[=meta_reg_stan_data]{meta_reg_stan_data()}},
-\code{\link[=meta_reg_fit]{meta_reg_fit()}}, \code{\link[=meta_reg_extract]{meta_reg_extract()}}, \code{\link[=meta_reg_output]{meta_reg_output()}}.
+Bayesian Meta-Regression
 }

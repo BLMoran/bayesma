@@ -126,9 +126,9 @@
     </div>
 
     <div class="section level2">
-      <h2 id="core-meta-analysis-pipeline">Core meta-analysis pipeline<a class="anchor" aria-label="anchor" href="#core-meta-analysis-pipeline"></a></h2>
+      <h2 id="core-meta-analysis">Core meta-analysis<a class="anchor" aria-label="anchor" href="#core-meta-analysis"></a></h2>
 
-      <div class="section-desc"><p>One-call and modular pipeline functions for common-effect and random-effects models.</p></div>
+      <div class="section-desc"><p>Functions for fitting common-effect and random-effects meta-analysis models.</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -144,48 +144,6 @@
 
         <dt>
 
-          <code><a href="bayesma_spec.html">bayesma_spec()</a></code>
-
-        </dt>
-        <dd>Build a bayesma specification object</dd>
-
-        <dt>
-
-          <code><a href="bayesma_stan_code.html">bayesma_stan_code()</a></code>
-
-        </dt>
-        <dd>Generate Stan code for a bayesma specification</dd>
-
-        <dt>
-
-          <code><a href="bayesma_stan_data.html">bayesma_stan_data()</a></code>
-
-        </dt>
-        <dd>Build the Stan data list for a bayesma specification</dd>
-
-        <dt>
-
-          <code><a href="bayesma_fit.html">bayesma_fit()</a></code>
-
-        </dt>
-        <dd>Compile and sample a bayesma model</dd>
-
-        <dt>
-
-          <code><a href="bayesma_extract.html">bayesma_extract()</a></code>
-
-        </dt>
-        <dd>Extract tidy effect components from a bayesma fit</dd>
-
-        <dt>
-
-          <code><a href="bayesma_output.html">bayesma_output()</a></code>
-
-        </dt>
-        <dd>Assemble a <code>bayesma</code> object from pipeline outputs</dd>
-
-        <dt>
-
           <code><a href="bayesma_marginal.html">bayesma_marginal()</a></code>
 
         </dt>
@@ -198,7 +156,7 @@
         </dt>
         <dd>Generate a Bayesian meta-analysis report</dd>
       </dl></div><div class="section level2">
-      <h2 id="multivariate-meta-analysis-pipeline">Multivariate meta-analysis pipeline<a class="anchor" aria-label="anchor" href="#multivariate-meta-analysis-pipeline"></a></h2>
+      <h2 id="multivariate-meta-analysis">Multivariate meta-analysis<a class="anchor" aria-label="anchor" href="#multivariate-meta-analysis"></a></h2>
 
 
 
@@ -274,48 +232,6 @@
 
         <dt>
 
-          <code><a href="egger_spec.html">egger_spec()</a></code>
-
-        </dt>
-        <dd>Build an Egger's test specification object</dd>
-
-        <dt>
-
-          <code><a href="egger_stan_code.html">egger_stan_code()</a></code>
-
-        </dt>
-        <dd>Generate Stan code for an Egger's test specification</dd>
-
-        <dt>
-
-          <code><a href="egger_stan_data.html">egger_stan_data()</a></code>
-
-        </dt>
-        <dd>Build the Stan data list for an Egger's test specification</dd>
-
-        <dt>
-
-          <code><a href="egger_fit.html">egger_fit()</a></code>
-
-        </dt>
-        <dd>Compile and sample an Egger's test model</dd>
-
-        <dt>
-
-          <code><a href="egger_extract.html">egger_extract()</a></code>
-
-        </dt>
-        <dd>Extract tidy summaries from an Egger's test fit</dd>
-
-        <dt>
-
-          <code><a href="egger_output.html">egger_output()</a></code>
-
-        </dt>
-        <dd>Assemble a <code>bayesma_egger</code> object from pipeline outputs</dd>
-
-        <dt>
-
           <code><a href="egger_plot.html">egger_plot()</a></code>
 
         </dt>
@@ -336,48 +252,6 @@
 
         </dt>
         <dd>Bayesian Meta-Regression</dd>
-
-        <dt>
-
-          <code><a href="meta_reg_spec.html">meta_reg_spec()</a></code>
-
-        </dt>
-        <dd>Build a meta-regression specification object</dd>
-
-        <dt>
-
-          <code><a href="meta_reg_stan_code.html">meta_reg_stan_code()</a></code>
-
-        </dt>
-        <dd>Generate Stan code for a meta-regression specification</dd>
-
-        <dt>
-
-          <code><a href="meta_reg_stan_data.html">meta_reg_stan_data()</a></code>
-
-        </dt>
-        <dd>Build the Stan data list for a meta-regression specification</dd>
-
-        <dt>
-
-          <code><a href="meta_reg_fit.html">meta_reg_fit()</a></code>
-
-        </dt>
-        <dd>Compile and sample a meta-regression model</dd>
-
-        <dt>
-
-          <code><a href="meta_reg_extract.html">meta_reg_extract()</a></code>
-
-        </dt>
-        <dd>Extract tidy effect components from a meta-regression fit</dd>
-
-        <dt>
-
-          <code><a href="meta_reg_output.html">meta_reg_output()</a></code>
-
-        </dt>
-        <dd>Assemble a <code>bayesma_metareg</code> object from pipeline outputs</dd>
 
         <dt>
 
@@ -452,48 +326,6 @@
 
         </dt>
         <dd>Robust Bayesian Model Averaging for Meta-Analysis</dd>
-
-        <dt>
-
-          <code><a href="robma_spec.html">robma_spec()</a></code>
-
-        </dt>
-        <dd>Build a RoBMA specification object</dd>
-
-        <dt>
-
-          <code><a href="robma_stan_code.html">robma_stan_code()</a></code>
-
-        </dt>
-        <dd>Generate Stan programs for a RoBMA specification</dd>
-
-        <dt>
-
-          <code><a href="robma_stan_data.html">robma_stan_data()</a></code>
-
-        </dt>
-        <dd>Build cmdstanr data list(s) for a RoBMA specification</dd>
-
-        <dt>
-
-          <code><a href="robma_fit.html">robma_fit()</a></code>
-
-        </dt>
-        <dd>Compile and sample a RoBMA specification</dd>
-
-        <dt>
-
-          <code><a href="robma_extract.html">robma_extract()</a></code>
-
-        </dt>
-        <dd>Extract tidy effect components from a RoBMA fit</dd>
-
-        <dt>
-
-          <code><a href="robma_output.html">robma_output()</a></code>
-
-        </dt>
-        <dd>Assemble the final RoBMA output object</dd>
 
         <dt>
 
@@ -727,7 +559,7 @@
           <code><a href="pp_check.html">pp_check()</a></code>
 
         </dt>
-        <dd>Posterior Predictive Check for bayesma Objects</dd>
+        <dd>Posterior and Prior Predictive Checks for bayesma Objects</dd>
       </dl></div><div class="section level2">
       <h2 id="visualisations">Visualisations<a class="anchor" aria-label="anchor" href="#visualisations"></a></h2>
 
@@ -779,6 +611,29 @@
 
         </dt>
         <dd>ECDF Plot Comparing Prior Sensitivity</dd>
+      </dl></div><div class="section level2">
+      <h2 id="datasets">Datasets<a class="anchor" aria-label="anchor" href="#datasets"></a></h2>
+
+
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="binary_outcome.html">binary_outcome</a></code>
+
+        </dt>
+        <dd>Example Binary Outcome Dataset</dd>
+
+        <dt>
+
+          <code><a href="cont_outcome.html">cont_outcome</a></code>
+
+        </dt>
+        <dd>Example Continuous Outcome Dataset</dd>
       </dl></div><div class="section level2">
       <h2 id="utilities">Utilities<a class="anchor" aria-label="anchor" href="#utilities"></a></h2>
 

@@ -251,7 +251,7 @@
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">vector</span>[N] treat;</span></code></pre></div>
 </section><section class="level3"><h3 id="required-generated-quantities-block">Required generated quantities block<a class="anchor" aria-label="anchor" href="#required-generated-quantities-block"></a>
 </h3>
-<p>For compatibility with <code><a href="../reference/bayesma_extract.html">bayesma_extract()</a></code> and <code><a href="../reference/bayesma_output.html">bayesma_output()</a></code>, the <code>generated quantities {}</code> block must export <code>b_Intercept</code> (the pooled effect):</p>
+<p>For compatibility with <code>bayesma_extract()</code> and <code>bayesma_output()</code>, the <code>generated quantities {}</code> block must export <code>b_Intercept</code> (the pooled effect):</p>
 <div class="sourceCode" id="cb7"><pre class="sourceCode stan"><code class="sourceCode stan"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">generated quantities</span> {</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">real</span> b_Intercept = mu;</span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>

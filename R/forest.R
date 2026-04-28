@@ -168,7 +168,7 @@ forest <- function(model,
   validate_inputs_bayesma(
     model           = model,
     data            = data,
-    measure         = estimand,
+    estimand         = estimand,
     studyvar        = {{studyvar}},
     year            = {{year}},
     subgroup        = subgroup,

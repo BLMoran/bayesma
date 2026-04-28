@@ -15,7 +15,7 @@ ecdf_model_plot(
   model,
   data,
   prior,
-  measure,
+  estimand,
   rob_var = NULL,
   exclude_high_rob = FALSE,
   incl_common_effect = FALSE,
@@ -72,9 +72,9 @@ ecdf_model_plot(
       If not provided and `incl_robma = FALSE`, defaults to
       "User-specified prior".
 
-- measure:
+- estimand:
 
-  Effect measure string (e.g., "OR", "RR", "HR", "IRR", "MD", "SMD").
+  Effect estimand string (e.g., "OR", "RR", "HR", "IRR", "MD", "SMD").
 
 - rob_var:
 
@@ -126,7 +126,7 @@ ecdf_model_plot(
 
 - null_value:
 
-  Null hypothesis value. If NULL, uses measure default.
+  Null hypothesis value. If NULL, uses estimand default.
 
 - null_range:
 
@@ -134,7 +134,7 @@ ecdf_model_plot(
 
 - add_null_range:
 
-  Logical. If TRUE and `null_range` is NULL, uses measure-appropriate
+  Logical. If TRUE and `null_range` is NULL, uses estimand-appropriate
   defaults.
 
 - color_null_range:
@@ -218,7 +218,7 @@ priors <- list(
 ecdf_model_plot(
   model = model,
   data = dat,
-  measure = "OR",
+  estimand = "OR",
   prior = priors$weak_reg,
   incl_random_effect = TRUE,
   incl_pet_peese = TRUE
@@ -227,7 +227,7 @@ ecdf_model_plot(
 ecdf_model_plot(
   model = model,
   data = dat,
-  measure = "OR",
+  estimand = "OR",
   prior = priors$weak_reg,
   incl_robma = TRUE
 )

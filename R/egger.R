@@ -13,35 +13,7 @@
 # Stage 1: spec
 # -----------------------------------------------------------------------------
 
-#' Build an Egger's test specification object
-#'
-#' @param data A data frame with one row per study.
-#' @param studyvar Character. Column name of the study identifier.
-#' @param n_ctrl,n_int Character. Column names of control and intervention
-#'   sample sizes.
-#' @param event_ctrl,event_int Character. Column names of event counts
-#'   (binomial / Poisson likelihoods).
-#' @param mean_ctrl,mean_int,sd_ctrl,sd_int Character. Column names of arm
-#'   means and SDs (Gaussian likelihood).
-#' @param likelihood Character. One of `"binomial"`, `"gaussian"`,
-#'   `"poisson"`.
-#' @param heterogeneity Character. `"multiplicative"` (default) or
-#'   `"additive"`.
-#' @param alpha_prior Prior on the intercept.
-#' @param beta_prior Prior on the slope (the Egger coefficient).
-#' @param kappa_prior Prior on the multiplicative heterogeneity
-#'   coefficient.
-#' @param gamma_prior Prior on the dispersion parameter.
-#' @param d_prior Prior on the overdispersion parameter.
-#' @param tau_prior Prior on the between-study SD for the additive
-#'   heterogeneity parameterisation.
-#' @param credible_level Numeric in `(0, 1)`. Credible-interval level for
-#'   the summary. Default `0.90`.
-#' @param custom_model Optional character scalar of Stan code overriding
-#'   the generated program.
-#' @param custom_data Optional named list merged into the Stan data list.
-#' @return An object of class `"egger_spec"`.
-#' @export
+#' @noRd
 egger_spec <- function(
     data,
     studyvar,
@@ -204,13 +176,7 @@ print.egger_spec <- function(x, ...) {
 # Stage 2: stan code
 # -----------------------------------------------------------------------------
 
-#' Generate Stan code for an Egger's test specification
-#'
-#' @param spec An `egger_spec` object.
-#' @param format Logical. If `TRUE` (default), format via
-#'   `stanc --auto-format`; falls back to the raw program if unavailable.
-#' @return An object of class `"egger_stan_code"`.
-#' @export
+#' @noRd
 egger_stan_code <- function(spec, format = TRUE) {
   if (!inherits(spec, "egger_spec")) {
     cli::cli_abort("{.arg spec} must be an {.cls egger_spec} object.")
@@ -236,11 +202,7 @@ egger_stan_code <- function(spec, format = TRUE) {
 # Stage 3: stan data
 # -----------------------------------------------------------------------------
 
-#' Build the Stan data list for an Egger's test specification
-#'
-#' @param spec An `egger_spec` object.
-#' @return A named list suitable for `cmdstanr::CmdStanModel$sample(data = ...)`.
-#' @export
+#' @noRd
 egger_stan_data <- function(spec) {
   if (!inherits(spec, "egger_spec")) {
     cli::cli_abort("{.arg spec} must be an {.cls egger_spec} object.")
@@ -280,16 +242,7 @@ egger_stan_data <- function(spec) {
 # Stage 4: fit
 # -----------------------------------------------------------------------------
 
-#' Compile and sample an Egger's test model
-#'
-#' @param spec      An `egger_spec` object.
-#' @param code      An `egger_stan_code` object. Defaults to
-#'   `egger_stan_code(spec)`.
-#' @param stan_data A Stan data list. Defaults to `egger_stan_data(spec)`.
-#' @param chains,iter_warmup,iter_sampling,adapt_delta,seed MCMC settings.
-#' @param ... Passed to `cmdstanr::CmdStanModel$sample()`.
-#' @return An object of class `"egger_fit"`.
-#' @export
+#' @noRd
 egger_fit <- function(spec,
                       code          = egger_stan_code(spec),
                       stan_data     = egger_stan_data(spec),
@@ -326,12 +279,7 @@ egger_fit <- function(spec,
 # Stage 5: extract
 # -----------------------------------------------------------------------------
 
-#' Extract tidy summaries from an Egger's test fit
-#'
-#' @param fit  An `egger_fit` object.
-#' @param spec An `egger_spec` object.
-#' @return An object of class `"egger_effects"`.
-#' @export
+#' @noRd
 egger_extract <- function(fit, spec) {
   if (!inherits(fit, "egger_fit")) {
     cli::cli_abort("{.arg fit} must be an {.cls egger_fit} object.")
@@ -451,13 +399,7 @@ build_egger_conclusion <- function(beta_summary, credible_level) {
 # Stage 6: output
 # -----------------------------------------------------------------------------
 
-#' Assemble a `bayesma_egger` object from pipeline outputs
-#'
-#' @param spec    An `egger_spec` object.
-#' @param fit     An `egger_fit` object.
-#' @param effects An `egger_effects` object.
-#' @return A list of class `"bayesma_egger"`.
-#' @export
+#' @noRd
 egger_output <- function(spec, fit, effects) {
   if (!inherits(spec,    "egger_spec"))    cli::cli_abort("{.arg spec} must be {.cls egger_spec}.")
   if (!inherits(fit,     "egger_fit"))     cli::cli_abort("{.arg fit} must be {.cls egger_fit}.")
@@ -628,14 +570,30 @@ print.egger_summary <- function(x, digits = 3, ...) {
 
 #' Egger's Regression Test for Small-Study Effects (Bayesian)
 #'
-#' Thin orchestrator over the six-stage pipeline:
-#' [egger_spec()], [egger_stan_code()], [egger_stan_data()], [egger_fit()],
-#' [egger_extract()], [egger_output()].
-#'
-#' @inheritParams egger_spec
+#' @param data A data frame with one row per study.
+#' @param studyvar Character. Column name of the study identifier.
+#' @param n_ctrl,n_int Character. Column names of control and intervention
+#'   sample sizes.
+#' @param event_ctrl,event_int Character. Column names of event counts
+#'   (binomial / Poisson likelihoods).
+#' @param mean_ctrl,mean_int,sd_ctrl,sd_int Character. Column names of arm
+#'   means and SDs (Gaussian likelihood).
+#' @param likelihood Character. One of `"binomial"`, `"gaussian"`,
+#'   `"poisson"`.
+#' @param heterogeneity Character. `"multiplicative"` (default) or
+#'   `"additive"`.
+#' @param alpha_prior Prior on the intercept.
+#' @param beta_prior Prior on the slope (the Egger coefficient).
+#' @param kappa_prior Prior on the multiplicative heterogeneity coefficient.
+#' @param gamma_prior Prior on the dispersion parameter.
+#' @param d_prior Prior on the overdispersion parameter.
+#' @param tau_prior Prior on the between-study SD for additive heterogeneity.
+#' @param credible_level Numeric in `(0, 1)`. Credible-interval level.
+#'   Default `0.90`.
+#' @param custom_model Optional character scalar of Stan code overriding the
+#'   generated program.
+#' @param custom_data Optional named list merged into the Stan data list.
 #' @param chains,iter_warmup,iter_sampling,adapt_delta,seed MCMC settings.
-#' @param return_stage Character. One of `"full"` (default), `"spec"`,
-#'   `"code"`, `"data"`, or `"fit"`.
 #' @param ... Passed to `cmdstanr::sample()`.
 #' @return An object of class `c("bayesma_egger", "bayesma")`.
 #' @export
@@ -659,7 +617,6 @@ egger <- function(
     d_prior        = NULL,
     tau_prior       = NULL,
     credible_level = 0.90,
-    return_stage   = c("full", "spec", "code", "data", "fit"),
     chains         = 4,
     iter_warmup    = 2000,
     iter_sampling  = 4000,
@@ -669,9 +626,7 @@ egger <- function(
     custom_data    = NULL,
     ...
 ) {
-  return_stage <- rlang::arg_match(return_stage)
-
-  spec <- egger_spec(
+  spec      <- egger_spec(
     data = data, studyvar = studyvar,
     n_ctrl = n_ctrl, n_int = n_int,
     event_ctrl = event_ctrl, event_int = event_int,
@@ -684,22 +639,14 @@ egger <- function(
     credible_level = credible_level,
     custom_model = custom_model, custom_data = custom_data
   )
-  if (return_stage == "spec") return(spec)
-
-  code <- egger_stan_code(spec)
-  if (return_stage == "code") return(code)
-
+  code      <- egger_stan_code(spec)
   stan_data <- egger_stan_data(spec)
-  if (return_stage == "data") return(stan_data)
-
-  fit <- egger_fit(
+  fit       <- egger_fit(
     spec = spec, code = code, stan_data = stan_data,
     chains = chains, iter_warmup = iter_warmup,
     iter_sampling = iter_sampling, adapt_delta = adapt_delta,
     seed = seed, ...
   )
-  if (return_stage == "fit") return(fit)
-
   effects <- egger_extract(fit, spec)
   egger_output(spec, fit, effects)
 }

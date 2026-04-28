@@ -1,37 +1,48 @@
 #' Robust Bayesian Model Averaging for Meta-Analysis
 #'
-#' `robma()` is a thin orchestrator over a six-stage pipeline. Each stage is
-#' exported so users can pause for inspection or plug in their own Stan
-#' program(s) via the `custom_model` argument.
+#' Fits a Robust Bayesian Meta-Analysis (RoBMA) model using Bayesian model
+#' averaging across models with and without an effect, heterogeneity, and
+#' publication bias. Use `stan_code(model)` to inspect the generated Stan
+#' programs after fitting.
 #'
-#' The pipeline:
-#' 1. [robma_spec()]      -- validate arguments, resolve priors, build grid.
-#' 2. [robma_stan_code()] -- generate Stan programs (one per component / indicator).
-#' 3. [robma_stan_data()] -- build the corresponding Stan data lists.
-#' 4. [robma_fit()]       -- compile + sample + bridge sampling / PIP extraction.
-#' 5. [robma_extract()]   -- null-range probabilities + forest data frame.
-#' 6. [robma_output()]    -- assemble the final `bayesma_robma` object.
-#'
-#' @inheritParams robma_spec
-#' @param null_range Numeric vector of length 2 giving the null range
-#'   on the log scale (e.g., `c(-0.1, 0.1)` for log OR). Effects
-#'   within this range are considered practically equivalent to zero.
-#'   Defaults to `NULL` (point null at exactly zero). When specified,
-#'   direction probabilities and the P(practically null) are computed
-#'   relative to this range. For OR/RR, `c(-0.1, 0.1)` corresponds
-#'   to OR/RR in `[0.905, 1.105]`.
+#' @param data A data frame with one row per study.
+#' @param studyvar Character. Column name of the study identifier.
+#' @param event_ctrl,event_int Character. Column names of event counts
+#'   (binomial / Poisson likelihoods).
+#' @param mean_ctrl,mean_int,sd_ctrl,sd_int Character. Column names of arm
+#'   means and SDs (Gaussian likelihood).
+#' @param n_ctrl,n_int Character. Column names of arm sample sizes.
+#' @param likelihood Character. One of `"binomial"`, `"gaussian"`, `"poisson"`.
+#' @param priors_effect,priors_effect_null,priors_heterogeneity,priors_heterogeneity_null,priors_bias,priors_bias_null
+#'   Lists of prior objects for the effect, heterogeneity, and publication-bias
+#'   components (alternative and null). If `NULL`, RoBMA defaults are used.
+#' @param rescale_priors Numeric. Scale factor applied to default priors.
+#'   Default `1`.
+#' @param method Character. `"bridge"` (default) uses bridge sampling across
+#'   the full model grid; `"ss"` uses a single spike-and-slab Stan model.
+#' @param bias_indicator Character. Spike-and-slab bias mechanism:
+#'   `"bias_corrected"`, `"pet_peese"`, or `"selection_weight"`.
+#' @param null_range Numeric vector of length 2 giving the null range on the
+#'   log scale (e.g., `c(-0.1, 0.1)` for log OR). Effects within this range
+#'   are considered practically equivalent to zero. Defaults to `NULL` (point
+#'   null at exactly zero). For OR/RR, `c(-0.1, 0.1)` corresponds to OR/RR
+#'   in `[0.905, 1.105]`.
+#' @param b_prior Prior on the `b` slope for spike-and-slab bias correction.
+#' @param p_bias_prior Prior on the bias inclusion probability.
+#' @param p_cutoffs Numeric vector of one-sided p-value cutoffs for
+#'   selection-weight models. Default `c(0.025, 0.05)`.
+#' @param parallel Logical. Fit the bridgesampling grid in parallel.
+#' @param chains,iter_warmup,iter_sampling,adapt_delta,seed MCMC settings.
+#' @param quiet Logical. Suppress per-step progress messages.
 #' @param custom_model Optional Stan program(s) that override code generation.
 #'   For `method = "bridge"`, a named list of character scalars keyed by model
 #'   label. For `method = "ss"`, a single character scalar.
 #' @param custom_data Optional Stan data overrides merged onto the auto-built
 #'   data list(s). Same shape conventions as `custom_model`.
-#' @param return_stage Character. One of `"full"` (default), `"spec"`,
-#'   `"code"`, `"data"`, or `"fit"`. Returns the intermediate pipeline object
-#'   instead of the final `bayesma_robma` object.
 #' @param format Logical. If `TRUE` (default), auto-format generated Stan
 #'   programs with `stanc --auto-format`.
-#' @return An object of class `c("bayesma_robma", "bayesma")`, or an
-#'   intermediate pipeline object if `return_stage` is not `"full"`.
+#' @param ... Additional arguments passed to `cmdstanr::CmdStanModel$sample()`.
+#' @return An object of class `c("bayesma_robma", "bayesma")`.
 #' @export
 robma <- function(
     data, studyvar,
@@ -56,12 +67,9 @@ robma <- function(
     quiet = FALSE,
     custom_model = NULL,
     custom_data = NULL,
-    return_stage = c("full", "spec", "code", "data", "fit"),
     format = TRUE,
     ...
 ) {
-  return_stage <- rlang::arg_match(return_stage)
-
   spec <- robma_spec(
     data                      = data,
     studyvar                  = studyvar,
@@ -94,15 +102,9 @@ robma <- function(
     custom_data               = custom_data,
     ...
   )
-  if (return_stage == "spec") return(spec)
-
-  code <- robma_stan_code(spec, format = format)
-  if (return_stage == "code") return(code)
-
+  code      <- robma_stan_code(spec, format = format)
   stan_data <- robma_stan_data(spec)
-  if (return_stage == "data") return(stan_data)
-
-  fit <- robma_fit(
+  fit       <- robma_fit(
     spec          = spec,
     code          = code,
     stan_data     = stan_data,
@@ -115,8 +117,6 @@ robma <- function(
     quiet         = quiet,
     ...
   )
-  if (return_stage == "fit") return(fit)
-
   effects <- robma_extract(fit, spec)
   robma_output(spec, fit, effects)
 }

@@ -1,12 +1,6 @@
 # Bayesian Meta-Regression
 
-Thin orchestrator over the six-stage pipeline:
-[`meta_reg_spec()`](https://blmoran.github.io/bayesma/reference/meta_reg_spec.md),
-[`meta_reg_stan_code()`](https://blmoran.github.io/bayesma/reference/meta_reg_stan_code.md),
-[`meta_reg_stan_data()`](https://blmoran.github.io/bayesma/reference/meta_reg_stan_data.md),
-[`meta_reg_fit()`](https://blmoran.github.io/bayesma/reference/meta_reg_fit.md),
-[`meta_reg_extract()`](https://blmoran.github.io/bayesma/reference/meta_reg_extract.md),
-[`meta_reg_output()`](https://blmoran.github.io/bayesma/reference/meta_reg_output.md).
+Bayesian Meta-Regression
 
 ## Usage
 
@@ -38,7 +32,6 @@ meta_reg(
   beta_priors = NULL,
   custom_model = NULL,
   custom_data = NULL,
-  return_stage = c("full", "spec", "code", "data", "fit"),
   chains = 4,
   iter_warmup = 1000,
   iter_sampling = 1000,
@@ -108,8 +101,7 @@ meta_reg(
 
 - mu_prior:
 
-  Prior on the intercept (pooled effect at the reference moderator
-  values).
+  Prior on the intercept.
 
 - tau_prior:
 
@@ -136,11 +128,6 @@ meta_reg(
 - custom_data:
 
   Optional named list merged into the Stan data list.
-
-- return_stage:
-
-  Character. One of `"full"` (default), `"spec"`, `"code"`, `"data"`, or
-  `"fit"`.
 
 - chains, iter_warmup, iter_sampling, adapt_delta, seed:
 

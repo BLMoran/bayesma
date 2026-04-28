@@ -122,25 +122,7 @@ assemble_stan_blocks <- function(blocks) {
 # Stage 1: spec -- validate args, extract data, resolve priors
 # -----------------------------------------------------------------------------
 
-#' Build a bayesma specification object
-#'
-#' Validates the argument combination, resolves default priors, extracts the
-#' relevant vectors from `data`, computes study-level effect sizes where
-#' needed, and returns a list that every downstream stage consumes.
-#'
-#' This is stage 1 of the [bayesma()] pipeline. You typically do not call it
-#' directly -- use `bayesma(..., return_stage = "spec")` instead -- but it is
-#' exported for users who want to inspect or mutate the spec before generating
-#' Stan code.
-#'
-#' @inheritParams bayesma
-#' @param custom_model Optional Stan program (character scalar) supplied by
-#'   the user. When non-NULL, [bayesma_stan_code()] returns this verbatim.
-#' @param custom_data Optional list of Stan data to override the automatically
-#'   built data list. Useful when `custom_model` declares variables that the
-#'   standard builder does not know about.
-#' @return An object of class `"bayesma_spec"`.
-#' @export
+#' @noRd
 bayesma_spec <- function(
     data,
     studyvar,
@@ -408,27 +390,54 @@ print.bayesma_spec <- function(x, ...) {
 
 
 # -----------------------------------------------------------------------------
+# Internal: prior-only Stan code injection
+# -----------------------------------------------------------------------------
+
+#' @noRd
+inject_prior_only <- function(stan_code) {
+  # 1. Add `int<lower=0, upper=1> prior_only;` to the data block.
+  #    Data blocks contain no braces in their body, so [^}]* is safe.
+  stan_code <- sub(
+    pattern     = "(data \\{[^}]*?)(\n\\})",
+    replacement = "\\1\n  int<lower=0, upper=1> prior_only;\n\\2",
+    x           = stan_code,
+    perl        = TRUE
+  )
+
+  # 2. Wrap the likelihood section of the model block in if (!prior_only).
+  #    The generators always emit "  // Likelihood\n" as a separator; we
+  #    split there, then re-join with the conditional guard.
+  marker <- "// Likelihood\n"
+  if (!grepl(marker, stan_code, fixed = TRUE)) return(stan_code)
+
+  # Find the marker (allowing for leading whitespace after auto-format)
+  split_pos <- regexpr("\\s*// Likelihood\n", stan_code, perl = TRUE)
+  if (split_pos == -1L) return(stan_code)
+
+  before_lik <- substr(stan_code, 1L, split_pos - 1L)
+  after_lik  <- substr(stan_code, split_pos + attr(split_pos, "match.length"), nchar(stan_code))
+
+  # The model block's closing `}` is the first `\n}` (no leading spaces).
+  end_pos  <- regexpr("\n\\}", after_lik)
+  if (end_pos == -1L) return(stan_code)
+
+  lik_body   <- substr(after_lik, 1L, end_pos - 1L)
+  after_body <- substr(after_lik, end_pos, nchar(after_lik))
+
+  paste0(
+    before_lik,
+    "  if (!prior_only) {\n  // Likelihood\n",
+    lik_body, "\n  }",
+    after_body
+  )
+}
+
+
+# -----------------------------------------------------------------------------
 # Stage 2: bayesma_stan_code -- spec -> named blocks + full program
 # -----------------------------------------------------------------------------
 
-#' Generate Stan code for a bayesma specification
-#'
-#' Returns both the full Stan program and its decomposition into the standard
-#' blocks (`functions`, `data`, `transformed_data`, `parameters`,
-#' `transformed_parameters`, `model`, `generated_quantities`). Missing blocks
-#' are empty strings.
-#'
-#' If `spec$custom_model` is non-NULL, the user's Stan code is returned
-#' verbatim (and parsed into blocks for inspection).
-#'
-#' @param spec A `bayesma_spec` object.
-#' @return An object of class `"bayesma_stan_code"` -- a list with elements
-#'   `functions`, `data`, `transformed_data`, `parameters`,
-#'   `transformed_parameters`, `model`, `generated_quantities`, and `full`.
-#' @param format Logical. If `TRUE` (default), run the generated program
-#'   through Stan's `stanc --auto-format` for consistent indentation and
-#'   spacing. Falls back to the raw program if the formatter is unavailable.
-#' @export
+#' @noRd
 bayesma_stan_code <- function(spec, format = TRUE) {
   if (!inherits(spec, "bayesma_spec")) {
     cli::cli_abort("{.arg spec} must be a {.cls bayesma_spec} object.")
@@ -527,15 +536,7 @@ format.bayesma_stan_code <- function(x, ...) x$full
 # Stage 3: bayesma_stan_data -- spec -> cmdstanr data list
 # -----------------------------------------------------------------------------
 
-#' Build the Stan data list for a bayesma specification
-#'
-#' Constructs the list passed to `cmdstanr::sample()`. When
-#' `spec$custom_data` is provided, those elements override or augment the
-#' automatically built list.
-#'
-#' @param spec A `bayesma_spec` object.
-#' @return A named list suitable for `cmdstanr::CmdStanModel$sample(data = ...)`.
-#' @export
+#' @noRd
 bayesma_stan_data <- function(spec) {
   if (!inherits(spec, "bayesma_spec")) {
     cli::cli_abort("{.arg spec} must be a {.cls bayesma_spec} object.")
@@ -708,23 +709,7 @@ build_stan_data_pet_peese <- function(spec) {
 # Stage 4: bayesma_fit -- compile + sample
 # -----------------------------------------------------------------------------
 
-#' Compile and sample a bayesma model
-#'
-#' Takes the Stan code and data produced by earlier stages and runs
-#' `cmdstanr::sample()`. Handles the PET-PEESE decision rule (fits PET first,
-#' then switches to PEESE when posterior evidence for an effect exceeds the
-#' threshold).
-#'
-#' @param spec     A `bayesma_spec` object.
-#' @param code     A `bayesma_stan_code` object, or a character scalar Stan
-#'   program. Defaults to `bayesma_stan_code(spec)`.
-#' @param stan_data A Stan data list. Defaults to `bayesma_stan_data(spec)`.
-#' @param chains,iter_warmup,iter_sampling,adapt_delta,seed MCMC settings.
-#' @param ... Passed to `cmdstanr::CmdStanModel$sample()`.
-#' @return A list with class `"bayesma_fit"` containing elements `fit` (the
-#'   cmdstanr `CmdStanMCMC`), `stan_code` (list), `stan_data` (list), and
-#'   (for PET-PEESE) `pet_peese` decision metadata.
-#' @export
+#' @noRd
 bayesma_fit <- function(spec,
                         code          = bayesma_stan_code(spec),
                         stan_data     = bayesma_stan_data(spec),
@@ -805,17 +790,7 @@ bayesma_fit <- function(spec,
 # Stage 5: bayesma_extract -- fit + spec -> tidy effect components
 # -----------------------------------------------------------------------------
 
-#' Extract tidy effect components from a bayesma fit
-#'
-#' Summaries, draws, per-study rows, and the prediction interval for a fitted
-#' bayesma model. When `spec$custom_model` is set, extraction is best-effort:
-#' `mu` is summarised if it exists in the fit, otherwise only the raw summary
-#' table and draws are returned.
-#'
-#' @param fit  A `bayesma_fit` object.
-#' @param spec A `bayesma_spec` object.
-#' @return An object of class `"bayesma_effects"`.
-#' @export
+#' @noRd
 bayesma_extract <- function(fit, spec) {
   if (!inherits(fit, "bayesma_fit")) {
     cli::cli_abort("{.arg fit} must be a {.cls bayesma_fit} object.")
@@ -945,26 +920,11 @@ extract_effects_standard <- function(fit, spec) {
     dplyr::mutate(study        = forcats::fct_inorder(.data$study),
                   effect_scale = effect_label)
 
-  pred_interval <- NULL
-  if (is_re) {
-    tryCatch({
-      mn <- as.vector(
-        posterior::subset_draws(fit$draws("mu_new"), variable = "mu_new")
-      )
-      pred_interval <<- tibble::tibble(
-        estimate = stats::median(mn),
-        lower    = stats::quantile(mn, 0.025),
-        upper    = stats::quantile(mn, 0.975)
-      )
-    }, error = function(e) NULL)
-  }
-
   list(
-    summary       = summary_tbl,
-    draws         = draws,
-    forest_df     = forest_df,
-    pred_interval = pred_interval,
-    effect_label  = effect_label
+    summary      = summary_tbl,
+    draws        = draws,
+    forest_df    = forest_df,
+    effect_label = effect_label
   )
 }
 
@@ -1094,11 +1054,10 @@ extract_effects_simple <- function(fit, spec, key_vars, draw_vars,
     dplyr::mutate(study = forcats::fct_inorder(.data$study))
 
   list(
-    summary       = summary_tbl,
-    draws         = draws,
-    forest_df     = forest_df,
-    pred_interval = NULL,
-    extra_meta    = extra_meta
+    summary    = summary_tbl,
+    draws      = draws,
+    forest_df  = forest_df,
+    extra_meta = extra_meta
   )
 }
 
@@ -1112,8 +1071,7 @@ extract_effects_custom <- function(fit, spec) {
     error = function(e) NULL
   )
 
-  forest_df     <- NULL
-  pred_interval <- NULL
+  forest_df <- NULL
   if ("mu" %in% draw_vars) {
     mu_draws <- as.vector(
       posterior::subset_draws(fit$draws("mu"), variable = "mu")
@@ -1134,25 +1092,13 @@ extract_effects_custom <- function(fit, spec) {
     )
     forest_df <- dplyr::bind_rows(study_rows, pooled_row) |>
       dplyr::mutate(study = forcats::fct_inorder(.data$study))
-
-    if ("mu_new" %in% draw_vars) {
-      mn <- as.vector(
-        posterior::subset_draws(fit$draws("mu_new"), variable = "mu_new")
-      )
-      pred_interval <- tibble::tibble(
-        estimate = stats::median(mn),
-        lower    = stats::quantile(mn, 0.025),
-        upper    = stats::quantile(mn, 0.975)
-      )
-    }
   }
 
   list(
-    summary       = summary_tbl,
-    draws         = draws_raw,
-    forest_df     = forest_df,
-    pred_interval = pred_interval,
-    effect_label  = "custom"
+    summary      = summary_tbl,
+    draws        = draws_raw,
+    forest_df    = forest_df,
+    effect_label = "custom"
   )
 }
 
@@ -1161,17 +1107,7 @@ extract_effects_custom <- function(fit, spec) {
 # Stage 6: bayesma_output -- assemble the final bayesma object
 # -----------------------------------------------------------------------------
 
-#' Assemble a `bayesma` object from pipeline outputs
-#'
-#' Combines the outputs of the earlier stages into the standard `bayesma`
-#' return object consumed by downstream tools (`forest()`, `diagnostics()`,
-#' etc.).
-#'
-#' @param spec    A `bayesma_spec` object.
-#' @param fit     A `bayesma_fit` object.
-#' @param effects A `bayesma_effects` object (from [bayesma_extract()]).
-#' @return A list of class `"bayesma"`.
-#' @export
+#' @noRd
 bayesma_output <- function(spec, fit, effects) {
   if (!inherits(spec,    "bayesma_spec"))    cli::cli_abort("{.arg spec} must be {.cls bayesma_spec}.")
   if (!inherits(fit,     "bayesma_fit"))     cli::cli_abort("{.arg fit} must be {.cls bayesma_fit}.")
@@ -1222,15 +1158,14 @@ bayesma_output <- function(spec, fit, effects) {
   if (!is.null(spec$custom_model)) meta$custom_model <- TRUE
 
   out <- list(
-    fit           = fit$fit,
-    summary       = effects$summary,
-    forest_df     = effects$forest_df,
-    draws         = effects$draws,
-    pred_interval = effects$pred_interval,
-    stan_code     = code_full,
-    stan_data     = fit$stan_data,
-    arm_data      = arm_data,
-    meta          = meta
+    fit       = fit$fit,
+    summary   = effects$summary,
+    forest_df = effects$forest_df,
+    draws     = effects$draws,
+    stan_code = code_full,
+    stan_data = fit$stan_data,
+    arm_data  = arm_data,
+    meta      = meta
   )
   class(out) <- "bayesma"
   out

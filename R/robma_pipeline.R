@@ -13,43 +13,7 @@
 # Stage 1: robma_spec
 # -----------------------------------------------------------------------------
 
-#' Build a RoBMA specification object
-#'
-#' @param data A data frame with one row per study.
-#' @param studyvar Character. Column name of the study identifier.
-#' @param event_ctrl,event_int Character. Column names of event counts
-#'   (binomial / Poisson likelihoods).
-#' @param mean_ctrl,mean_int,sd_ctrl,sd_int Character. Column names of arm
-#'   means and SDs (Gaussian likelihood).
-#' @param n_ctrl,n_int Character. Column names of arm sample sizes.
-#' @param likelihood Character. One of `"binomial"`, `"gaussian"`,
-#'   `"poisson"`.
-#' @param priors_effect,priors_effect_null,priors_heterogeneity,priors_heterogeneity_null,priors_bias,priors_bias_null
-#'   Lists of `bayesma_prior` objects for the effect, heterogeneity and
-#'   publication-bias components (alternative and null). If `NULL`, the
-#'   RoBMA defaults are used.
-#' @param rescale_priors Numeric. Scale factor applied to default priors.
-#'   Default `1`.
-#' @param method Character. `"bridge"` (default) uses bridgesampling across
-#'   the full model grid; `"ss"` uses a single spike-and-slab Stan model.
-#' @param bias_indicator Character. Spike-and-slab bias mechanism:
-#'   `"bias_corrected"`, `"pet_peese"`, or `"selection_weight"`.
-#' @param null_range Numeric length-2 vector. Range treated as the point
-#'   null for the effect component.
-#' @param b_prior Prior on the `b` slope for spike-and-slab bias correction.
-#' @param p_bias_prior Prior on the bias inclusion probability.
-#' @param p_cutoffs Numeric vector of one-sided p-value cutoffs for
-#'   selection-weight models. Default `c(0.025, 0.05)`.
-#' @param parallel Logical. Fit the bridgesampling grid in parallel.
-#' @param chains,iter_warmup,iter_sampling,adapt_delta,seed MCMC settings.
-#' @param quiet Logical. Suppress per-step progress messages.
-#' @param custom_model Optional character scalar of Stan code overriding
-#'   the generated program (spike-and-slab only).
-#' @param custom_data Optional named list merged into the Stan data list.
-#' @param ... Additional arguments forwarded to
-#'   `cmdstanr::CmdStanModel$sample()`.
-#' @return An object of class `c("bayesma_robma_spec", "bayesma_spec")`.
-#' @export
+#' @noRd
 robma_spec <- function(
     data, studyvar,
     event_ctrl = NULL, event_int = NULL,
@@ -287,23 +251,7 @@ print.bayesma_robma_spec <- function(x, ...) {
 # Stage 2: robma_stan_code
 # -----------------------------------------------------------------------------
 
-#' Generate Stan programs for a RoBMA specification
-#'
-#' For `method = "bridge"` returns a named list keyed by model label. Each entry
-#' is either a `bayesma_stan_code`-shaped list (parsed blocks + `full`) or, for
-#' analytic component models with no Stan program, a list with `analytic = TRUE`
-#' and `full = NA_character_`.
-#'
-#' For `method = "ss"` returns a single-entry list keyed by `bias_indicator`.
-#'
-#' If `spec$custom_model` is set, the user's Stan program(s) replace the
-#' generated code: a character scalar is used for the ss case; a named list is
-#' merged per-label for the bridge case.
-#'
-#' @param spec A `bayesma_robma_spec`.
-#' @param format Logical. Run each program through `stanc --auto-format`.
-#' @return An object of class `"bayesma_robma_stan_code"`.
-#' @export
+#' @noRd
 robma_stan_code <- function(spec, format = TRUE) {
   if (!inherits(spec, "bayesma_robma_spec")) {
     cli::cli_abort("{.arg spec} must be a {.cls bayesma_robma_spec} object.",
@@ -460,19 +408,7 @@ print.bayesma_robma_stan_code <- function(x, ...) {
 # Stage 3: robma_stan_data
 # -----------------------------------------------------------------------------
 
-#' Build cmdstanr data list(s) for a RoBMA specification
-#'
-#' Returns a named list keyed by model label (bridge) or by bias indicator
-#' (ss). Each element is a list suitable for `cmdstanr::CmdStanModel$sample()`.
-#' Analytic bridge components contribute a `NULL` entry.
-#'
-#' `spec$custom_data` overlays the auto-built data list. If `custom_data` is a
-#' list keyed by label, per-label overrides are applied; for the ss case a
-#' non-nested list is merged at the top level of the single program.
-#'
-#' @param spec A `bayesma_robma_spec`.
-#' @return An object of class `"bayesma_robma_stan_data"`.
-#' @export
+#' @noRd
 robma_stan_data <- function(spec) {
   if (!inherits(spec, "bayesma_robma_spec")) {
     cli::cli_abort("{.arg spec} must be a {.cls bayesma_robma_spec} object.",
@@ -564,22 +500,7 @@ print.bayesma_robma_stan_data <- function(x, ...) {
 # Stage 4: robma_fit
 # -----------------------------------------------------------------------------
 
-#' Compile and sample a RoBMA specification
-#'
-#' Accepts the outputs of `robma_stan_code()` and `robma_stan_data()`.
-#' Dispatches on `spec$method` to bridge sampling (with model averaging across
-#' the component grid) or the spike-and-slab joint model.
-#'
-#' @param spec A `bayesma_robma_spec`.
-#' @param code A `bayesma_robma_stan_code`.
-#' @param stan_data A `bayesma_robma_stan_data`.
-#' @param chains,iter_warmup,iter_sampling,adapt_delta,seed MCMC settings.
-#' @param parallel Logical. Parallelise sampling across component models
-#'   (bridge only).
-#' @param quiet Logical. Suppress progress messages.
-#' @param ... Passed to `cmdstanr::CmdStanModel$sample()`.
-#' @return An object of class `"bayesma_robma_fit"`.
-#' @export
+#' @noRd
 robma_fit <- function(spec, code, stan_data,
                       chains = 4, iter_warmup = 1000, iter_sampling = 1000,
                       adapt_delta = 0.95, seed = 1234,
@@ -959,12 +880,7 @@ robma_fit_ss <- function(spec, code, stan_data,
 # Stage 5: robma_extract
 # -----------------------------------------------------------------------------
 
-#' Extract tidy effect components from a RoBMA fit
-#'
-#' @param fit A `bayesma_robma_fit`.
-#' @param spec A `bayesma_robma_spec`.
-#' @return An object of class `"bayesma_robma_effects"`.
-#' @export
+#' @noRd
 robma_extract <- function(fit, spec) {
   if (!inherits(spec, "bayesma_robma_spec")) {
     cli::cli_abort("{.arg spec} must be a {.cls bayesma_robma_spec} object.",
@@ -1013,13 +929,7 @@ robma_extract <- function(fit, spec) {
 # Stage 6: robma_output
 # -----------------------------------------------------------------------------
 
-#' Assemble the final RoBMA output object
-#'
-#' @param spec A `bayesma_robma_spec`.
-#' @param fit A `bayesma_robma_fit`.
-#' @param effects A `bayesma_robma_effects`.
-#' @return An object of class `c("bayesma_robma", "bayesma")`.
-#' @export
+#' @noRd
 robma_output <- function(spec, fit, effects) {
   result <- fit
   result$meta <- list(

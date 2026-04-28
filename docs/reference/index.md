@@ -1,40 +1,18 @@
 # Package index
 
-## Core meta-analysis pipeline
+## Core meta-analysis
 
-One-call and modular pipeline functions for common-effect and
-random-effects models.
+Functions for fitting common-effect and random-effects meta-analysis
+models.
 
 - [`bayesma()`](https://blmoran.github.io/bayesma/reference/bayesma.md)
   : Run a Bayesian Meta-Analysis in Stan
-
-- [`bayesma_spec()`](https://blmoran.github.io/bayesma/reference/bayesma_spec.md)
-  : Build a bayesma specification object
-
-- [`bayesma_stan_code()`](https://blmoran.github.io/bayesma/reference/bayesma_stan_code.md)
-  : Generate Stan code for a bayesma specification
-
-- [`bayesma_stan_data()`](https://blmoran.github.io/bayesma/reference/bayesma_stan_data.md)
-  : Build the Stan data list for a bayesma specification
-
-- [`bayesma_fit()`](https://blmoran.github.io/bayesma/reference/bayesma_fit.md)
-  : Compile and sample a bayesma model
-
-- [`bayesma_extract()`](https://blmoran.github.io/bayesma/reference/bayesma_extract.md)
-  : Extract tidy effect components from a bayesma fit
-
-- [`bayesma_output()`](https://blmoran.github.io/bayesma/reference/bayesma_output.md)
-  :
-
-  Assemble a `bayesma` object from pipeline outputs
-
 - [`bayesma_marginal()`](https://blmoran.github.io/bayesma/reference/bayesma_marginal.md)
   : Compute a marginal estimand from a bayesma fit
-
 - [`bayesma_report()`](https://blmoran.github.io/bayesma/reference/bayesma_report.md)
   : Generate a Bayesian meta-analysis report
 
-## Multivariate meta-analysis pipeline
+## Multivariate meta-analysis
 
 - [`bayesma_mv()`](https://blmoran.github.io/bayesma/reference/bayesma_mv.md)
   : Run a Multivariate Bayesian Meta-Analysis in Stan
@@ -63,27 +41,6 @@ random-effects models.
 
 - [`egger()`](https://blmoran.github.io/bayesma/reference/egger.md) :
   Egger's Regression Test for Small-Study Effects (Bayesian)
-
-- [`egger_spec()`](https://blmoran.github.io/bayesma/reference/egger_spec.md)
-  : Build an Egger's test specification object
-
-- [`egger_stan_code()`](https://blmoran.github.io/bayesma/reference/egger_stan_code.md)
-  : Generate Stan code for an Egger's test specification
-
-- [`egger_stan_data()`](https://blmoran.github.io/bayesma/reference/egger_stan_data.md)
-  : Build the Stan data list for an Egger's test specification
-
-- [`egger_fit()`](https://blmoran.github.io/bayesma/reference/egger_fit.md)
-  : Compile and sample an Egger's test model
-
-- [`egger_extract()`](https://blmoran.github.io/bayesma/reference/egger_extract.md)
-  : Extract tidy summaries from an Egger's test fit
-
-- [`egger_output()`](https://blmoran.github.io/bayesma/reference/egger_output.md)
-  :
-
-  Assemble a `bayesma_egger` object from pipeline outputs
-
 - [`egger_plot()`](https://blmoran.github.io/bayesma/reference/egger_plot.md)
   : Plot method for bayesma_egger
 
@@ -91,36 +48,12 @@ random-effects models.
 
 - [`meta_reg()`](https://blmoran.github.io/bayesma/reference/meta_reg.md)
   : Bayesian Meta-Regression
-
-- [`meta_reg_spec()`](https://blmoran.github.io/bayesma/reference/meta_reg_spec.md)
-  : Build a meta-regression specification object
-
-- [`meta_reg_stan_code()`](https://blmoran.github.io/bayesma/reference/meta_reg_stan_code.md)
-  : Generate Stan code for a meta-regression specification
-
-- [`meta_reg_stan_data()`](https://blmoran.github.io/bayesma/reference/meta_reg_stan_data.md)
-  : Build the Stan data list for a meta-regression specification
-
-- [`meta_reg_fit()`](https://blmoran.github.io/bayesma/reference/meta_reg_fit.md)
-  : Compile and sample a meta-regression model
-
-- [`meta_reg_extract()`](https://blmoran.github.io/bayesma/reference/meta_reg_extract.md)
-  : Extract tidy effect components from a meta-regression fit
-
-- [`meta_reg_output()`](https://blmoran.github.io/bayesma/reference/meta_reg_output.md)
-  :
-
-  Assemble a `bayesma_metareg` object from pipeline outputs
-
 - [`coefficient_evidence()`](https://blmoran.github.io/bayesma/reference/coefficient_evidence.md)
   : Bayesian Evidence for Meta-Regression Coefficients
-
 - [`metareg_mod_plot()`](https://blmoran.github.io/bayesma/reference/metareg_mod_plot.md)
   : Plot Method for bayesma_coef_evidence Objects
-
 - [`bubble_plot()`](https://blmoran.github.io/bayesma/reference/bubble_plot.md)
   : Bubble Plot for Meta-Regression
-
 - [`multi_bubble_plots()`](https://blmoran.github.io/bayesma/reference/multi_bubble_plots.md)
   : Multi-panel Bubble Plots
 
@@ -137,18 +70,6 @@ random-effects models.
 
 - [`robma()`](https://blmoran.github.io/bayesma/reference/robma.md) :
   Robust Bayesian Model Averaging for Meta-Analysis
-- [`robma_spec()`](https://blmoran.github.io/bayesma/reference/robma_spec.md)
-  : Build a RoBMA specification object
-- [`robma_stan_code()`](https://blmoran.github.io/bayesma/reference/robma_stan_code.md)
-  : Generate Stan programs for a RoBMA specification
-- [`robma_stan_data()`](https://blmoran.github.io/bayesma/reference/robma_stan_data.md)
-  : Build cmdstanr data list(s) for a RoBMA specification
-- [`robma_fit()`](https://blmoran.github.io/bayesma/reference/robma_fit.md)
-  : Compile and sample a RoBMA specification
-- [`robma_extract()`](https://blmoran.github.io/bayesma/reference/robma_extract.md)
-  : Extract tidy effect components from a RoBMA fit
-- [`robma_output()`](https://blmoran.github.io/bayesma/reference/robma_output.md)
-  : Assemble the final RoBMA output object
 - [`robma_table()`](https://blmoran.github.io/bayesma/reference/robma_table.md)
   : Create a gt Table for RoBMA Results
 - [`robma_sensitivity()`](https://blmoran.github.io/bayesma/reference/robma_sensitivity.md)
@@ -242,7 +163,7 @@ Preliminary investigation of meta-analytic data structure.
 - [`diagnostics()`](https://blmoran.github.io/bayesma/reference/diagnostics.md)
   : Single-Page Model Diagnostics for bayesma Objects
 - [`pp_check()`](https://blmoran.github.io/bayesma/reference/pp_check.md)
-  : Posterior Predictive Check for bayesma Objects
+  : Posterior and Prior Predictive Checks for bayesma Objects
 
 ## Visualisations
 
@@ -258,6 +179,13 @@ Preliminary investigation of meta-analytic data structure.
   : ECDF Plot Comparing Model Strategies
 - [`ecdf_prior_plot()`](https://blmoran.github.io/bayesma/reference/ecdf_prior_plot.md)
   : ECDF Plot Comparing Prior Sensitivity
+
+## Datasets
+
+- [`binary_outcome`](https://blmoran.github.io/bayesma/reference/binary_outcome.md)
+  : Example Binary Outcome Dataset
+- [`cont_outcome`](https://blmoran.github.io/bayesma/reference/cont_outcome.md)
+  : Example Continuous Outcome Dataset
 
 ## Utilities
 

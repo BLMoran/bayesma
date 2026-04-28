@@ -307,20 +307,14 @@ articles:
       - bibliography
 
 reference:
-  - title: Core meta-analysis pipeline
-    desc: One-call and modular pipeline functions for common-effect and random-effects models.
+  - title: Core meta-analysis
+    desc: Functions for fitting common-effect and random-effects meta-analysis models.
     contents:
       - bayesma
-      - bayesma_spec
-      - bayesma_stan_code
-      - bayesma_stan_data
-      - bayesma_fit
-      - bayesma_extract
-      - bayesma_output
       - bayesma_marginal
       - bayesma_report
 
-  - title: Multivariate meta-analysis pipeline
+  - title: Multivariate meta-analysis
     contents:
       - bayesma_mv
       - bayesma_mv_spec
@@ -333,23 +327,11 @@ reference:
   - title: Egger's test
     contents:
       - egger
-      - egger_spec
-      - egger_stan_code
-      - egger_stan_data
-      - egger_fit
-      - egger_extract
-      - egger_output
       - egger_plot
 
   - title: Meta-regression
     contents:
       - meta_reg
-      - meta_reg_spec
-      - meta_reg_stan_code
-      - meta_reg_stan_data
-      - meta_reg_fit
-      - meta_reg_extract
-      - meta_reg_output
       - coefficient_evidence
       - metareg_mod_plot
       - bubble_plot
@@ -364,12 +346,6 @@ reference:
   - title: RoBMA
     contents:
       - robma
-      - robma_spec
-      - robma_stan_code
-      - robma_stan_data
-      - robma_fit
-      - robma_extract
-      - robma_output
       - robma_table
       - robma_sensitivity
       - robma_default_priors
@@ -443,6 +419,11 @@ reference:
       - rob_plot
       - ecdf_model_plot
       - ecdf_prior_plot
+
+  - title: Datasets
+    contents:
+      - binary_outcome
+      - cont_outcome
 
   - title: Utilities
     contents:

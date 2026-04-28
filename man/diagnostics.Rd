@@ -44,8 +44,8 @@ The diagnostic page contains six panels:
 }
 \examples{
 \dontrun{
-fit <- bayesma(data, likelihood = "binomial", measure = "OR", ...)
-bayesma_diagnostics(fit)
+fit <- bayesma(data, likelihood = "binomial", ...)
+diagnostics(fit)
 }
 
 }

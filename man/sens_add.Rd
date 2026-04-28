@@ -25,7 +25,7 @@ sens_add_plot_width(x, plot_width)
 \item{show}{Logical. Whether to display posterior probability columns.}
 
 \item{range}{Numeric vector of length 2 giving the null/ROPE range, or
-\code{NULL} to use the default for the model's measure.}
+\code{NULL} to use the default for the model's estimand.}
 
 \item{color_null_range}{Colour used to shade the null range.}
 

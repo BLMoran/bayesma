@@ -145,7 +145,7 @@ robma_sens <- run_robma_sensitivity(
 model <- attach_robma_sensitivity(model, robma_sens)
 
 # Step 3: Create sensitivity plot with RoBMA
-sensitivity_plot(model, data, priors, measure = "OR", incl_robma = TRUE)
+sensitivity_plot(model, data, priors, estimand = "OR", incl_robma = TRUE)
 }\if{html}{\out{</div>}}
 
 This separation allows the computationally expensive RoBMA fitting to be done

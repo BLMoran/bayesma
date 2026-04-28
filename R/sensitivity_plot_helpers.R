@@ -7,7 +7,7 @@
 #' across different sensitivity analyses.
 #'
 #' @param df Data frame containing posterior draws
-#' @param measure Effect measure type
+#' @param estimand Effect estimand type
 #' @param split_color_by_null Logical. Color based on null hypothesis
 #' @param color_overall_posterior Fill color for densities
 #' @param color_overall_posterior_outline Outline color for densities
@@ -28,7 +28,7 @@
 #' @keywords internal
 #' @noRd
 sensitivity_density_plot_fn <- function(df,
-                                        measure,
+                                        estimand,
                                         split_color_by_null = FALSE,
                                         color_overall_posterior = "dodgerblue",
                                         color_overall_posterior_outline = "blue",
@@ -44,11 +44,11 @@ sensitivity_density_plot_fn <- function(df,
                                         color_null_range = "#77bb41",
                                         font = NULL) {
 
-  props <- get_measure_properties(measure)
+  props <- get_measure_properties(estimand)
   null_value <- null_value %||% props$null_value
   breaks <- x_breaks %||% ggplot2::waiver()
 
-  # For ratio measures (OR, RR, HR, IRR), compute density on log scale
+  # For ratio estimands (OR, RR, HR, IRR), compute density on log scale
   # This ensures the KDE bandwidth is appropriate for the log-scale display
   use_log_density <- isTRUE(props$log_scale)
   if (use_log_density) {
@@ -249,7 +249,7 @@ sensitivity_density_plot_fn <- function(df,
     ggplot2::labs(x = props$x_label)
 
   # Apply appropriate scale
-  # For ratio measures, data is already log-transformed, so we use
+  # For ratio estimands, data is already log-transformed, so we use
   # a custom transformation to display original scale labels
   if (use_log_density) {
     # Create custom breaks on the original scale
@@ -377,7 +377,7 @@ sensitivity_table_left <- function(
 #' for the sensitivity analysis plot.
 #'
 #' @param df Data frame containing sensitivity analysis results
-#' @param measure Effect measure type
+#' @param estimand Effect estimand type
 #' @param add_probs Logical. Whether to include probability columns
 #' @param font Optional font family for the table
 #'
@@ -387,7 +387,7 @@ sensitivity_table_left <- function(
 #' @noRd
 sensitivity_table_right <- function(
     df,
-    measure,
+    estimand,
     add_probs = FALSE,
     add_probs_null_range = FALSE,
     font = NULL
@@ -440,7 +440,7 @@ sensitivity_table_right <- function(
 
   # Labels only for columns that exist
   labels <- c(
-    estimate = paste(measure, "[95% CrI]"),
+    estimate = paste(estimand, "[95% CrI]"),
     pr_benefit = "Pr(Benefit)",
     pr_no_benefit = "Pr(Harm)",
     pr_benefit_null_range = paste("Pr(Benefit>", "\u03B4", ")"),
@@ -495,7 +495,7 @@ sensitivity_table_right <- function(
 # Function for RoBMA draw extraction
 #' @noRd
 robma_to_sensitivity_draws <- function(robma_fit,
-                                       measure,
+                                       estimand,
                                        prior,
                                        prior_label,
                                        section_label = "RoBMA") {
@@ -538,8 +538,8 @@ robma_to_sensitivity_draws <- function(robma_fit,
 
   cli::cli_alert_info("RoBMA {prior}: {n_total} draws ({pct_null}% null model weight)")
 
-  # RoBMA returns mu on log scale for ratio measures
-  if (measure %in% c("OR", "RR", "HR", "IRR")) {
+  # RoBMA returns mu on log scale for ratio estimands
+  if (estimand %in% c("OR", "RR", "HR", "IRR")) {
     x <- exp(x)
   }
 

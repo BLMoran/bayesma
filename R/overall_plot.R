@@ -88,25 +88,17 @@ overall_plot <- function(model,
                          font = NULL,
                          plot_arrangement = "vertical") {
 
-  measure <- estimand
-
-  # Validate model class
-
   if (!inherits(model, "bayesma")) {
     cli::cli_abort("{.arg model} must be a {.cls bayesma} object.")
   }
 
-  # Get measure properties
-  props <- get_measure_properties(measure)
-
-  # Set null value from measure properties if not provided
-  null_value <- null_value %||% props$null_value
+  props        <- get_measure_properties(estimand)
+  null_value   <- null_value %||% props$null_value
   is_log_scale <- props$log_scale
-  x_label <- props$x_label
+  x_label      <- props$x_label
 
-  # Set tau x-axis label
-  tau_x_label <- if (measure %in% c("MD", "SMD") ||
-                     (is_marginal_estimand(measure) && model$meta$likelihood == "gaussian")) {
+  tau_x_label <- if (estimand %in% c("MD", "SMD") ||
+                     (is_marginal_estimand(estimand) && model$meta$likelihood == "gaussian")) {
     "Standard Deviation"
   } else {
     "Standard Deviation (Log Scale)"
@@ -128,12 +120,12 @@ overall_plot <- function(model,
   # ========================================================================
   is_re <- has_random_effects(model)
 
-  mu_samples <- if (is_marginal_estimand(measure)) {
+  mu_samples <- if (is_marginal_estimand(estimand)) {
     if (is.null(model$marginal)) {
       cli::cli_abort(
         c(
-          "Marginal estimand {.val {measure}} requires {.code $marginal} draws.",
-          "i" = "Re-fit the model with {.code estimand = {.val {measure}}} to attach marginal draws."
+          "Marginal estimand {.val {estimand}} requires {.code $marginal} draws.",
+          "i" = "Re-fit the model with {.code estimand = {.val {estimand}}} to attach marginal draws."
         )
       )
     }

@@ -19,7 +19,7 @@
 #'       \code{model$robma_sensitivity}. If not provided and
 #'       \code{incl_robma = FALSE}, defaults to "User-specified prior".}
 #'   }
-#' @param measure Effect measure string (e.g., "OR", "RR", "HR", "IRR", "MD", "SMD").
+#' @param estimand Effect estimand string (e.g., "OR", "RR", "HR", "IRR", "MD", "SMD").
 #' @param rob_var Optional. Name of the risk-of-bias variable (unquoted).
 #' @param exclude_high_rob Logical. If TRUE, includes an "Excluding High RoB" section.
 #' @param incl_common_effect Logical. Include common effect model. Default FALSE.
@@ -37,10 +37,10 @@
 #'   probability axis labels. Either \code{"null"} (compare to
 #'   \code{null_value}) or \code{"null_range"} (compare to
 #'   \code{null_range} boundaries). Default is \code{"null"}.
-#' @param null_value Null hypothesis value. If NULL, uses measure default.
+#' @param null_value Null hypothesis value. If NULL, uses estimand default.
 #' @param null_range Numeric vector of length 2 giving null range bounds.
 #' @param add_null_range Logical. If TRUE and \code{null_range} is NULL,
-#'   uses measure-appropriate defaults.
+#'   uses estimand-appropriate defaults.
 #' @param color_null_range Fill colour for the null range band.
 #'   Default \code{"#77bb41"}.
 #' @param label_control Label for control group. Default \code{"Control"}.
@@ -88,7 +88,7 @@
 #' ecdf_model_plot(
 #'   model = model,
 #'   data = dat,
-#'   measure = "OR",
+#'   estimand = "OR",
 #'   prior = priors$weak_reg,
 #'   incl_random_effect = TRUE,
 #'   incl_pet_peese = TRUE
@@ -97,7 +97,7 @@
 #' ecdf_model_plot(
 #'   model = model,
 #'   data = dat,
-#'   measure = "OR",
+#'   estimand = "OR",
 #'   prior = priors$weak_reg,
 #'   incl_robma = TRUE
 #' )
@@ -122,7 +122,7 @@
 ecdf_model_plot <- function(model,
                             data,
                             prior,
-                            measure,
+                            estimand,
                             rob_var = NULL,
                             exclude_high_rob = FALSE,
                             incl_common_effect = FALSE,
@@ -158,7 +158,7 @@ ecdf_model_plot <- function(model,
   validate_inputs_sens_plot(
     model   = model,
     data    = data,
-    measure = measure,
+    estimand = estimand,
     priors  = prior
   )
 
@@ -213,7 +213,7 @@ ecdf_model_plot <- function(model,
     robma_fit <- robma_sens[[prior_id]]
   }
 
-  props      <- get_measure_properties(measure)
+  props      <- get_measure_properties(estimand)
   null_value <- null_value %||% props$null_value
 
   # ---------------------------
@@ -221,7 +221,7 @@ ecdf_model_plot <- function(model,
   # ---------------------------
   if (is.null(null_range) && isTRUE(add_null_range)) {
     null_range <- switch(
-      measure,
+      estimand,
       OR  = c(0.9, 1.1),
       RR  = c(0.9, 1.1),
       HR  = c(0.9, 1.1),
@@ -329,7 +329,15 @@ ecdf_model_plot <- function(model,
 
   # ---------------------------
   transform_mu <- function(mu_raw) {
-    if (measure %in% c("OR", "RR", "HR", "IRR")) exp(mu_raw) else mu_raw
+    if (estimand %in% c("OR", "RR", "HR", "IRR")) exp(mu_raw) else mu_raw
+  }
+
+  extract_mu_draws <- function(m) {
+    if (is_marginal_estimand(estimand) && !is.null(m$marginal)) {
+      m$marginal$draws
+    } else {
+      as.numeric(m$draws[["mu"]])
+    }
   }
 
   priors_match <- function(p1, p2) {
@@ -339,10 +347,11 @@ ecdf_model_plot <- function(model,
     identical(unclass(p1), unclass(p2))
   }
 
-  orig_mu_prior  <- model$meta$priors$mu %||% model$meta$call_args$mu_prior
-  orig_tau_prior <- model$meta$priors$tau %||% model$meta$call_args$tau_prior
+  orig_mu_prior   <- model$meta$priors$mu %||% model$meta$call_args$mu_prior
+  orig_tau_prior  <- model$meta$priors$tau %||% model$meta$call_args$tau_prior
   orig_model_type <- model$meta$model_type %||% model$meta$call_args$model_type %||% "random_effect"
-  orig_stage <- model$meta$stage %||% model$meta$call_args$stage %||% "one_stage"
+  orig_stage      <- model$meta$stage %||% model$meta$call_args$stage %||% "one_stage"
+  orig_estimand   <- model$meta$call_args$estimand %||% "OR"
 
   cli::cli_h3("Fitting models for ECDF plot")
   cli::cli_alert_info("Prior: {prior_label}")
@@ -355,13 +364,14 @@ ecdf_model_plot <- function(model,
     sec_model_type <- sec$overrides$model_type %||% orig_model_type
     sec_stage <- sec$overrides$stage %||% orig_stage
 
-    model_matches <- (sec_model_type == orig_model_type) && (sec_stage == orig_stage)
-    can_reuse <- mu_matches && tau_matches && model_matches && is.null(sec$data_override)
+    model_matches    <- (sec_model_type == orig_model_type) && (sec_stage == orig_stage)
+    estimand_matches <- identical(estimand, orig_estimand)
+    can_reuse <- mu_matches && tau_matches && model_matches && estimand_matches && is.null(sec$data_override)
 
     if (can_reuse) {
       cli::cli_alert_success("{sec$label}: reusing original draws")
-      mu_raw <- as.numeric(model$draws[["mu"]])
-      x <- transform_mu(mu_raw)
+      mu_raw <- extract_mu_draws(model)
+      x <- if (is_marginal_estimand(estimand)) mu_raw else transform_mu(mu_raw)
       return(tibble::tibble(
         section_label = sec$label,
         x             = x
@@ -377,7 +387,8 @@ ecdf_model_plot <- function(model,
             model     = model,
             data      = sec$data_override %||% data,
             mu_prior  = mu_prior,
-            tau_prior = tau_prior
+            tau_prior = tau_prior,
+            estimand  = estimand
           ),
           sec$overrides
         )
@@ -396,8 +407,8 @@ ecdf_model_plot <- function(model,
       return(tibble::tibble(section_label = character(), x = numeric()))
     }
 
-    mu_raw <- as.numeric(fit$draws[["mu"]])
-    x <- transform_mu(mu_raw)
+    mu_raw <- extract_mu_draws(fit)
+    x <- if (is_marginal_estimand(estimand)) mu_raw else transform_mu(mu_raw)
 
     tibble::tibble(
       section_label = sec$label,
@@ -423,7 +434,7 @@ ecdf_model_plot <- function(model,
 
         all_draws <- robma_to_sensitivity_draws(
           robma_fit     = robma_fit,
-          measure       = measure,
+          estimand       = estimand,
           prior         = prior,
           prior_label   = prior_label,
           section_label = "RoBMA (Model-Averaged)"
@@ -508,11 +519,11 @@ ecdf_model_plot <- function(model,
   breaks    <- x_breaks %||% ggplot2::waiver()
 
   if (prob_reference == "null") {
-    y_left_label  <- paste0("Probability ", measure, " < ", null_value)
-    y_right_label <- paste0("Probability ", measure, " > ", null_value)
+    y_left_label  <- paste0("Probability ", estimand, " < ", null_value)
+    y_right_label <- paste0("Probability ", estimand, " > ", null_value)
   } else {
-    y_left_label  <- paste0("Probability ", measure, " < ", null_range[1])
-    y_right_label <- paste0("Probability ", measure, " > ", null_range[2])
+    y_left_label  <- paste0("Probability ", estimand, " < ", null_range[1])
+    y_right_label <- paste0("Probability ", estimand, " > ", null_range[2])
   }
 
   # Default subtitle shows prior

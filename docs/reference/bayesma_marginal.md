@@ -43,7 +43,7 @@ A list with elements:
 
 For relative-effect estimands (`"OR"`, `"RR"`, `"HR"`, `"IRR"`, `"MD"`,
 `"SMD"`) this function is unnecessary —
-[`bayesma_output()`](https://blmoran.github.io/bayesma/reference/bayesma_output.md)
+[`bayesma()`](https://blmoran.github.io/bayesma/reference/bayesma.md)
 already returns the pooled effect on the appropriate scale.
 
 ## Methods by estimand and stage

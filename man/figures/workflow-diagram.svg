@@ -1,0 +1,262 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 912" width="800" height="912">
+
+  <defs>
+    <!-- Arrowhead marker -->
+    <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#4F6D8A"/>
+    </marker>
+    <!-- Dashed arrowhead (same, used on loop) -->
+    <marker id="arrow-dash" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#4F6D8A"/>
+    </marker>
+  </defs>
+
+  <!-- ── Background ───────────────────────────────────────────────── -->
+  <rect width="800" height="912" fill="#F7FBFF"/>
+
+  <!-- ── Title ────────────────────────────────────────────────────── -->
+  <text x="400" y="30"
+        text-anchor="middle"
+        font-family="'Montserrat','Open Sans',Arial,sans-serif"
+        font-size="15" font-weight="700" fill="#2E3A4A">
+    bayesma — Meta-Analysis Workflow
+  </text>
+  <line x1="80" y1="42" x2="720" y2="42" stroke="#3191bf" stroke-width="1" opacity="0.4"/>
+
+  <!-- ════════════════════════════════════════════════════════════════
+       STEP 1  ·  Data Preparation, Trustworthiness & Quality
+       y=50, h=106
+       ════════════════════════════════════════════════════════════════ -->
+  <rect x="80" y="50" width="640" height="106" rx="6"
+        fill="#EAF4FB" stroke="#3191bf" stroke-width="1.5"/>
+  <!-- header (rounded top, flat bottom via clip trick) -->
+  <path d="M 86 50 Q 80 50 80 56 L 80 78 L 720 78 L 720 56 Q 720 50 714 50 Z"
+        fill="#4F6D8A"/>
+  <text x="104" y="68"
+        font-family="'Montserrat','Open Sans',Arial,sans-serif"
+        font-size="10.5" font-weight="700" fill="#9FD8F5">STEP 1</text>
+  <text x="148" y="68"
+        font-family="'Montserrat','Open Sans',Arial,sans-serif"
+        font-size="10.5" fill="white">
+    ·  Data Preparation, Trustworthiness &amp; Quality Assessment
+  </text>
+  <!-- row 1 -->
+  <text x="104" y="99"  font-family="'Source Code Pro','Courier New',monospace" font-size="10.5" fill="#2E3A4A">inspect_sr()</text>
+  <text x="278" y="99"  font-family="'Source Code Pro','Courier New',monospace" font-size="10.5" fill="#2E3A4A">inspect_sr_table()</text>
+  <text x="488" y="99"  font-family="'Source Code Pro','Courier New',monospace" font-size="10.5" fill="#2E3A4A">inspect_plot()</text>
+  <!-- row 2 -->
+  <text x="104" y="119" font-family="'Source Code Pro','Courier New',monospace" font-size="10.5" fill="#2E3A4A">bayes_carlisle_test()</text>
+  <text x="348" y="119" font-family="'Source Code Pro','Courier New',monospace" font-size="10.5" fill="#2E3A4A">bayes_grim_test()</text>
+  <text x="558" y="119" font-family="'Source Code Pro','Courier New',monospace" font-size="10.5" fill="#2E3A4A">primed()</text>
+  <!-- row 3 -->
+  <text x="104" y="139" font-family="'Source Code Pro','Courier New',monospace" font-size="10.5" fill="#2E3A4A">rob_plot()</text>
+  <text x="278" y="139" font-family="'Source Code Pro','Courier New',monospace" font-size="10.5" fill="#2E3A4A">filter_trustworthy()</text>
+  <text x="488" y="139" font-family="'Source Code Pro','Courier New',monospace" font-size="10.5" fill="#2E3A4A">inspect_summary_plot()</text>
+
+  <!-- arrow 1 → 2 -->
+  <line x1="400" y1="156" x2="400" y2="170"
+        stroke="#4F6D8A" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- ════════════════════════════════════════════════════════════════
+       STEP 2  ·  Prior Specification
+       y=172, h=86
+       ════════════════════════════════════════════════════════════════ -->
+  <rect x="80" y="172" width="640" height="86" rx="6"
+        fill="#EAF4FB" stroke="#3191bf" stroke-width="1.5"/>
+  <path d="M 86 172 Q 80 172 80 178 L 80 200 L 720 200 L 720 178 Q 720 172 714 172 Z"
+        fill="#4F6D8A"/>
+  <text x="104" y="190"
+        font-family="'Montserrat','Open Sans',Arial,sans-serif"
+        font-size="10.5" font-weight="700" fill="#9FD8F5">STEP 2</text>
+  <text x="148" y="190"
+        font-family="'Montserrat','Open Sans',Arial,sans-serif"
+        font-size="10.5" fill="white">·  Prior Specification</text>
+  <!-- row 1 -->
+  <text x="104" y="223" font-family="'Source Code Pro','Courier New',monospace" font-size="10.5" fill="#2E3A4A">normal()</text>
+  <text x="230" y="223" font-family="'Source Code Pro','Courier New',monospace" font-size="10.5" fill="#2E3A4A">half_normal()</text>
+  <text x="390" y="223" font-family="'Source Code Pro','Courier New',monospace" font-size="10.5" fill="#2E3A4A">half_cauchy()</text>
+  <text x="548" y="223" font-family="'Source Code Pro','Courier New',monospace" font-size="10.5" fill="#2E3A4A">exponential()</text>
+  <!-- row 2 -->
+  <text x="104" y="243" font-family="'Source Code Pro','Courier New',monospace" font-size="10.5" fill="#2E3A4A">prior_bias()</text>
+  <text x="278" y="243" font-family="'Source Code Pro','Courier New',monospace" font-size="10.5" fill="#2E3A4A">prior_copas()</text>
+  <text x="460" y="243" font-family="'Source Code Pro','Courier New',monospace" font-size="10.5" fill="#2E3A4A">ecdf_prior_plot()</text>
+
+  <!-- arrow 2 → 3 -->
+  <line x1="400" y1="258" x2="400" y2="272"
+        stroke="#4F6D8A" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- ════════════════════════════════════════════════════════════════
+       STEP 3  ·  Model Specification & Fitting
+       y=274, h=86
+       ════════════════════════════════════════════════════════════════ -->
+  <rect x="80" y="274" width="640" height="86" rx="6"
+        fill="#EAF4FB" stroke="#3191bf" stroke-width="1.5"/>
+  <path d="M 86 274 Q 80 274 80 280 L 80 302 L 720 302 L 720 280 Q 720 274 714 274 Z"
+        fill="#4F6D8A"/>
+  <text x="104" y="292"
+        font-family="'Montserrat','Open Sans',Arial,sans-serif"
+        font-size="10.5" font-weight="700" fill="#9FD8F5">STEP 3</text>
+  <text x="148" y="292"
+        font-family="'Montserrat','Open Sans',Arial,sans-serif"
+        font-size="10.5" fill="white">·  Model Specification &amp; Fitting</text>
+  <!-- row 1: one-call interface -->
+  <text x="104" y="323" font-family="'Source Code Pro','Courier New',monospace" font-size="10.5" fill="#2E3A4A">bayesma()</text>
+  <text x="255" y="323" font-family="'Source Code Pro','Courier New',monospace" font-size="10.5" fill="#2E3A4A">bayesma_mv()</text>
+  <text x="415" y="323" font-family="'Source Code Pro','Courier New',monospace" font-size="10.5" fill="#2E3A4A">meta_reg()</text>
+  <text x="558" y="323" font-family="'Source Code Pro','Courier New',monospace" font-size="10.5" fill="#2E3A4A">robma()</text>
+  <!-- row 2: modular pipeline -->
+  <text x="104" y="343" font-family="'Source Code Pro','Courier New',monospace" font-size="10.5" fill="#2E3A4A">bayesma_spec()</text>
+  <text x="268" y="343" font-family="'Source Code Pro','Courier New',monospace" font-size="10.5" fill="#7A8A9A">→</text>
+  <text x="282" y="343" font-family="'Source Code Pro','Courier New',monospace" font-size="10.5" fill="#2E3A4A">bayesma_stan_code()</text>
+  <text x="466" y="343" font-family="'Source Code Pro','Courier New',monospace" font-size="10.5" fill="#7A8A9A">→</text>
+  <text x="480" y="343" font-family="'Source Code Pro','Courier New',monospace" font-size="10.5" fill="#2E3A4A">bayesma_fit()</text>
+
+  <!-- arrow 3 → diamond -->
+  <line x1="400" y1="360" x2="400" y2="374"
+        stroke="#4F6D8A" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- ════════════════════════════════════════════════════════════════
+       CONVERGENCE DIAMOND
+       center (400, 413), half-w=165, half-h=35
+       top=378, bottom=448, left=235, right=565
+       ════════════════════════════════════════════════════════════════ -->
+  <polygon points="400,378 565,413 400,448 235,413"
+           fill="#FFF3CD" stroke="#4F6D8A" stroke-width="1.5"/>
+  <text x="400" y="408" text-anchor="middle"
+        font-family="'Montserrat','Open Sans',Arial,sans-serif"
+        font-size="11" font-weight="700" fill="#4F6D8A">Converged?</text>
+  <text x="400" y="423" text-anchor="middle"
+        font-family="'Source Code Pro','Courier New',monospace"
+        font-size="10" fill="#5A6A7A">diagnostics()</text>
+
+  <!-- arrow YES (bottom of diamond → step 4) -->
+  <line x1="400" y1="448" x2="400" y2="460"
+        stroke="#4F6D8A" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="408" y="457"
+        font-family="'Montserrat','Open Sans',Arial,sans-serif"
+        font-size="10" font-weight="600" fill="#4F6D8A">Yes</text>
+
+  <!-- arrow NO (left of diamond → back to step 3) dashed -->
+  <path d="M 235 413 L 50 413 L 50 306 L 80 306"
+        stroke="#4F6D8A" stroke-width="2" fill="none"
+        stroke-dasharray="6,4" marker-end="url(#arrow-dash)"/>
+  <text x="228" y="408" text-anchor="end"
+        font-family="'Montserrat','Open Sans',Arial,sans-serif"
+        font-size="10" font-weight="600" fill="#4F6D8A">No</text>
+  <!-- "Revise model" label on the vertical segment, rotated -->
+  <text transform="rotate(-90, 62, 360)" x="62" y="360"
+        text-anchor="middle"
+        font-family="'Open Sans',Arial,sans-serif"
+        font-size="9.5" fill="#4F6D8A">Revise model</text>
+
+  <!-- ════════════════════════════════════════════════════════════════
+       STEP 4  ·  Model Evaluation & Posterior Checks
+       y=462, h=86
+       ════════════════════════════════════════════════════════════════ -->
+  <rect x="80" y="462" width="640" height="86" rx="6"
+        fill="#EAF4FB" stroke="#3191bf" stroke-width="1.5"/>
+  <path d="M 86 462 Q 80 462 80 468 L 80 490 L 720 490 L 720 468 Q 720 462 714 462 Z"
+        fill="#4F6D8A"/>
+  <text x="104" y="480"
+        font-family="'Montserrat','Open Sans',Arial,sans-serif"
+        font-size="10.5" font-weight="700" fill="#9FD8F5">STEP 4</text>
+  <text x="148" y="480"
+        font-family="'Montserrat','Open Sans',Arial,sans-serif"
+        font-size="10.5" fill="white">·  Model Evaluation &amp; Posterior Checks</text>
+  <!-- row 1 -->
+  <text x="104" y="511" font-family="'Source Code Pro','Courier New',monospace" font-size="10.5" fill="#2E3A4A">pp_check()</text>
+  <text x="278" y="511" font-family="'Source Code Pro','Courier New',monospace" font-size="10.5" fill="#2E3A4A">ecdf_model_plot()</text>
+  <text x="496" y="511" font-family="'Source Code Pro','Courier New',monospace" font-size="10.5" fill="#2E3A4A">bayesma_output()</text>
+  <!-- row 2 -->
+  <text x="104" y="531" font-family="'Source Code Pro','Courier New',monospace" font-size="10.5" fill="#2E3A4A">compare_models()</text>
+  <text x="316" y="531" font-family="'Source Code Pro','Courier New',monospace" font-size="10.5" fill="#2E3A4A">compare_table()</text>
+  <text x="506" y="531" font-family="'Source Code Pro','Courier New',monospace" font-size="10.5" fill="#2E3A4A">compare_plot()</text>
+
+  <!-- arrow 4 → 5 -->
+  <line x1="400" y1="548" x2="400" y2="560"
+        stroke="#4F6D8A" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- ════════════════════════════════════════════════════════════════
+       STEP 5  ·  Publication Bias Assessment
+       y=562, h=86
+       ════════════════════════════════════════════════════════════════ -->
+  <rect x="80" y="562" width="640" height="86" rx="6"
+        fill="#EAF4FB" stroke="#3191bf" stroke-width="1.5"/>
+  <path d="M 86 562 Q 80 562 80 568 L 80 590 L 720 590 L 720 568 Q 720 562 714 562 Z"
+        fill="#4F6D8A"/>
+  <text x="104" y="580"
+        font-family="'Montserrat','Open Sans',Arial,sans-serif"
+        font-size="10.5" font-weight="700" fill="#9FD8F5">STEP 5</text>
+  <text x="148" y="580"
+        font-family="'Montserrat','Open Sans',Arial,sans-serif"
+        font-size="10.5" fill="white">·  Publication Bias Assessment</text>
+  <!-- row 1 -->
+  <text x="104" y="611" font-family="'Source Code Pro','Courier New',monospace" font-size="10.5" fill="#2E3A4A">funnel_plot()</text>
+  <text x="288" y="611" font-family="'Source Code Pro','Courier New',monospace" font-size="10.5" fill="#2E3A4A">egger()</text>
+  <text x="398" y="611" font-family="'Source Code Pro','Courier New',monospace" font-size="10.5" fill="#2E3A4A">egger_plot()</text>
+  <text x="556" y="611" font-family="'Source Code Pro','Courier New',monospace" font-size="10.5" fill="#2E3A4A">egger_output()</text>
+  <!-- row 2 -->
+  <text x="104" y="631" font-family="'Source Code Pro','Courier New',monospace" font-size="10.5" fill="#2E3A4A">robma()</text>
+  <text x="238" y="631" font-family="'Source Code Pro','Courier New',monospace" font-size="10.5" fill="#2E3A4A">robma_table()</text>
+  <text x="416" y="631" font-family="'Source Code Pro','Courier New',monospace" font-size="10.5" fill="#2E3A4A">robma_sensitivity()</text>
+  <text x="620" y="631" font-family="'Source Code Pro','Courier New',monospace" font-size="10.5" fill="#7A8A9A">...</text>
+
+  <!-- arrow 5 → 6 -->
+  <line x1="400" y1="648" x2="400" y2="660"
+        stroke="#4F6D8A" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- ════════════════════════════════════════════════════════════════
+       STEP 6  ·  Sensitivity Analysis & Meta-Regression
+       y=662, h=86
+       ════════════════════════════════════════════════════════════════ -->
+  <rect x="80" y="662" width="640" height="86" rx="6"
+        fill="#EAF4FB" stroke="#3191bf" stroke-width="1.5"/>
+  <path d="M 86 662 Q 80 662 80 668 L 80 690 L 720 690 L 720 668 Q 720 662 714 662 Z"
+        fill="#4F6D8A"/>
+  <text x="104" y="680"
+        font-family="'Montserrat','Open Sans',Arial,sans-serif"
+        font-size="10.5" font-weight="700" fill="#9FD8F5">STEP 6</text>
+  <text x="148" y="680"
+        font-family="'Montserrat','Open Sans',Arial,sans-serif"
+        font-size="10.5" fill="white">·  Sensitivity Analysis &amp; Meta-Regression</text>
+  <!-- row 1 -->
+  <text x="104" y="711" font-family="'Source Code Pro','Courier New',monospace" font-size="10.5" fill="#2E3A4A">sensitivity_plot()</text>
+  <text x="328" y="711" font-family="'Source Code Pro','Courier New',monospace" font-size="10.5" fill="#2E3A4A">render_sensitivity_patchwork()</text>
+  <!-- row 2 -->
+  <text x="104" y="731" font-family="'Source Code Pro','Courier New',monospace" font-size="10.5" fill="#2E3A4A">meta_reg()</text>
+  <text x="258" y="731" font-family="'Source Code Pro','Courier New',monospace" font-size="10.5" fill="#2E3A4A">bubble_plot()</text>
+  <text x="424" y="731" font-family="'Source Code Pro','Courier New',monospace" font-size="10.5" fill="#2E3A4A">coefficient_evidence()</text>
+
+  <!-- arrow 6 → 7 -->
+  <line x1="400" y1="748" x2="400" y2="760"
+        stroke="#4F6D8A" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- ════════════════════════════════════════════════════════════════
+       STEP 7  ·  Results & Reporting
+       y=762, h=106
+       ════════════════════════════════════════════════════════════════ -->
+  <rect x="80" y="762" width="640" height="106" rx="6"
+        fill="#EAF4FB" stroke="#3191bf" stroke-width="1.5"/>
+  <path d="M 86 762 Q 80 762 80 768 L 80 790 L 720 790 L 720 768 Q 720 762 714 762 Z"
+        fill="#4F6D8A"/>
+  <text x="104" y="780"
+        font-family="'Montserrat','Open Sans',Arial,sans-serif"
+        font-size="10.5" font-weight="700" fill="#9FD8F5">STEP 7</text>
+  <text x="148" y="780"
+        font-family="'Montserrat','Open Sans',Arial,sans-serif"
+        font-size="10.5" fill="white">·  Results &amp; Reporting</text>
+  <!-- row 1 -->
+  <text x="104" y="811" font-family="'Source Code Pro','Courier New',monospace" font-size="10.5" fill="#2E3A4A">bayesma_extract()</text>
+  <text x="326" y="811" font-family="'Source Code Pro','Courier New',monospace" font-size="10.5" fill="#2E3A4A">bayesma_output()</text>
+  <text x="534" y="811" font-family="'Source Code Pro','Courier New',monospace" font-size="10.5" fill="#2E3A4A">bayesma_marginal()</text>
+  <!-- row 2 -->
+  <text x="104" y="831" font-family="'Source Code Pro','Courier New',monospace" font-size="10.5" fill="#2E3A4A">bayes_forest()</text>
+  <text x="296" y="831" font-family="'Source Code Pro','Courier New',monospace" font-size="10.5" fill="#2E3A4A">overall_plot()</text>
+  <text x="484" y="831" font-family="'Source Code Pro','Courier New',monospace" font-size="10.5" fill="#2E3A4A">metareg_mod_plot()</text>
+  <!-- row 3 -->
+  <text x="104" y="851" font-family="'Source Code Pro','Courier New',monospace" font-size="10.5" fill="#2E3A4A">interpret()</text>
+  <text x="264" y="851" font-family="'Source Code Pro','Courier New',monospace" font-size="10.5" fill="#2E3A4A">bayesma_report()</text>
+  <text x="474" y="851" font-family="'Source Code Pro','Courier New',monospace" font-size="10.5" fill="#2E3A4A">coefficient_evidence()</text>
+
+</svg>

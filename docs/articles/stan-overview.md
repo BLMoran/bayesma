@@ -15,25 +15,18 @@ runs a six-stage internal pipeline:
 
     spec → code → data → fit → extract → output
 
-1.  **spec**
-    ([`bayesma_spec()`](https://blmoran.github.io/bayesma/reference/bayesma_spec.md)):
-    validates arguments and resolves model type, likelihood, stage, RE
-    distribution, and prior specifications into a structured list.
-2.  **code**
-    ([`bayesma_stan_code()`](https://blmoran.github.io/bayesma/reference/bayesma_stan_code.md)):
-    generates the Stan program as a character string from the spec.
-3.  **data**
-    ([`bayesma_stan_data()`](https://blmoran.github.io/bayesma/reference/bayesma_stan_data.md)):
-    prepares the named list of data passed to
-    `cmdstanr::cmdstan_model()$sample()`.
+1.  **spec** (`bayesma_spec()`): validates arguments and resolves model
+    type, likelihood, stage, RE distribution, and prior specifications
+    into a structured list.
+2.  **code** (`bayesma_stan_code()`): generates the Stan program as a
+    character string from the spec.
+3.  **data** (`bayesma_stan_data()`): prepares the named list of data
+    passed to `cmdstanr::cmdstan_model()$sample()`.
 4.  **fit**: compiles the Stan model and runs MCMC. Compilation is
     cached.
-5.  **extract**
-    ([`bayesma_extract()`](https://blmoran.github.io/bayesma/reference/bayesma_extract.md)):
-    reshapes the posterior draws into tidy format.
-6.  **output**
-    ([`bayesma_output()`](https://blmoran.github.io/bayesma/reference/bayesma_output.md)):
-    formats the posterior for display.
+5.  **extract** (`bayesma_extract()`): reshapes the posterior draws into
+    tidy format.
+6.  **output** (`bayesma_output()`): formats the posterior for display.
 
 Any stage can be returned early for inspection:
 

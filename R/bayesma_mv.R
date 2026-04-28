@@ -404,30 +404,10 @@ bayesma_mv_extract <- function(fit, spec) {
       outcome = factor(.data$outcome, levels = spec$outcome_labels)
     )
 
-  # ---- Prediction intervals ----
-  pred_intervals <- purrr::map(1:2, function(k) {
-    mn_var <- paste0("mu_new[", k, "]")
-    mn_k <- tryCatch(
-      as.vector(posterior::subset_draws(
-        cmdstan_fit$draws(mn_var), variable = mn_var
-      )),
-      error = function(e) NULL
-    )
-    if (!is.null(mn_k)) {
-      tibble::tibble(
-        outcome  = spec$outcome_labels[k],
-        estimate = stats::median(mn_k),
-        lower    = stats::quantile(mn_k, 0.025),
-        upper    = stats::quantile(mn_k, 0.975)
-      )
-    }
-  }) |> purrr::list_rbind()
-
   eff <- list(
-    summary        = summary_tbl,
-    draws          = draws,
-    forest_df      = forest_df,
-    pred_intervals = pred_intervals
+    summary   = summary_tbl,
+    draws     = draws,
+    forest_df = forest_df
   )
   class(eff) <- c("bayesma_mv_effects", "list")
   eff
@@ -454,12 +434,11 @@ bayesma_mv_output <- function(spec, fit, effects) {
   else as.character(fit$stan_code)
 
   out <- list(
-    fit            = fit$fit,
-    summary        = effects$summary,
-    forest_df      = effects$forest_df,
-    draws          = effects$draws,
-    pred_intervals = effects$pred_intervals,
-    stan_code      = code_full,
+    fit       = fit$fit,
+    summary   = effects$summary,
+    forest_df = effects$forest_df,
+    draws     = effects$draws,
+    stan_code = code_full,
     stan_data      = fit$stan_data,
     es             = list(outcome_1 = spec$es_1, outcome_2 = spec$es_2),
     meta           = list(
@@ -484,14 +463,8 @@ bayesma_mv_output <- function(spec, fit, effects) {
 
 #' Run a Multivariate Bayesian Meta-Analysis in Stan
 #'
-#' Thin orchestrator over the six-stage pipeline:
-#' [bayesma_mv_spec()], [bayesma_mv_stan_code()], [bayesma_mv_stan_data()],
-#' [bayesma_mv_fit()], [bayesma_mv_extract()], [bayesma_mv_output()].
-#'
 #' @inheritParams bayesma_mv_spec
 #' @param chains,iter_warmup,iter_sampling,adapt_delta,seed MCMC settings.
-#' @param return_stage Character. One of `"full"` (default), `"spec"`,
-#'   `"code"`, `"data"`, or `"fit"`.
 #' @param ... Passed to `cmdstanr::sample()`.
 #' @return An object of class `c("bayesma_mv", "bayesma")`.
 #' @export
@@ -509,7 +482,6 @@ bayesma_mv <- function(
     rho_between_prior = NULL,
     custom_model      = NULL,
     custom_data       = NULL,
-    return_stage      = c("full", "spec", "code", "data", "fit"),
     chains            = 4,
     iter_warmup       = 1000,
     iter_sampling     = 1000,
@@ -517,8 +489,6 @@ bayesma_mv <- function(
     seed              = 1234,
     ...
 ) {
-  return_stage <- rlang::arg_match(return_stage)
-
   spec <- bayesma_mv_spec(
     data = data, studyvar = {{ studyvar }},
     mean_ctrl_1 = {{ mean_ctrl_1 }}, mean_int_1 = {{ mean_int_1 }},
@@ -533,22 +503,14 @@ bayesma_mv <- function(
     rho_between_prior = rho_between_prior,
     custom_model = custom_model, custom_data = custom_data
   )
-  if (return_stage == "spec") return(spec)
-
-  code <- bayesma_mv_stan_code(spec)
-  if (return_stage == "code") return(code)
-
+  code      <- bayesma_mv_stan_code(spec)
   stan_data <- bayesma_mv_stan_data(spec)
-  if (return_stage == "data") return(stan_data)
-
-  fit <- bayesma_mv_fit(
+  fit       <- bayesma_mv_fit(
     spec = spec, code = code, stan_data = stan_data,
     chains = chains, iter_warmup = iter_warmup,
     iter_sampling = iter_sampling, adapt_delta = adapt_delta,
     seed = seed, ...
   )
-  if (return_stage == "fit") return(fit)
-
   effects <- bayesma_mv_extract(fit, spec)
   bayesma_mv_output(spec, fit, effects)
 }

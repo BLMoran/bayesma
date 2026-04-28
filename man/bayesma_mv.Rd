@@ -28,7 +28,6 @@ bayesma_mv(
   rho_between_prior = NULL,
   custom_model = NULL,
   custom_data = NULL,
-  return_stage = c("full", "spec", "code", "data", "fit"),
   chains = 4,
   iter_warmup = 1000,
   iter_sampling = 1000,
@@ -87,9 +86,6 @@ code to override the generated program.}
 
 \item{custom_data}{Optional named list merged into the Stan data list.}
 
-\item{return_stage}{Character. One of \code{"full"} (default), \code{"spec"},
-\code{"code"}, \code{"data"}, or \code{"fit"}.}
-
 \item{chains, iter_warmup, iter_sampling, adapt_delta, seed}{MCMC settings.}
 
 \item{...}{Passed to \code{cmdstanr::sample()}.}
@@ -98,7 +94,5 @@ code to override the generated program.}
 An object of class \code{c("bayesma_mv", "bayesma")}.
 }
 \description{
-Thin orchestrator over the six-stage pipeline:
-\code{\link[=bayesma_mv_spec]{bayesma_mv_spec()}}, \code{\link[=bayesma_mv_stan_code]{bayesma_mv_stan_code()}}, \code{\link[=bayesma_mv_stan_data]{bayesma_mv_stan_data()}},
-\code{\link[=bayesma_mv_fit]{bayesma_mv_fit()}}, \code{\link[=bayesma_mv_extract]{bayesma_mv_extract()}}, \code{\link[=bayesma_mv_output]{bayesma_mv_output()}}.
+Run a Multivariate Bayesian Meta-Analysis in Stan
 }

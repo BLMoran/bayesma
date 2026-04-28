@@ -97,9 +97,8 @@ bayesma(
 )
 ```
 
-`bin_probs` is computed internally by
-[`bayesma_stan_data()`](https://blmoran.github.io/bayesma/reference/bayesma_stan_data.md)
-using the normal CDF evaluated at the bin boundaries.
+`bin_probs` is computed internally by `bayesma_stan_data()` using the
+normal CDF evaluated at the bin boundaries.
 
 ## Parameterisation notes
 

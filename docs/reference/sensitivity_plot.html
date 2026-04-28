@@ -328,7 +328,7 @@ the null value using <code>color_favours_control</code> and <code>color_favours_
 <span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/attach_robma_sensitivity.html">attach_robma_sensitivity</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">robma_sens</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Step 3: Create sensitivity plot with RoBMA</span></span>
-<span><span class="fu"><a href="../reference/sensitivity_plot.html">sensitivity_plot</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">data</span>, <span class="va">priors</span>, measure <span class="op">=</span> <span class="st">"OR"</span>, incl_robma <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre><p></p></div>
+<span><span class="fu"><a href="../reference/sensitivity_plot.html">sensitivity_plot</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">data</span>, <span class="va">priors</span>, estimand <span class="op">=</span> <span class="st">"OR"</span>, incl_robma <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre><p></p></div>
 <p>This separation allows the computationally expensive RoBMA fitting to be done
 once and cached, rather than being re-run every time the plot is generated.</p>
 </div>

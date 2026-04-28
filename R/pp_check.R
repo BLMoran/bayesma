@@ -1,26 +1,52 @@
-#' Posterior Predictive Check for bayesma Objects
+#' Posterior and Prior Predictive Checks for bayesma Objects
 #'
 #' @description
-#' Produces a posterior predictive check plot comparing observed data to
-#' replicated datasets drawn from the posterior predictive distribution.
-#' Provides a posterior predictive check interface analogous to standard Bayesian workflow.
+#' Compares observed data to replicated datasets drawn from either the
+#' posterior predictive distribution (standard use) or the prior predictive
+#' distribution (when the model was fitted with `sample_prior = TRUE`).
 #'
-#' @param object A \code{bayesma} object.
-#' @param type Character. Plot type passed to \code{bayesplot::ppc_*}.
-#'   One of \code{"dens_overlay"} (default), \code{"hist"}, \code{"stat"},
-#'   \code{"scatter"}, \code{"bars"} (discrete only), \code{"ecdf_overlay"},
-#'   \code{"ribbon"}.
-#' @param ndraws Number of posterior draws to use. Default 100.
-#' @param ... Additional arguments passed to the underlying \code{bayesplot::ppc_*} function.
+#' **Posterior predictive check** (`sample_prior = FALSE`, the default): draws
+#' `y_rep` from `p(y_rep | y)`. Agreement between `y` and `y_rep` indicates the
+#' fitted model can reproduce the observed data.
 #'
-#' @return A \code{ggplot} object.
+#' **Prior predictive check** (`sample_prior = TRUE`): draws `y_rep` from
+#' `p(y_rep)`, integrating over the prior without conditioning on the data.
+#' This is a tool for prior *elicitation and sanity-checking* — verifying that
+#' the prior does not place substantial mass on data values that are impossible
+#' or implausible given domain knowledge, before the data have been seen.
+#'
+#' @section Prior predictive checks and double-dipping:
+#' It is legitimate to use a prior predictive check to verify that a prior is
+#' coherent on the observable scale (e.g. that it does not imply impossible
+#' event counts). It is **not** legitimate to iteratively adjust priors until
+#' `y_rep` matches the observed `y`: doing so smuggles the data into the prior,
+#' inflating posterior confidence. Priors should be specified from external
+#' knowledge, expert elicitation, or independent reference data — not from the
+#' analysis dataset itself.
+#'
+#' @param object A `bayesma` object. If fitted with `sample_prior = TRUE`,
+#'   a prior predictive check is produced; otherwise a posterior predictive
+#'   check.
+#' @param type Character. Plot type passed to `bayesplot::ppc_*`. One of
+#'   `"dens_overlay"` (default), `"hist"`, `"stat"`, `"scatter"`,
+#'   `"bars"` (discrete only), `"ecdf_overlay"`, `"ribbon"`.
+#' @param ndraws Integer. Number of draws to display. Default `100`.
+#' @param ... Additional arguments passed to the underlying
+#'   `bayesplot::ppc_*` function.
+#'
+#' @return A `ggplot` object.
 #'
 #' @examples
 #' \dontrun{
+#' # Posterior predictive check
 #' fit <- bayesma(data, likelihood = "binomial", ...)
 #' pp_check(fit)
 #' pp_check(fit, type = "stat", stat = "mean")
-#' pp_check(fit, type = "scatter")
+#'
+#' # Prior predictive check — use to verify priors are sensible,
+#' # not to calibrate them against the analysis data
+#' prior_fit <- bayesma(data, likelihood = "binomial", ..., sample_prior = TRUE)
+#' pp_check(prior_fit)
 #' }
 #'
 #' @export
@@ -113,8 +139,14 @@ pp_check <- function(object, type = "dens_overlay", ndraws = 100, ...) {
                    }
   )
 
+  check_label <- if (isTRUE(object$meta$prior_predictive)) {
+    "Prior Predictive Check"
+  } else {
+    "Posterior Predictive Check"
+  }
+
   p <- ppc_fn(y, y_rep, ...) +
-    ggplot2::ggtitle("Posterior Predictive Check") +
+    ggplot2::ggtitle(check_label) +
     ggplot2::theme_minimal(base_family = "") +
     ggplot2::theme(
       plot.title = ggplot2::element_text(face = "bold", size = 12)

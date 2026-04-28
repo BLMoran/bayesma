@@ -8,7 +8,7 @@ ecdf_prior_plot(
   model,
   data,
   priors,
-  measure,
+  estimand,
   model_types = "random_effect",
   prior_order = NULL,
   prob_reference = "null",
@@ -37,7 +37,7 @@ ecdf_prior_plot(
 list with at least \code{mu_prior} and optionally \code{tau_prior}, and
 may include \code{name} for display labels.}
 
-\item{measure}{Effect measure string (e.g., "OR", "RR", "HR", "IRR", "MD", "SMD").}
+\item{estimand}{Effect estimand string (e.g., "OR", "RR", "HR", "IRR", "MD", "SMD").}
 
 \item{model_types}{Character vector specifying which model type(s) to include.
 Maximum of 2 model types to avoid clutter. Valid values: \code{"common_effect"},
@@ -54,12 +54,12 @@ probability axis labels. Either \code{"null"} (compare to
 \code{null_value}) or \code{"null_range"} (compare to
 \code{null_range} boundaries). Default is \code{"null"}.}
 
-\item{null_value}{Null hypothesis value. If NULL, uses measure default.}
+\item{null_value}{Null hypothesis value. If NULL, uses estimand default.}
 
 \item{null_range}{Numeric vector of length 2 giving null range bounds.}
 
 \item{add_null_range}{Logical. If TRUE and \code{null_range} is NULL,
-uses measure-appropriate defaults.}
+uses estimand-appropriate defaults.}
 
 \item{color_null_range}{Fill colour for the null range band.
 Default \code{"#77bb41"}.}

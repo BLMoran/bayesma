@@ -6,7 +6,7 @@
 #' a conditional average treatment effect (CATE).
 #'
 #' For relative-effect estimands (`"OR"`, `"RR"`, `"HR"`, `"IRR"`, `"MD"`,
-#' `"SMD"`) this function is unnecessary — [bayesma_output()] already returns
+#' `"SMD"`) this function is unnecessary — [bayesma()] already returns
 #' the pooled effect on the appropriate scale.
 #'
 #' @section Methods by estimand and stage:

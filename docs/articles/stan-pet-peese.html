@@ -235,7 +235,7 @@ y_i \mid \alpha, \beta \sim \mathcal{N}(\alpha + \beta \cdot s_i^2,\, s_i^2 + \t
 <li>
 <code>tau</code> captures residual between-study heterogeneity not explained by the precision-effect relationship.</li>
 <li>
-<code>b_Intercept = alpha</code> is the estimand reported by <code><a href="../reference/bayesma_output.html">bayesma_output()</a></code>.</li>
+<code>b_Intercept = alpha</code> is the estimand reported by <code>bayesma_output()</code>.</li>
 </ul></section><section class="level2"><h2 id="identifiability">Identifiability<a class="anchor" aria-label="anchor" href="#identifiability"></a>
 </h2>
 <p>PET-PEESE is identified when there is meaningful variation in <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>s</mi><mi>i</mi></msub><annotation encoding="application/x-tex">s_i</annotation></semantics></math> across studies. When all studies have similar precision, the slope <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math> is weakly identified and the intercept <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>α</mi><annotation encoding="application/x-tex">\alpha</annotation></semantics></math> is uncertain. This is a limitation of the method, not a model specification error.</p>

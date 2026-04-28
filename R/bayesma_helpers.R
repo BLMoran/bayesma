@@ -1147,25 +1147,9 @@ build_output <- function(fit, likelihood, model_type, re_dist,
     dplyr::mutate(study = forcats::fct_inorder(.data$study),
                   effect_scale = effect_label)
 
-  # Prediction interval
-  pred_interval <- NULL
-  if (is_re) {
-    tryCatch({
-      mn <- as.vector(
-        posterior::subset_draws(fit$draws("mu_new"),
-                                variable = "mu_new")
-      )
-      pred_interval <- tibble::tibble(
-        estimate = stats::median(mn),
-        lower = stats::quantile(mn, 0.025),
-        upper = stats::quantile(mn, 0.975)
-      )
-    }, error = function(e) NULL)
-  }
-
   out <- list(
     fit = fit, summary = summary_tbl, forest_df = forest_df,
-    draws = draws, pred_interval = pred_interval,
+    draws = draws,
     stan_code = stan_code, stan_data = stan_data, arm_data = arm_data,
     meta = list(
       likelihood = likelihood, model_type = model_type,

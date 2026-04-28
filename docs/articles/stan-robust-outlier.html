@@ -266,12 +266,12 @@ p(y_i \mid \mu, \tau, \tau_{\text{out}}, \pi) = (1-\pi) \cdot \mathcal{N}(y_i \m
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit_outlier</span><span class="op">)</span></span></code></pre></div>
-<p>The <code>generated quantities</code> block computes <code>p_outlier[i]</code> — the posterior probability that study <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>i</mi><annotation encoding="application/x-tex">i</annotation></semantics></math> belongs to the outlier component. These are extracted and reported by <code><a href="../reference/bayesma_output.html">bayesma_output()</a></code>.</p>
+<p>The <code>generated quantities</code> block computes <code>p_outlier[i]</code> — the posterior probability that study <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>i</mi><annotation encoding="application/x-tex">i</annotation></semantics></math> belongs to the outlier component. These are extracted and reported by <code>bayesma_output()</code>.</p>
 </section><section class="level2"><h2 id="identifying-outlier-studies">Identifying outlier studies<a class="anchor" aria-label="anchor" href="#identifying-outlier-studies"></a>
 </h2>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">#| eval: false</span></span>
-<span><span class="fu"><a href="../reference/bayesma_output.html">bayesma_output</a></span><span class="op">(</span><span class="va">fit_outlier</span>, type <span class="op">=</span> <span class="st">"outlier_probabilities"</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu">bayesma_output</span><span class="op">(</span><span class="va">fit_outlier</span>, type <span class="op">=</span> <span class="st">"outlier_probabilities"</span><span class="op">)</span></span></code></pre></div>
 <p>Studies with <code>p_outlier &gt; 0.5</code> are flagged as probable outliers in the summary table. These should be investigated for data quality issues, coding errors, or genuine moderators that explain the discrepancy.</p>
 </section><section class="level2"><h2 id="key-output-parameters">Key output parameters<a class="anchor" aria-label="anchor" href="#key-output-parameters"></a>
 </h2>

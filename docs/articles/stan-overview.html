@@ -184,17 +184,17 @@
 <pre><code>spec → code → data → fit → extract → output</code></pre>
 <ol type="1">
 <li>
-<strong>spec</strong> (<code><a href="../reference/bayesma_spec.html">bayesma_spec()</a></code>): validates arguments and resolves model type, likelihood, stage, RE distribution, and prior specifications into a structured list.</li>
+<strong>spec</strong> (<code>bayesma_spec()</code>): validates arguments and resolves model type, likelihood, stage, RE distribution, and prior specifications into a structured list.</li>
 <li>
-<strong>code</strong> (<code><a href="../reference/bayesma_stan_code.html">bayesma_stan_code()</a></code>): generates the Stan program as a character string from the spec.</li>
+<strong>code</strong> (<code>bayesma_stan_code()</code>): generates the Stan program as a character string from the spec.</li>
 <li>
-<strong>data</strong> (<code><a href="../reference/bayesma_stan_data.html">bayesma_stan_data()</a></code>): prepares the named list of data passed to <code>cmdstanr::cmdstan_model()$sample()</code>.</li>
+<strong>data</strong> (<code>bayesma_stan_data()</code>): prepares the named list of data passed to <code>cmdstanr::cmdstan_model()$sample()</code>.</li>
 <li>
 <strong>fit</strong>: compiles the Stan model and runs MCMC. Compilation is cached.</li>
 <li>
-<strong>extract</strong> (<code><a href="../reference/bayesma_extract.html">bayesma_extract()</a></code>): reshapes the posterior draws into tidy format.</li>
+<strong>extract</strong> (<code>bayesma_extract()</code>): reshapes the posterior draws into tidy format.</li>
 <li>
-<strong>output</strong> (<code><a href="../reference/bayesma_output.html">bayesma_output()</a></code>): formats the posterior for display.</li>
+<strong>output</strong> (<code>bayesma_output()</code>): formats the posterior for display.</li>
 </ol>
 <p>Any stage can be returned early for inspection:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">

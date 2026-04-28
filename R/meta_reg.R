@@ -13,42 +13,7 @@
 # Stage 1: spec
 # -----------------------------------------------------------------------------
 
-#' Build a meta-regression specification object
-#'
-#' @param data A data frame with one row per study.
-#' @param studyvar Character. Column name of the study identifier.
-#' @param yi,vi Character. Column names of pre-computed effect sizes and
-#'   their sampling variances (two-stage only).
-#' @param mods One-sided formula specifying moderators
-#'   (e.g. `~ age + dose`).
-#' @param event_ctrl,event_int Character. Column names of event counts for
-#'   binomial / Poisson likelihoods.
-#' @param mean_ctrl,mean_int,sd_ctrl,sd_int Character. Column names of arm
-#'   means and SDs for the Gaussian likelihood.
-#' @param n_ctrl,n_int Character. Column names of arm sample sizes.
-#' @param likelihood Character. One of `"binomial"`, `"gaussian"`,
-#'   `"poisson"`.
-#' @param model_type Character. `"random_effect"` (default) or
-#'   `"common_effect"`.
-#' @param stage Character. `"two_stage"` (default) or `"one_stage"`.
-#' @param center Logical. Mean-centre continuous moderators. Default `TRUE`.
-#' @param scale Logical. Scale continuous moderators to unit SD. Default
-#'   `FALSE`.
-#' @param small_sample Character. Small-sample adjustment for two-stage
-#'   models: `"none"`, `"t_approx"`, or `"hjsk"`.
-#' @param mu_prior Prior on the intercept (pooled effect at the reference
-#'   moderator values).
-#' @param tau_prior Prior on the between-study SD (random-effects models).
-#' @param gamma_prior Prior on the Gaussian arm-level intercept
-#'   (one-stage only).
-#' @param beta_prior Default prior for every regression coefficient.
-#' @param beta_priors Named list of coefficient-specific priors, overriding
-#'   `beta_prior` for those coefficients.
-#' @param custom_model Optional character scalar of Stan code overriding
-#'   the generated program.
-#' @param custom_data Optional named list merged into the Stan data list.
-#' @return An object of class `"meta_reg_spec"`.
-#' @export
+#' @noRd
 meta_reg_spec <- function(
     data,
     studyvar,
@@ -246,14 +211,7 @@ print.meta_reg_spec <- function(x, ...) {
 # Stage 2: stan code
 # -----------------------------------------------------------------------------
 
-#' Generate Stan code for a meta-regression specification
-#'
-#' @param spec A `meta_reg_spec` object.
-#' @param format Logical. If `TRUE` (default), run the generated program
-#'   through Stan's `stanc --auto-format` for consistent indentation and
-#'   spacing. Falls back to the raw program if the formatter is unavailable.
-#' @return An object of class `"meta_reg_stan_code"`.
-#' @export
+#' @noRd
 meta_reg_stan_code <- function(spec, format = TRUE) {
   if (!inherits(spec, "meta_reg_spec")) {
     cli::cli_abort("{.arg spec} must be a {.cls meta_reg_spec} object.")
@@ -290,11 +248,7 @@ meta_reg_stan_code <- function(spec, format = TRUE) {
 # Stage 3: stan data
 # -----------------------------------------------------------------------------
 
-#' Build the Stan data list for a meta-regression specification
-#'
-#' @param spec A `meta_reg_spec` object.
-#' @return A named list suitable for `cmdstanr::CmdStanModel$sample(data = ...)`.
-#' @export
+#' @noRd
 meta_reg_stan_data <- function(spec) {
   if (!inherits(spec, "meta_reg_spec")) {
     cli::cli_abort("{.arg spec} must be a {.cls meta_reg_spec} object.")
@@ -381,16 +335,7 @@ build_stan_data_mreg_one_stage <- function(spec) {
 # Stage 4: fit
 # -----------------------------------------------------------------------------
 
-#' Compile and sample a meta-regression model
-#'
-#' @param spec      A `meta_reg_spec` object.
-#' @param code      A `meta_reg_stan_code` object. Defaults to
-#'   `meta_reg_stan_code(spec)`.
-#' @param stan_data A Stan data list. Defaults to `meta_reg_stan_data(spec)`.
-#' @param chains,iter_warmup,iter_sampling,adapt_delta,seed MCMC settings.
-#' @param ... Passed to `cmdstanr::CmdStanModel$sample()`.
-#' @return An object of class `"meta_reg_fit"`.
-#' @export
+#' @noRd
 meta_reg_fit <- function(spec,
                          code          = meta_reg_stan_code(spec),
                          stan_data     = meta_reg_stan_data(spec),
@@ -426,12 +371,7 @@ meta_reg_fit <- function(spec,
 # Stage 5: extract
 # -----------------------------------------------------------------------------
 
-#' Extract tidy effect components from a meta-regression fit
-#'
-#' @param fit  A `meta_reg_fit` object.
-#' @param spec A `meta_reg_spec` object.
-#' @return An object of class `"meta_reg_effects"`.
-#' @export
+#' @noRd
 meta_reg_extract <- function(fit, spec) {
   if (!inherits(fit, "meta_reg_fit")) {
     cli::cli_abort("{.arg fit} must be a {.cls meta_reg_fit} object.")
@@ -567,29 +507,13 @@ meta_reg_extract <- function(fit, spec) {
     )
   }
 
-  # ---- Prediction interval ----
-  pred_interval <- NULL
-  if (is_re) {
-    tryCatch({
-      mn <- as.vector(posterior::subset_draws(
-        cmdstan_fit$draws("mu_new"), variable = "mu_new"
-      ))
-      pred_interval <<- tibble::tibble(
-        estimate = stats::median(mn),
-        lower    = stats::quantile(mn, 0.025),
-        upper    = stats::quantile(mn, 0.975)
-      )
-    }, error = function(e) NULL)
-  }
-
   eff <- list(
-    summary       = summary_tbl,
-    draws         = draws,
-    coefficients  = coef_tbl,
-    tau           = tau_summary,
-    forest_df     = forest_df,
-    pred_interval = pred_interval,
-    effect_label  = effect_label
+    summary      = summary_tbl,
+    draws        = draws,
+    coefficients = coef_tbl,
+    tau          = tau_summary,
+    forest_df    = forest_df,
+    effect_label = effect_label
   )
   class(eff) <- c("meta_reg_effects", "list")
   eff
@@ -600,13 +524,7 @@ meta_reg_extract <- function(fit, spec) {
 # Stage 6: output
 # -----------------------------------------------------------------------------
 
-#' Assemble a `bayesma_metareg` object from pipeline outputs
-#'
-#' @param spec    A `meta_reg_spec` object.
-#' @param fit     A `meta_reg_fit` object.
-#' @param effects A `meta_reg_effects` object.
-#' @return A list of class `c("bayesma_metareg", "bayesma")`.
-#' @export
+#' @noRd
 meta_reg_output <- function(spec, fit, effects) {
   if (!inherits(spec,    "meta_reg_spec"))    cli::cli_abort("{.arg spec} must be {.cls meta_reg_spec}.")
   if (!inherits(fit,     "meta_reg_fit"))     cli::cli_abort("{.arg fit} must be {.cls meta_reg_fit}.")
@@ -618,15 +536,14 @@ meta_reg_output <- function(spec, fit, effects) {
   arm_data <- attr(fit$stan_data, "arm_data")
 
   out <- list(
-    fit           = fit$fit,
-    summary       = effects$summary,
-    coefficients  = effects$coefficients,
-    tau           = effects$tau,
-    forest_df     = effects$forest_df,
-    draws         = effects$draws,
-    pred_interval = effects$pred_interval,
-    stan_code     = code_full,
-    stan_data     = fit$stan_data,
+    fit          = fit$fit,
+    summary      = effects$summary,
+    coefficients = effects$coefficients,
+    tau          = effects$tau,
+    forest_df    = effects$forest_df,
+    draws        = effects$draws,
+    stan_code    = code_full,
+    stan_data    = fit$stan_data,
     meta          = list(
       likelihood   = spec$likelihood,
       model_type   = spec$model_type,
@@ -654,14 +571,33 @@ meta_reg_output <- function(spec, fit, effects) {
 
 #' Bayesian Meta-Regression
 #'
-#' Thin orchestrator over the six-stage pipeline:
-#' [meta_reg_spec()], [meta_reg_stan_code()], [meta_reg_stan_data()],
-#' [meta_reg_fit()], [meta_reg_extract()], [meta_reg_output()].
-#'
-#' @inheritParams meta_reg_spec
+#' @param data A data frame with one row per study.
+#' @param studyvar Character. Column name of the study identifier.
+#' @param yi,vi Character. Column names of pre-computed effect sizes and
+#'   their sampling variances (two-stage only).
+#' @param mods One-sided formula specifying moderators (e.g. `~ age + dose`).
+#' @param event_ctrl,event_int Character. Column names of event counts for
+#'   binomial / Poisson likelihoods.
+#' @param mean_ctrl,mean_int,sd_ctrl,sd_int Character. Column names of arm
+#'   means and SDs for the Gaussian likelihood.
+#' @param n_ctrl,n_int Character. Column names of arm sample sizes.
+#' @param likelihood Character. One of `"binomial"`, `"gaussian"`, `"poisson"`.
+#' @param model_type Character. `"random_effect"` (default) or `"common_effect"`.
+#' @param stage Character. `"two_stage"` (default) or `"one_stage"`.
+#' @param center Logical. Mean-centre continuous moderators. Default `TRUE`.
+#' @param scale Logical. Scale continuous moderators to unit SD. Default `FALSE`.
+#' @param small_sample Character. Small-sample adjustment for two-stage models:
+#'   `"none"`, `"t_approx"`, or `"hjsk"`.
+#' @param mu_prior Prior on the intercept.
+#' @param tau_prior Prior on the between-study SD (random-effects models).
+#' @param gamma_prior Prior on the Gaussian arm-level intercept (one-stage only).
+#' @param beta_prior Default prior for every regression coefficient.
+#' @param beta_priors Named list of coefficient-specific priors, overriding
+#'   `beta_prior` for those coefficients.
+#' @param custom_model Optional character scalar of Stan code overriding the
+#'   generated program.
+#' @param custom_data Optional named list merged into the Stan data list.
 #' @param chains,iter_warmup,iter_sampling,adapt_delta,seed MCMC settings.
-#' @param return_stage Character. One of `"full"` (default), `"spec"`,
-#'   `"code"`, `"data"`, or `"fit"`.
 #' @param ... Passed to `cmdstanr::sample()`.
 #' @return An object of class `c("bayesma_metareg", "bayesma")`.
 #' @export
@@ -692,7 +628,6 @@ meta_reg <- function(
     beta_priors   = NULL,
     custom_model  = NULL,
     custom_data   = NULL,
-    return_stage  = c("full", "spec", "code", "data", "fit"),
     chains        = 4,
     iter_warmup   = 1000,
     iter_sampling = 1000,
@@ -700,8 +635,6 @@ meta_reg <- function(
     seed          = 1234,
     ...
 ) {
-  return_stage <- rlang::arg_match(return_stage)
-
   spec <- meta_reg_spec(
     data = data, studyvar = studyvar, yi = yi, vi = vi, mods = mods,
     event_ctrl = event_ctrl, event_int = event_int,
@@ -716,22 +649,14 @@ meta_reg <- function(
     beta_priors = beta_priors,
     custom_model = custom_model, custom_data = custom_data
   )
-  if (return_stage == "spec") return(spec)
-
-  code <- meta_reg_stan_code(spec)
-  if (return_stage == "code") return(code)
-
+  code      <- meta_reg_stan_code(spec)
   stan_data <- meta_reg_stan_data(spec)
-  if (return_stage == "data") return(stan_data)
-
-  fit <- meta_reg_fit(
+  fit       <- meta_reg_fit(
     spec = spec, code = code, stan_data = stan_data,
     chains = chains, iter_warmup = iter_warmup,
     iter_sampling = iter_sampling, adapt_delta = adapt_delta,
     seed = seed, ...
   )
-  if (return_stage == "fit") return(fit)
-
   effects <- meta_reg_extract(fit, spec)
   meta_reg_output(spec, fit, effects)
 }

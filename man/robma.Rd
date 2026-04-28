@@ -38,7 +38,6 @@ robma(
   quiet = FALSE,
   custom_model = NULL,
   custom_data = NULL,
-  return_stage = c("full", "spec", "code", "data", "fit"),
   format = TRUE,
   ...
 )
@@ -56,29 +55,25 @@ means and SDs (Gaussian likelihood).}
 
 \item{n_ctrl, n_int}{Character. Column names of arm sample sizes.}
 
-\item{likelihood}{Character. One of \code{"binomial"}, \code{"gaussian"},
-\code{"poisson"}.}
+\item{likelihood}{Character. One of \code{"binomial"}, \code{"gaussian"}, \code{"poisson"}.}
 
-\item{priors_effect, priors_effect_null, priors_heterogeneity, priors_heterogeneity_null, priors_bias, priors_bias_null}{Lists of \code{bayesma_prior} objects for the effect, heterogeneity and
-publication-bias components (alternative and null). If \code{NULL}, the
-RoBMA defaults are used.}
+\item{priors_effect, priors_effect_null, priors_heterogeneity, priors_heterogeneity_null, priors_bias, priors_bias_null}{Lists of prior objects for the effect, heterogeneity, and publication-bias
+components (alternative and null). If \code{NULL}, RoBMA defaults are used.}
 
 \item{rescale_priors}{Numeric. Scale factor applied to default priors.
 Default \code{1}.}
 
-\item{method}{Character. \code{"bridge"} (default) uses bridgesampling across
+\item{method}{Character. \code{"bridge"} (default) uses bridge sampling across
 the full model grid; \code{"ss"} uses a single spike-and-slab Stan model.}
 
 \item{bias_indicator}{Character. Spike-and-slab bias mechanism:
 \code{"bias_corrected"}, \code{"pet_peese"}, or \code{"selection_weight"}.}
 
-\item{null_range}{Numeric vector of length 2 giving the null range
-on the log scale (e.g., \code{c(-0.1, 0.1)} for log OR). Effects
-within this range are considered practically equivalent to zero.
-Defaults to \code{NULL} (point null at exactly zero). When specified,
-direction probabilities and the P(practically null) are computed
-relative to this range. For OR/RR, \code{c(-0.1, 0.1)} corresponds
-to OR/RR in \verb{[0.905, 1.105]}.}
+\item{null_range}{Numeric vector of length 2 giving the null range on the
+log scale (e.g., \code{c(-0.1, 0.1)} for log OR). Effects within this range
+are considered practically equivalent to zero. Defaults to \code{NULL} (point
+null at exactly zero). For OR/RR, \code{c(-0.1, 0.1)} corresponds to OR/RR
+in \verb{[0.905, 1.105]}.}
 
 \item{b_prior}{Prior on the \code{b} slope for spike-and-slab bias correction.}
 
@@ -100,33 +95,17 @@ label. For \code{method = "ss"}, a single character scalar.}
 \item{custom_data}{Optional Stan data overrides merged onto the auto-built
 data list(s). Same shape conventions as \code{custom_model}.}
 
-\item{return_stage}{Character. One of \code{"full"} (default), \code{"spec"},
-\code{"code"}, \code{"data"}, or \code{"fit"}. Returns the intermediate pipeline object
-instead of the final \code{bayesma_robma} object.}
-
 \item{format}{Logical. If \code{TRUE} (default), auto-format generated Stan
 programs with \code{stanc --auto-format}.}
 
-\item{...}{Additional arguments forwarded to
-\code{cmdstanr::CmdStanModel$sample()}.}
+\item{...}{Additional arguments passed to \code{cmdstanr::CmdStanModel$sample()}.}
 }
 \value{
-An object of class \code{c("bayesma_robma", "bayesma")}, or an
-intermediate pipeline object if \code{return_stage} is not \code{"full"}.
+An object of class \code{c("bayesma_robma", "bayesma")}.
 }
 \description{
-\code{robma()} is a thin orchestrator over a six-stage pipeline. Each stage is
-exported so users can pause for inspection or plug in their own Stan
-program(s) via the \code{custom_model} argument.
-}
-\details{
-The pipeline:
-\enumerate{
-\item \code{\link[=robma_spec]{robma_spec()}}      -- validate arguments, resolve priors, build grid.
-\item \code{\link[=robma_stan_code]{robma_stan_code()}} -- generate Stan programs (one per component / indicator).
-\item \code{\link[=robma_stan_data]{robma_stan_data()}} -- build the corresponding Stan data lists.
-\item \code{\link[=robma_fit]{robma_fit()}}       -- compile + sample + bridge sampling / PIP extraction.
-\item \code{\link[=robma_extract]{robma_extract()}}   -- null-range probabilities + forest data frame.
-\item \code{\link[=robma_output]{robma_output()}}    -- assemble the final \code{bayesma_robma} object.
-}
+Fits a Robust Bayesian Meta-Analysis (RoBMA) model using Bayesian model
+averaging across models with and without an effect, heterogeneity, and
+publication bias. Use \code{stan_code(model)} to inspect the generated Stan
+programs after fitting.
 }

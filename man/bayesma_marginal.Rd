@@ -28,7 +28,7 @@ a conditional average treatment effect (CATE).
 }
 \details{
 For relative-effect estimands (\code{"OR"}, \code{"RR"}, \code{"HR"}, \code{"IRR"}, \code{"MD"},
-\code{"SMD"}) this function is unnecessary — \code{\link[=bayesma_output]{bayesma_output()}} already returns
+\code{"SMD"}) this function is unnecessary — \code{\link[=bayesma]{bayesma()}} already returns
 the pooled effect on the appropriate scale.
 }
 \section{Methods by estimand and stage}{

@@ -116,12 +116,9 @@ For one-stage binary models, replace `y` and `se` with:
 
 ### Required generated quantities block
 
-For compatibility with
-[`bayesma_extract()`](https://blmoran.github.io/bayesma/reference/bayesma_extract.md)
-and
-[`bayesma_output()`](https://blmoran.github.io/bayesma/reference/bayesma_output.md),
-the `generated quantities {}` block must export `b_Intercept` (the
-pooled effect):
+For compatibility with `bayesma_extract()` and `bayesma_output()`, the
+`generated quantities {}` block must export `b_Intercept` (the pooled
+effect):
 
 ``` stan
 generated quantities {

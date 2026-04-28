@@ -204,7 +204,7 @@ fits:
     model <- attach_robma_sensitivity(model, robma_sens)
 
     # Step 3: Create sensitivity plot with RoBMA
-    sensitivity_plot(model, data, priors, measure = "OR", incl_robma = TRUE)
+    sensitivity_plot(model, data, priors, estimand = "OR", incl_robma = TRUE)
 
 This separation allows the computationally expensive RoBMA fitting to be
 done once and cached, rather than being re-run every time the plot is

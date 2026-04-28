@@ -76,7 +76,7 @@
 #' model <- attach_robma_sensitivity(model, robma_sens)
 #'
 #' # Step 3: Create sensitivity plot with RoBMA
-#' sensitivity_plot(model, data, priors, measure = "OR", incl_robma = TRUE)
+#' sensitivity_plot(model, data, priors, estimand = "OR", incl_robma = TRUE)
 #' ```
 #'
 #' This separation allows the computationally expensive RoBMA fitting to be done
@@ -125,7 +125,7 @@ sensitivity_plot <- function(
     font = NULL
 ) {
 
-  measure <- estimand
+  estimand <- estimand
 
   # ---------------------------
   # 1) Validation
@@ -133,7 +133,7 @@ sensitivity_plot <- function(
   validate_inputs_sens_plot(
     model   = model,
     data    = data,
-    measure = measure,
+    estimand = estimand,
     priors  = priors
   )
 
@@ -153,7 +153,7 @@ sensitivity_plot <- function(
         "  robma_sens <- run_robma_sensitivity(data, priors, robma_template = robma_fit)",
         "
   model <- attach_robma_sensitivity(model, robma_sens)",
-        "  sensitivity_plot(model, data, priors, measure, incl_robma = TRUE)"
+        "  sensitivity_plot(model, data, priors, estimand, incl_robma = TRUE)"
       ))
     }
   }
@@ -206,19 +206,19 @@ sensitivity_plot <- function(
   # ---------------------------
   # 2) Null range handling
   # ---------------------------
-  props      <- get_measure_properties(measure)
+  props      <- get_measure_properties(estimand)
   null_value <- null_value %||% props$null_value
 
   if (is.null(null_range) && isTRUE(add_null_range)) {
     null_range <- switch(
-      measure,
+      estimand,
       OR  = c(0.9, 1.1),
       RR  = c(0.9, 1.1),
       HR  = c(0.9, 1.1),
       IRR = c(0.9, 1.1),
       SMD = c(-0.1, 0.1),
       cli::cli_abort(
-        "{.arg null_range} must be supplied for {.val {measure}}.",
+        "{.arg null_range} must be supplied for {.val {estimand}}.",
         call = rlang::caller_env()
       )
     )
@@ -348,12 +348,12 @@ sensitivity_plot <- function(
 
     # helper: effect-scale transform for plotting
     transform_mu <- function(mu_raw) {
-      if (measure %in% c("OR", "RR", "HR", "IRR")) exp(mu_raw) else mu_raw
+      if (estimand %in% c("OR", "RR", "HR", "IRR")) exp(mu_raw) else mu_raw
     }
 
     # helper: extract mu draws from a model (uses marginal draws for marginal estimands)
     extract_mu_draws <- function(m) {
-      if (is_marginal_estimand(measure) && !is.null(m$marginal)) {
+      if (is_marginal_estimand(estimand) && !is.null(m$marginal)) {
         m$marginal$draws
       } else {
         as.numeric(m$draws[["mu"]])
@@ -373,6 +373,7 @@ sensitivity_plot <- function(
     orig_tau_prior <- model$meta$priors$tau %||% model$meta$call_args$tau_prior
     orig_model_type <- model$meta$model_type %||% model$meta$call_args$model_type %||% "random_effect"
     orig_stage <- model$meta$stage %||% model$meta$call_args$stage %||% "one_stage"
+    orig_estimand <- model$meta$call_args$estimand %||% "OR"
 
     cli::cli_h3("Fitting sensitivity models")
     cli::cli_alert_info("Original model: {orig_model_type} ({orig_stage})")
@@ -404,9 +405,9 @@ sensitivity_plot <- function(
       sec_model_type <- sec$overrides$model_type %||% orig_model_type
       sec_stage <- sec$overrides$stage %||% orig_stage
 
-      # Can reuse if: priors match AND model_type matches AND stage matches AND no data override
-      model_matches <- (sec_model_type == orig_model_type) && (sec_stage == orig_stage)
-      can_reuse <- mu_matches && tau_matches && model_matches && is.null(sec$data_override)
+      model_matches    <- (sec_model_type == orig_model_type) && (sec_stage == orig_stage)
+      estimand_matches <- identical(estimand, orig_estimand)
+      can_reuse <- mu_matches && tau_matches && model_matches && estimand_matches && is.null(sec$data_override)
 
       if (can_reuse) {
         cli::cli_alert_success("{sec$label} + {prior_id}: reusing original draws")
@@ -428,10 +429,11 @@ sensitivity_plot <- function(
         {
           refit_args <- c(
             list(
-              model    = model,
-              data     = sec$data_override %||% data,
-              mu_prior = mu_prior,
-              tau_prior = tau_prior
+              model     = model,
+              data      = sec$data_override %||% data,
+              mu_prior  = mu_prior,
+              tau_prior = tau_prior,
+              estimand  = estimand
             ),
             sec$overrides
           )
@@ -460,7 +462,7 @@ sensitivity_plot <- function(
       x <- transform_mu(mu_raw)
 
       # Warn and optionally exclude if estimates are unreasonable
-      if (measure %in% c("OR", "RR", "HR", "IRR")) {
+      if (estimand %in% c("OR", "RR", "HR", "IRR")) {
         median_x <- stats::median(x)
         q_low <- stats::quantile(x, 0.025)
         q_high <- stats::quantile(x, 0.975)
@@ -469,7 +471,7 @@ sensitivity_plot <- function(
         if (median_x > 100 || median_x < 0.01 || q_high > 10000) {
           cli::cli_warn(c(
             "!" = "Extreme estimates for {sec$label} + {prior_id}",
-            "i" = "Median {measure} = {format(round(median_x, 1), big.mark=',')}",
+            "i" = "Median {estimand} = {format(round(median_x, 1), big.mark=',')}",
             "i" = "95% CrI: [{format(round(q_low, 1), big.mark=',')}, {format(round(q_high, 1), big.mark=',')}]",
             "i" = "This typically indicates model convergence failure.",
             "i" = "Consider excluding this model type from sensitivity analysis."
@@ -538,7 +540,7 @@ sensitivity_plot <- function(
         # Get all draws with null tracking
         all_draws <- robma_to_sensitivity_draws(
           robma_fit     = robma_fit,
-          measure       = measure,
+          estimand       = estimand,
           prior         = pid,
           prior_label   = prior_label_map[[pid]] %||% pid,
           section_label = "RoBMA"  # temporary, will be updated
@@ -560,9 +562,9 @@ sensitivity_plot <- function(
           h1_draws <- model_avg_draws$x[!model_avg_draws$is_null_draw]
           if (length(h1_draws) > 0) {
             # Get the null value on the transformed scale
-            null_val <- if (measure %in% c("OR", "RR", "HR", "IRR")) 1 else 0
-            # Jitter width: 2% of H1 range on log scale for ratio measures
-            if (measure %in% c("OR", "RR", "HR", "IRR")) {
+            null_val <- if (estimand %in% c("OR", "RR", "HR", "IRR")) 1 else 0
+            # Jitter width: 2% of H1 range on log scale for ratio estimands
+            if (estimand %in% c("OR", "RR", "HR", "IRR")) {
               log_range <- diff(range(log(h1_draws)))
               jitter_sd <- exp(log_range * 0.02) - 1
               n_null <- sum(model_avg_draws$is_null_draw)
@@ -742,7 +744,7 @@ sensitivity_plot <- function(
   table_left <- sensitivity_table_left(summary_df, font = font)
   table_right <- sensitivity_table_right(
     summary_df,
-    measure              = measure,
+    estimand              = estimand,
     add_probs            = add_probs,
     add_probs_null_range = has_null_range && isTRUE(add_probs),
     font                 = font
@@ -753,7 +755,7 @@ sensitivity_plot <- function(
   # ---------------------------
   sens_plot <- sensitivity_density_plot_fn(
     df                              = draws,
-    measure                         = measure,
+    estimand                         = estimand,
     split_color_by_null             = split_color_by_null,
     color_overall_posterior         = color_overall_posterior,
     color_overall_posterior_outline = color_overall_posterior_outline,
@@ -775,7 +777,7 @@ sensitivity_plot <- function(
   # ---------------------------
   density_args <- list(
     df                              = draws,
-    measure                         = measure,
+    estimand                         = estimand,
     split_color_by_null             = split_color_by_null,
     color_overall_posterior         = color_overall_posterior,
     color_overall_posterior_outline = color_overall_posterior_outline,
@@ -811,7 +813,7 @@ sensitivity_plot <- function(
       summary_df    = summary_df,
       prior_table   = prior_table,
       draws         = draws,
-      measure       = measure,
+      estimand       = estimand,
       null_value    = null_value,
       null_range    = null_range
     ),
@@ -877,7 +879,7 @@ render_sensitivity_patchwork <- function(x) {
 #' @param x A `bayesma_sensitivity_plot` object.
 #' @param show Logical. Whether to display posterior probability columns.
 #' @param range Numeric vector of length 2 giving the null/ROPE range, or
-#'   `NULL` to use the default for the model's measure.
+#'   `NULL` to use the default for the model's estimand.
 #' @param color_null_range Colour used to shade the null range.
 #' @param title,subtitle Character. Plot titles.
 #' @param align Title alignment: `"left"`, `"center"`, or `"right"`.
@@ -896,7 +898,7 @@ sens_add_probs <- function(x, show = TRUE) {
   x$has_probs <- isTRUE(show)
   x$table_right <- sensitivity_table_right(
     x$summary_df,
-    measure              = x$measure,
+    estimand              = x$estimand,
     add_probs            = x$has_probs,
     add_probs_null_range = x$has_null_range && x$has_probs,
     font                 = x$font
@@ -911,17 +913,17 @@ sens_add_null <- function(x, range = NULL, color_null_range = "#77bb41") {
     cli::cli_abort("{.fn sens_add_null} requires a {.cls bayesma_sensitivity_plot} object.")
   }
 
-  # Resolve default null range based on measure
+  # Resolve default null range based on estimand
   if (is.null(range)) {
     range <- switch(
-      x$measure,
+      x$estimand,
       OR  = c(0.9, 1.1),
       RR  = c(0.9, 1.1),
       HR  = c(0.9, 1.1),
       IRR = c(0.9, 1.1),
       SMD = c(-0.1, 0.1),
       cli::cli_abort(
-        "No default null range for measure {.val {x$measure}}. Please supply {.arg range} explicitly."
+        "No default null range for estimand {.val {x$estimand}}. Please supply {.arg range} explicitly."
       )
     )
   } else if (length(range) == 1 && is.numeric(range)) {
@@ -956,7 +958,7 @@ sens_add_null <- function(x, range = NULL, color_null_range = "#77bb41") {
   # Rebuild the right table (shows δ columns if probs are active)
   x$table_right <- sensitivity_table_right(
     x$summary_df,
-    measure              = x$measure,
+    estimand              = x$estimand,
     add_probs            = x$has_probs,
     add_probs_null_range = x$has_probs,
     font                 = x$font

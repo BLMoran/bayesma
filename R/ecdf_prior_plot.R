@@ -13,7 +13,7 @@
 #' @param priors A named list of prior specifications. Each element must be a
 #'   list with at least \code{mu_prior} and optionally \code{tau_prior}, and
 #'   may include \code{name} for display labels.
-#' @param measure Effect measure string (e.g., "OR", "RR", "HR", "IRR", "MD", "SMD").
+#' @param estimand Effect estimand string (e.g., "OR", "RR", "HR", "IRR", "MD", "SMD").
 #' @param model_types Character vector specifying which model type(s) to include.
 #'   Maximum of 2 model types to avoid clutter. Valid values: \code{"common_effect"},
 #'   \code{"random_effect"}, \code{"bias_corrected"}, \code{"selection_copas"},
@@ -26,10 +26,10 @@
 #'   probability axis labels. Either \code{"null"} (compare to
 #'   \code{null_value}) or \code{"null_range"} (compare to
 #'   \code{null_range} boundaries). Default is \code{"null"}.
-#' @param null_value Null hypothesis value. If NULL, uses measure default.
+#' @param null_value Null hypothesis value. If NULL, uses estimand default.
 #' @param null_range Numeric vector of length 2 giving null range bounds.
 #' @param add_null_range Logical. If TRUE and \code{null_range} is NULL,
-#'   uses measure-appropriate defaults.
+#'   uses estimand-appropriate defaults.
 #' @param color_null_range Fill colour for the null range band.
 #'   Default \code{"#77bb41"}.
 #' @param label_control Label for control group. Default \code{"Control"}.
@@ -82,7 +82,7 @@
 ecdf_prior_plot <- function(model,
                             data,
                             priors,
-                            measure,
+                            estimand,
                             model_types = "random_effect",
                             prior_order = NULL,
                             prob_reference = "null",
@@ -112,7 +112,7 @@ ecdf_prior_plot <- function(model,
   validate_inputs_sens_plot(
     model   = model,
     data    = data,
-    measure = measure,
+    estimand = estimand,
     priors  = priors
   )
 
@@ -186,7 +186,7 @@ ecdf_prior_plot <- function(model,
     ))
   }
 
-  props      <- get_measure_properties(measure)
+  props      <- get_measure_properties(estimand)
   null_value <- null_value %||% props$null_value
 
   # ---------------------------
@@ -194,7 +194,7 @@ ecdf_prior_plot <- function(model,
   # ---------------------------
   if (is.null(null_range) && isTRUE(add_null_range)) {
     null_range <- switch(
-      measure,
+      estimand,
       OR  = c(0.9, 1.1),
       RR  = c(0.9, 1.1),
       HR  = c(0.9, 1.1),
@@ -256,7 +256,15 @@ ecdf_prior_plot <- function(model,
   # 4. Extract draws for each prior × model_type
   # ---------------------------
   transform_mu <- function(mu_raw) {
-    if (measure %in% c("OR", "RR", "HR", "IRR")) exp(mu_raw) else mu_raw
+    if (estimand %in% c("OR", "RR", "HR", "IRR")) exp(mu_raw) else mu_raw
+  }
+
+  extract_mu_draws <- function(m) {
+    if (is_marginal_estimand(estimand) && !is.null(m$marginal)) {
+      m$marginal$draws
+    } else {
+      as.numeric(m$draws[["mu"]])
+    }
   }
 
   priors_match <- function(p1, p2) {
@@ -266,10 +274,11 @@ ecdf_prior_plot <- function(model,
     identical(unclass(p1), unclass(p2))
   }
 
-  orig_mu_prior  <- model$meta$priors$mu %||% model$meta$call_args$mu_prior
-  orig_tau_prior <- model$meta$priors$tau %||% model$meta$call_args$tau_prior
+  orig_mu_prior   <- model$meta$priors$mu %||% model$meta$call_args$mu_prior
+  orig_tau_prior  <- model$meta$priors$tau %||% model$meta$call_args$tau_prior
   orig_model_type <- model$meta$model_type %||% model$meta$call_args$model_type %||% "random_effect"
-  orig_stage <- model$meta$stage %||% model$meta$call_args$stage %||% "one_stage"
+  orig_stage      <- model$meta$stage %||% model$meta$call_args$stage %||% "one_stage"
+  orig_estimand   <- model$meta$call_args$estimand %||% "OR"
 
   cli::cli_h3("Fitting models for ECDF plot")
   cli::cli_alert_info("Model types: {.val {model_types}}")
@@ -291,7 +300,7 @@ ecdf_prior_plot <- function(model,
 
           all_draws <- robma_to_sensitivity_draws(
             robma_fit     = robma_sens[[pid]],
-            measure       = measure,
+            estimand       = estimand,
             prior         = pid,
             prior_label   = prior_label_map[[pid]],
             section_label = model_label
@@ -326,13 +335,14 @@ ecdf_prior_plot <- function(model,
         sec_model_type <- config$overrides$model_type %||% orig_model_type
         sec_stage <- config$overrides$stage %||% orig_stage
 
-        model_matches <- (sec_model_type == orig_model_type) && (sec_stage == orig_stage)
-        can_reuse <- mu_matches && tau_matches && model_matches
+        model_matches    <- (sec_model_type == orig_model_type) && (sec_stage == orig_stage)
+        estimand_matches <- identical(estimand, orig_estimand)
+        can_reuse <- mu_matches && tau_matches && model_matches && estimand_matches
 
         if (can_reuse) {
           cli::cli_alert_success("{model_label} + {pid}: reusing original draws")
-          mu_raw <- as.numeric(model$draws[["mu"]])
-          x <- transform_mu(mu_raw)
+          mu_raw <- extract_mu_draws(model)
+          x <- if (is_marginal_estimand(estimand)) mu_raw else transform_mu(mu_raw)
 
           draws_list[[length(draws_list) + 1]] <- tibble::tibble(
             x           = x,
@@ -350,7 +360,8 @@ ecdf_prior_plot <- function(model,
                   model     = model,
                   data      = data,
                   mu_prior  = mu_prior,
-                  tau_prior = tau_prior
+                  tau_prior = tau_prior,
+                  estimand  = estimand
                 ),
                 config$overrides
               )
@@ -366,8 +377,8 @@ ecdf_prior_plot <- function(model,
           )
 
           if (!is.null(fit)) {
-            mu_raw <- as.numeric(fit$draws[["mu"]])
-            x <- transform_mu(mu_raw)
+            mu_raw <- extract_mu_draws(fit)
+            x <- if (is_marginal_estimand(estimand)) mu_raw else transform_mu(mu_raw)
 
             draws_list[[length(draws_list) + 1]] <- tibble::tibble(
               x           = x,
@@ -424,11 +435,11 @@ ecdf_prior_plot <- function(model,
   breaks    <- x_breaks %||% ggplot2::waiver()
 
   if (prob_reference == "null") {
-    y_left_label  <- paste0("Probability ", measure, " < ", null_value)
-    y_right_label <- paste0("Probability ", measure, " > ", null_value)
+    y_left_label  <- paste0("Probability ", estimand, " < ", null_value)
+    y_right_label <- paste0("Probability ", estimand, " > ", null_value)
   } else {
-    y_left_label  <- paste0("Probability ", measure, " < ", null_range[1])
-    y_right_label <- paste0("Probability ", measure, " > ", null_range[2])
+    y_left_label  <- paste0("Probability ", estimand, " < ", null_range[1])
+    y_right_label <- paste0("Probability ", estimand, " > ", null_range[2])
   }
 
   # Default subtitle shows model type(s)

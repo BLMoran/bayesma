@@ -1,16 +1,8 @@
 #' Run a Bayesian Meta-Analysis in Stan
 #'
-#' `bayesma()` is a thin orchestrator over a six-stage pipeline. Each stage is
-#' exported so users can pause for inspection or plug in their own Stan program
-#' via the `custom_model` argument.
-#'
-#' The pipeline:
-#' 1. [bayesma_spec()] -- validate arguments, extract data, resolve priors.
-#' 2. [bayesma_stan_code()] -- generate Stan code as named blocks.
-#' 3. [bayesma_stan_data()] -- build the Stan data list.
-#' 4. [bayesma_fit()] -- compile and sample.
-#' 5. [bayesma_extract()] -- extract tidy effect components.
-#' 6. [bayesma_output()] -- assemble the final `bayesma` object.
+#' Fits a Bayesian meta-analysis model via Stan. Use `stan_code(model)` to
+#' inspect the generated Stan program after fitting. Supply `custom_model` to
+#' use your own Stan program instead.
 #'
 #' @param data A data frame with one row per study (or per arm for multi-arm studies).
 #' @param studyvar Character. Column name for study identifiers.
@@ -84,14 +76,16 @@
 #'   number of unique studies is below `re_min_k`. Default `NULL` (no
 #'   enforcement). Useful for subgroup analyses where some strata have too few
 #'   studies for stable random-effects estimation.
-#' @param return_stage Character. One of `"full"` (default), `"spec"`, `"code"`,
-#'   `"data"`, or `"fit"`. Returns the intermediate pipeline object instead of
-#'   the final `bayesma` object.
+#' @param sample_prior Logical. If `TRUE`, samples from the prior predictive
+#'   distribution by fitting the model without conditioning on the data
+#'   likelihood. The result can be passed to [pp_check()] to verify that the
+#'   prior places mass on plausible observable values. Use this for prior
+#'   elicitation and sanity-checking — not for calibrating priors against the
+#'   analysis dataset itself (which would be circular). Default `FALSE`.
 #' @param chains,iter_warmup,iter_sampling,adapt_delta,seed MCMC settings.
 #' @param ... Passed to `cmdstanr::sample()`.
 #'
-#' @return A list of class `"bayesma"` (or the intermediate stage object when
-#'   `return_stage` is not `"full"`).
+#' @return A list of class `"bayesma"`.
 #'
 #' @export
 bayesma <- function(
@@ -141,7 +135,7 @@ bayesma <- function(
     cate_covariate = NULL,
     baseline_risk  = NULL,
     re_min_k       = NULL,
-    return_stage   = c("full", "spec", "code", "data", "fit"),
+    sample_prior  = FALSE,
     chains        = 4,
     iter_warmup   = 1000,
     iter_sampling = 1000,
@@ -149,8 +143,6 @@ bayesma <- function(
     seed          = 1234,
     ...
 ) {
-  return_stage <- rlang::arg_match(return_stage)
-
   model_type <- enforce_re_min_k(
     model_type   = model_type,
     re_min_k     = re_min_k,
@@ -203,13 +195,14 @@ bayesma <- function(
     cate_covariate   = cate_covariate,
     baseline_risk    = baseline_risk
   )
-  if (return_stage == "spec") return(spec)
 
-  code <- bayesma_stan_code(spec)
-  if (return_stage == "code") return(code)
-
+  code      <- bayesma_stan_code(spec)
   stan_data <- bayesma_stan_data(spec)
-  if (return_stage == "data") return(stan_data)
+
+  if (isTRUE(sample_prior)) {
+    code$full <- inject_prior_only(code$full)
+    stan_data <- c(stan_data, list(prior_only = 1L))
+  }
 
   fit <- bayesma_fit(
     spec          = spec,
@@ -222,13 +215,12 @@ bayesma <- function(
     seed          = seed,
     ...
   )
-  if (return_stage == "fit") return(fit)
 
   effects <- bayesma_extract(fit, spec)
-  out <- bayesma_output(spec, fit, effects)
+  out     <- bayesma_output(spec, fit, effects)
+  if (isTRUE(sample_prior)) out$meta$prior_predictive <- TRUE
   if (is_marginal_estimand(spec$estimand)) {
     out$marginal <- bayesma_marginal(fit, spec)
-    out$pred_interval <- compute_marginal_pred_interval(fit, spec, out$marginal$draws)
   }
   out
 }

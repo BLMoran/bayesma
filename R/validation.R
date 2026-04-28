@@ -351,7 +351,7 @@ validate_prior_args <- function(stage, model_type, re_dist,
 validate_inputs_bayesma <- function(
     model,
     data,
-    measure,
+    estimand,
     studyvar,
     year,
     subgroup,
@@ -365,7 +365,7 @@ validate_inputs_bayesma <- function(
   if (!is.data.frame(data)) {
     cli::cli_abort("{.arg data} must be a data frame.")
   }
-  rlang::arg_match(measure, c("OR", "HR", "RR", "IRR", "MD", "SMD", "RD", "ARR", "ATE", "ATT", "CATE"))
+  rlang::arg_match(estimand, c("OR", "HR", "RR", "IRR", "MD", "SMD", "RD", "ARR", "ATE", "ATT", "CATE"))
   rlang::arg_match(sort_studies_by, c("author", "year", "effect"))
   rlang::arg_match(shrinkage_output, c("density", "pointinterval"))
 
@@ -430,7 +430,7 @@ validate_inputs_bayesma <- function(
 #' @param model A bayesma object to validate.
 #' @param data A data frame to validate.
 #' @param priors Priors object(s) — bayesma priors for bayesma.
-#' @param measure Character string specifying the effect measure.
+#' @param estimand Character string specifying the estimand.
 #'
 #' @return Invisible TRUE if validation passes, otherwise throws an error.
 #'
@@ -439,7 +439,7 @@ validate_inputs_sens_plot <- function(
     model,
     data,
     priors,
-    measure
+    estimand
 ) {
 
   if (!inherits(model, "bayesma")) {
@@ -450,7 +450,7 @@ validate_inputs_sens_plot <- function(
     cli::cli_abort("{.arg data} must be a data frame.")
   }
 
-  rlang::arg_match(measure, c("OR", "HR", "RR", "IRR", "MD", "SMD", "RD", "ARR", "ATE", "ATT", "CATE"))
+  rlang::arg_match(estimand, c("OR", "HR", "RR", "IRR", "MD", "SMD", "RD", "ARR", "ATE", "ATT", "CATE"))
 
   validate_priors_bayesma(priors)
 

@@ -1,8 +1,9 @@
 # Robust Bayesian Model Averaging for Meta-Analysis
 
-`robma()` is a thin orchestrator over a six-stage pipeline. Each stage
-is exported so users can pause for inspection or plug in their own Stan
-program(s) via the `custom_model` argument.
+Fits a Robust Bayesian Meta-Analysis (RoBMA) model using Bayesian model
+averaging across models with and without an effect, heterogeneity, and
+publication bias. Use `stan_code(model)` to inspect the generated Stan
+programs after fitting.
 
 ## Usage
 
@@ -41,7 +42,6 @@ robma(
   quiet = FALSE,
   custom_model = NULL,
   custom_data = NULL,
-  return_stage = c("full", "spec", "code", "data", "fit"),
   format = TRUE,
   ...
 )
@@ -77,9 +77,9 @@ robma(
 - priors_effect, priors_effect_null, priors_heterogeneity,
   priors_heterogeneity_null, priors_bias, priors_bias_null:
 
-  Lists of `bayesma_prior` objects for the effect, heterogeneity and
-  publication-bias components (alternative and null). If `NULL`, the
-  RoBMA defaults are used.
+  Lists of prior objects for the effect, heterogeneity, and
+  publication-bias components (alternative and null). If `NULL`, RoBMA
+  defaults are used.
 
 - rescale_priors:
 
@@ -87,7 +87,7 @@ robma(
 
 - method:
 
-  Character. `"bridge"` (default) uses bridgesampling across the full
+  Character. `"bridge"` (default) uses bridge sampling across the full
   model grid; `"ss"` uses a single spike-and-slab Stan model.
 
 - bias_indicator:
@@ -100,9 +100,8 @@ robma(
   Numeric vector of length 2 giving the null range on the log scale
   (e.g., `c(-0.1, 0.1)` for log OR). Effects within this range are
   considered practically equivalent to zero. Defaults to `NULL` (point
-  null at exactly zero). When specified, direction probabilities and the
-  P(practically null) are computed relative to this range. For OR/RR,
-  `c(-0.1, 0.1)` corresponds to OR/RR in `[0.905, 1.105]`.
+  null at exactly zero). For OR/RR, `c(-0.1, 0.1)` corresponds to OR/RR
+  in `[0.905, 1.105]`.
 
 - b_prior:
 
@@ -140,12 +139,6 @@ robma(
   Optional Stan data overrides merged onto the auto-built data list(s).
   Same shape conventions as `custom_model`.
 
-- return_stage:
-
-  Character. One of `"full"` (default), `"spec"`, `"code"`, `"data"`, or
-  `"fit"`. Returns the intermediate pipeline object instead of the final
-  `bayesma_robma` object.
-
 - format:
 
   Logical. If `TRUE` (default), auto-format generated Stan programs with
@@ -153,31 +146,8 @@ robma(
 
 - ...:
 
-  Additional arguments forwarded to `cmdstanr::CmdStanModel$sample()`.
+  Additional arguments passed to `cmdstanr::CmdStanModel$sample()`.
 
 ## Value
 
-An object of class `c("bayesma_robma", "bayesma")`, or an intermediate
-pipeline object if `return_stage` is not `"full"`.
-
-## Details
-
-The pipeline:
-
-1.  [`robma_spec()`](https://blmoran.github.io/bayesma/reference/robma_spec.md)
-    – validate arguments, resolve priors, build grid.
-
-2.  [`robma_stan_code()`](https://blmoran.github.io/bayesma/reference/robma_stan_code.md)
-    – generate Stan programs (one per component / indicator).
-
-3.  [`robma_stan_data()`](https://blmoran.github.io/bayesma/reference/robma_stan_data.md)
-    – build the corresponding Stan data lists.
-
-4.  [`robma_fit()`](https://blmoran.github.io/bayesma/reference/robma_fit.md)
-    – compile + sample + bridge sampling / PIP extraction.
-
-5.  [`robma_extract()`](https://blmoran.github.io/bayesma/reference/robma_extract.md)
-    – null-range probabilities + forest data frame.
-
-6.  [`robma_output()`](https://blmoran.github.io/bayesma/reference/robma_output.md)
-    – assemble the final `bayesma_robma` object.
+An object of class `c("bayesma_robma", "bayesma")`.

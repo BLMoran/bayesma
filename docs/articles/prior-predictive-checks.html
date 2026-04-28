@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>Prior predictive checks • bayesma</title>
+<title>Prior Predictive Checks • bayesma</title>
 <!-- favicons --><link rel="icon" type="image/png" sizes="96x96" href="../favicon-96x96.png">
 <link rel="icon" type="”image/svg+xml”" href="../favicon.svg">
 <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
@@ -20,7 +20,7 @@
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><script src="prior-predictive-checks_files/libs/quarto-html/popper.min.js"></script><script src="prior-predictive-checks_files/libs/quarto-html/tippy.umd.min.js"></script><link href="prior-predictive-checks_files/libs/quarto-html/tippy.css" rel="stylesheet">
 <link href="prior-predictive-checks_files/libs/quarto-html/light-border.css" rel="stylesheet">
-<!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Prior predictive checks">
+<!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Prior Predictive Checks">
 <meta property="og:image" content="https://blmoran.github.io/bayesma/logo.png">
 </head>
 <body>
@@ -161,7 +161,7 @@
 </nav><div class="container template-quarto">
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
-      <img src="../logo.png" class="logo" alt=""><h1>Prior predictive checks</h1>
+      <img src="../logo.png" class="logo" alt=""><h1>Prior Predictive Checks</h1>
 
 
 
@@ -175,62 +175,76 @@
 
 
 
-    <section class="level2"><h2 id="introduction">Introduction<a class="anchor" aria-label="anchor" href="#introduction"></a>
+    <section class="level2"><h2 id="what-is-a-prior-predictive-check">What is a prior predictive check?<a class="anchor" aria-label="anchor" href="#what-is-a-prior-predictive-check"></a>
 </h2>
-<p>A prior predictive check simulates data from the model using only the prior distributions — before any observed data are incorporated. The resulting prior predictive distribution tells you what data the model considers plausible before seeing the evidence.</p>
-<p>Prior predictive checks serve two purposes:</p>
-<ol type="1">
-<li>
-<strong>Prior calibration</strong>: Does the prior predictive distribution cover the range of effects that would be scientifically meaningful? Are the implied effects absurdly large or implausibly small?</li>
-<li>
-<strong>Model plausibility</strong>: Before fitting, does the model structure make sense? Can it generate data that looks anything like what you expect to observe?</li>
-</ol></section><section class="level2"><h2 id="running-prior-predictive-checks">Running prior predictive checks<a class="anchor" aria-label="anchor" href="#running-prior-predictive-checks"></a>
+<p>A prior predictive check simulates data from the model using only the prior distributions — before any observed data are incorporated. Because the likelihood is bypassed entirely, the draws reflect what the model considers plausible <em>a priori</em>, under nothing but the priors and the assumed data-generating process.</p>
+<p>The resulting distribution, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>y</mi><mtext mathvariant="normal">rep</mtext></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">p(y_\text{rep})</annotation></semantics></math>, answers the question: <em>if I knew nothing beyond my prior beliefs and this model structure, what data would I expect to see?</em></p>
+</section><section class="level2"><h2 id="what-prior-predictive-checks-are-for">What prior predictive checks are for<a class="anchor" aria-label="anchor" href="#what-prior-predictive-checks-are-for"></a>
 </h2>
+<p>Prior predictive checks have two legitimate uses.</p>
+<p><strong>Sanity-checking on the observable scale.</strong> Priors are typically specified on a transformed scale (log-OR, log-RR, Cohen’s <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>d</mi><annotation encoding="application/x-tex">d</annotation></semantics></math>). It is easy to choose a prior that looks reasonable in those units but implies absurd data — e.g. a <code>normal(0, 10)</code> prior on log-OR implies that studies routinely report ORs in the thousands. The prior predictive translates the prior back into the scale of the actual data, making such problems immediately visible.</p>
+<p><strong>Encoding external knowledge.</strong> When domain expertise or independent reference data inform the prior — for example, empirical estimates of between-study heterogeneity from a previous systematic review — the prior predictive lets you verify the prior is consistent with that knowledge before analysis begins.</p>
+</section><section class="level2"><h2 id="what-prior-predictive-checks-are-not-for">What prior predictive checks are not for<a class="anchor" aria-label="anchor" href="#what-prior-predictive-checks-are-not-for"></a>
+</h2>
+<p>It is tempting to adjust priors iteratively until <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>y</mi><mtext mathvariant="normal">rep</mtext></msub><annotation encoding="application/x-tex">y_\text{rep}</annotation></semantics></math> resembles the observed data. <strong>This is circular.</strong> Doing so smuggles the analysis dataset into the prior, so both the prior and the likelihood carry information from the same data. The resulting posterior will be overconfident: it appears to be updated by the data, but the data have already shaped the prior.</p>
+<p>Priors must be specified from sources that are genuinely independent of the analysis dataset:</p>
+<ul>
+<li>Domain expertise and subject-matter knowledge</li>
+<li>Empirical estimates from previous meta-analyses or independent cohorts</li>
+<li>General plausibility constraints (effect sizes cannot be infinite; event rates must lie in <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="true" form="prefix">[</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo stretchy="true" form="postfix">]</mo></mrow><annotation encoding="application/x-tex">[0, 1]</annotation></semantics></math>)</li>
+</ul>
+<p>The prior predictive check is then used to <em>verify</em> the chosen prior is coherent — not to <em>select</em> it by matching the observed data.</p>
+</section><section class="level2"><h2 id="running-a-prior-predictive-check">Running a prior predictive check<a class="anchor" aria-label="anchor" href="#running-a-prior-predictive-check"></a>
+</h2>
+<p>Pass <code>sample_prior = TRUE</code> to <code><a href="../reference/bayesma.html">bayesma()</a></code>. The model is compiled and sampled in the usual way, but the likelihood contribution is excluded from the model block so the MCMC explores the prior distribution. The <code>data</code> argument is still required: arm sizes and standard errors are used to keep the simulation on the same observable scale as the real data.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">fit_prior</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/bayesma.html">bayesma</a></span><span class="op">(</span></span>
-<span>  <span class="va">data</span>,</span>
-<span>  model_type    <span class="op">=</span> <span class="st">"random_effect"</span>,</span>
-<span>  sample_prior  <span class="op">=</span> <span class="cn">TRUE</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu"><a href="../reference/ecdf_prior_plot.html">ecdf_prior_plot</a></span><span class="op">(</span><span class="va">fit_prior</span><span class="op">)</span></span></code></pre></div>
-<p><code>sample_prior = TRUE</code> draws from the prior predictive distribution. No data are used in the likelihood; the <code>data</code> argument only provides the standard errors <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>s</mi><mi>i</mi></msub><annotation encoding="application/x-tex">s_i</annotation></semantics></math> for the simulation scale.</p>
-</section><section class="level2"><h2 id="what-to-look-for">What to look for<a class="anchor" aria-label="anchor" href="#what-to-look-for"></a>
-</h2>
-<p><strong>Effect scale.</strong> On the log-OR scale, effects above 2 or below −2 are unusual in most clinical literatures. If the prior predictive distribution assigns substantial probability to <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mo stretchy="true" form="prefix">|</mo><mi>μ</mi><mo stretchy="true" form="postfix">|</mo></mrow><mo>&gt;</mo><mn>3</mn></mrow><annotation encoding="application/x-tex">|\mu| &gt; 3</annotation></semantics></math>, the prior on <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>μ</mi><annotation encoding="application/x-tex">\mu</annotation></semantics></math> is too vague.</p>
-<p><strong>Heterogeneity scale.</strong> A prior that generates <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>τ</mi><mo>&gt;</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">\tau &gt; 2</annotation></semantics></math> on the log-OR scale implies studies differ by more than 4 log-ORs — implausible in most applications. Tighten the <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>τ</mi><annotation encoding="application/x-tex">\tau</annotation></semantics></math> prior if the prior predictive places more than 10% of mass above <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>τ</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">\tau = 1</annotation></semantics></math>.</p>
-<p><strong>Study-level effects.</strong> The prior predictive for individual study effects (<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>θ</mi><mi>i</mi></msub><annotation encoding="application/x-tex">\theta_i</annotation></semantics></math>) should span a plausible range without being dominated by the prior tails.</p>
-</section><section class="level2"><h2 id="interpreting-the-ecdf-prior-plot">Interpreting the ECDF prior plot<a class="anchor" aria-label="anchor" href="#interpreting-the-ecdf-prior-plot"></a>
-</h2>
-<p><code><a href="../reference/ecdf_prior_plot.html">ecdf_prior_plot()</a></code> overlays the empirical CDF of the observed effects with the prior predictive CDF. If the observed CDF falls far outside the prior predictive band, the priors are inconsistent with the data — the posterior will be dominated by the likelihood pulling against the prior, which can cause slow mixing and poor calibration.</p>
-</section><section class="level2"><h2 id="adjusting-priors">Adjusting priors<a class="anchor" aria-label="anchor" href="#adjusting-priors"></a>
-</h2>
-<p>If the prior predictive check reveals that priors are too vague or too tight:</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">fit_adj</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/bayesma.html">bayesma</a></span><span class="op">(</span></span>
-<span>  <span class="va">data</span>,</span>
-<span>  model_type   <span class="op">=</span> <span class="st">"random_effect"</span>,</span>
-<span>  mu_prior     <span class="op">=</span> <span class="fu"><a href="../reference/priors.html">normal</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0.5</span><span class="op">)</span>,</span>
-<span>  tau_prior    <span class="op">=</span> <span class="fu"><a href="../reference/priors.html">half_normal</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0.25</span><span class="op">)</span>,</span>
+<code class="sourceCode R"><span><span class="va">prior_fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/bayesma.html">bayesma</a></span><span class="op">(</span></span>
+<span>  data       <span class="op">=</span> <span class="va">my_data</span>,</span>
+<span>  studyvar   <span class="op">=</span> <span class="st">"study"</span>,</span>
+<span>  event_ctrl <span class="op">=</span> <span class="st">"events_c"</span>,</span>
+<span>  event_int  <span class="op">=</span> <span class="st">"events_i"</span>,</span>
+<span>  n_ctrl     <span class="op">=</span> <span class="st">"n_c"</span>,</span>
+<span>  n_int      <span class="op">=</span> <span class="st">"n_i"</span>,</span>
+<span>  likelihood <span class="op">=</span> <span class="st">"binomial"</span>,</span>
+<span>  model_type <span class="op">=</span> <span class="st">"random_effect"</span>,</span>
+<span>  mu_prior   <span class="op">=</span> <span class="fu"><a href="../reference/priors.html">normal</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span>,</span>
+<span>  tau_prior  <span class="op">=</span> <span class="fu"><a href="../reference/priors.html">half_cauchy</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0.5</span><span class="op">)</span>,</span>
 <span>  sample_prior <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="../reference/ecdf_prior_plot.html">ecdf_prior_plot</a></span><span class="op">(</span><span class="va">fit_adj</span><span class="op">)</span></span></code></pre></div>
-<p>Iterate until the prior predictive covers the plausible effect range without being dominated by the tails.</p>
-</section><section class="level2"><h2 id="informative-priors-from-external-data">Informative priors from external data<a class="anchor" aria-label="anchor" href="#informative-priors-from-external-data"></a>
+<span><span class="fu"><a href="../reference/pp_check.html">pp_check</a></span><span class="op">(</span><span class="va">prior_fit</span><span class="op">)</span></span></code></pre></div>
+<p>The plot overlays the observed data <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>y</mi><annotation encoding="application/x-tex">y</annotation></semantics></math> (dark line) with draws from <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>y</mi><mtext mathvariant="normal">rep</mtext></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">p(y_\text{rep})</annotation></semantics></math> (light lines). The observed data are shown for reference — to orient you on the scale of the data — not as a calibration target.</p>
+</section><section class="level2"><h2 id="what-to-look-for">What to look for<a class="anchor" aria-label="anchor" href="#what-to-look-for"></a>
 </h2>
-<p>Empirically-derived priors on <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>τ</mi><annotation encoding="application/x-tex">\tau</annotation></semantics></math> are available from Turner et al. (2015) (medical treatments, binary outcomes) and Rhodes et al. (2015) (psychological interventions, continuous outcomes). Using domain-calibrated priors avoids the need to rely entirely on prior predictive simulation:</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/bayesma.html">bayesma</a></span><span class="op">(</span></span>
+<p>Evaluate the prior predictive against <em>domain knowledge</em>, not against the observed data.</p>
+<p><strong>Effect scale.</strong> On the log-OR scale, values of <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mo stretchy="true" form="prefix">|</mo><mi>μ</mi><mo stretchy="true" form="postfix">|</mo></mrow><mo>&gt;</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">|\mu| &gt; 2</annotation></semantics></math> correspond to ORs above ~7 or below ~0.14. If the prior predictive assigns substantial mass to effects of this magnitude, ask whether that is defensible for the clinical context. Most pharmacological interventions fall in the range <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mo stretchy="true" form="prefix">|</mo><mtext mathvariant="normal">log-OR</mtext><mo stretchy="true" form="postfix">|</mo></mrow><mo>&lt;</mo><mn>1.5</mn></mrow><annotation encoding="application/x-tex">|\text{log-OR}|
+&lt; 1.5</annotation></semantics></math>; a prior placing 30% of its mass outside this range is very vague.</p>
+<p><strong>Heterogeneity scale.</strong> A <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>τ</mi><mo>&gt;</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">\tau &gt; 1</annotation></semantics></math> on the log-OR scale implies studies differ by more than 2 log-ORs — unusual in most literatures. Check whether the prior predictive for <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>τ</mi><annotation encoding="application/x-tex">\tau</annotation></semantics></math> is consistent with the degree of between-study variation you would expect from independent knowledge of the intervention area.</p>
+<p><strong>Study-level effects.</strong> The prior predictive for individual study effects <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>θ</mi><mi>i</mi></msub><annotation encoding="application/x-tex">\theta_i</annotation></semantics></math> should cover a plausible range. Very heavy tails (studies implying ORs &gt; 100) suggest the prior is too diffuse.</p>
+</section><section class="level2"><h2 id="specifying-priors-from-external-knowledge">Specifying priors from external knowledge<a class="anchor" aria-label="anchor" href="#specifying-priors-from-external-knowledge"></a>
+</h2>
+<p>Empirically-derived priors for <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>τ</mi><annotation encoding="application/x-tex">\tau</annotation></semantics></math> are available from Turner et al. (2015) for pharmacological and non-pharmacological interventions on binary outcomes, and from Rhodes et al. (2015) for psychological interventions on continuous outcomes. These are calibrated from large collections of meta-analyses and provide a principled starting point that is independent of any single analysis:</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Turner et al. (2015) median tau for pharmacological treatments (binary)</span></span>
+<span><span class="fu"><a href="../reference/bayesma.html">bayesma</a></span><span class="op">(</span></span>
 <span>  <span class="va">data</span>,</span>
 <span>  model_type <span class="op">=</span> <span class="st">"random_effect"</span>,</span>
-<span>  tau_prior  <span class="op">=</span> <span class="fu"><a href="../reference/priors.html">half_normal</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0.32</span><span class="op">)</span>  <span class="co"># Turner et al. median for pharmacological treatments</span></span>
+<span>  mu_prior   <span class="op">=</span> <span class="fu"><a href="../reference/priors.html">normal</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span>,</span>
+<span>  tau_prior  <span class="op">=</span> <span class="fu"><a href="../reference/priors.html">half_normal</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0.32</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-</section><section class="level2"><h2 id="prior-predictive-checks-for-publication-bias-models">Prior predictive checks for publication bias models<a class="anchor" aria-label="anchor" href="#prior-predictive-checks-for-publication-bias-models"></a>
+<p>Using externally-calibrated priors removes the temptation to tune against the analysis data and grounds the prior in the broader evidence base for the intervention class.</p>
+</section><section class="level2"><h2 id="comparing-prior-and-posterior">Comparing prior and posterior<a class="anchor" aria-label="anchor" href="#comparing-prior-and-posterior"></a>
 </h2>
-<p>For models with selection mechanisms (selection weight, Copas), prior predictive checks should verify that the implied selection probabilities are plausible. A prior that generates weight functions concentrated near zero (no selection) or near one (all studies published regardless of result) is uninformative.</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/ecdf_prior_plot.html">ecdf_prior_plot</a></span><span class="op">(</span><span class="va">fit_selection_prior</span>, parameter <span class="op">=</span> <span class="st">"selection_weights"</span><span class="op">)</span></span></code></pre></div>
+<p>Once the model has been fitted to the data, <code><a href="../reference/ecdf_prior_plot.html">ecdf_prior_plot()</a></code> overlays the prior predictive ECDF with the posterior ECDF. This is a diagnostic for <strong>prior-data conflict</strong>: if the posterior sits far in the tail of the prior predictive, the priors were inconsistent with what the data showed. Moderate conflict is expected and healthy — it means the data are updating the prior. Severe conflict may indicate a prior that is too tight, a model misspecification, or anomalous data.</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Fit with the prior predictive</span></span>
+<span><span class="va">prior_fit</span>    <span class="op">&lt;-</span> <span class="fu"><a href="../reference/bayesma.html">bayesma</a></span><span class="op">(</span><span class="va">data</span>, <span class="va">...</span>, sample_prior <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Fit the full model</span></span>
+<span><span class="va">posterior_fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/bayesma.html">bayesma</a></span><span class="op">(</span><span class="va">data</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Compare</span></span>
+<span><span class="fu"><a href="../reference/ecdf_prior_plot.html">ecdf_prior_plot</a></span><span class="op">(</span><span class="va">posterior_fit</span><span class="op">)</span></span></code></pre></div>
 </section><script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
       var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
