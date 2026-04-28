@@ -34,9 +34,9 @@ study.density.plot_fn  <- function(df,
                                    add_pred = FALSE,
                                    add_pred_subgroup = FALSE,
                                    pred_output = "density",
-                                   color_pred_posterior = "forestgreen",
-                                   color_pred_outline = "darkgreen",
-                                   color_pred_pointinterval = "forestgreen",
+                                   color_pred_posterior = "orange",
+                                   color_pred_outline = "darkorange2",
+                                   color_pred_pointinterval = "orange",
                                    font = NULL){
 
   # Filter out "No Pooled Effect" rows at the beginning
@@ -126,16 +126,14 @@ study.density.plot_fn  <- function(df,
 
   if (isTRUE(props$log_scale)){
     posterior.draws <- posterior.draws |>
-      dplyr::mutate(
-        x_studies = exp(b_Intercept))
+      dplyr::mutate(x_studies = exp(b_Intercept))
 
     study.effects <- study.effects |>
       dplyr::mutate(
         xdist = exp(distributional::dist_normal(mean = yi, sd = sqrt(vi))))
   } else {
     posterior.draws <- posterior.draws |>
-      dplyr::mutate(
-        x_studies = b_Intercept)
+      dplyr::mutate(x_studies = b_Intercept)
 
     study.effects <- study.effects |>
       dplyr::mutate(

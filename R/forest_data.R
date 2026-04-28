@@ -46,7 +46,8 @@ forest_data_fn <- function(data,
                            subgroup_order = NULL,
                            add_pred = FALSE,
                            add_pred_subgroup = FALSE,
-                           has_re = TRUE) {
+                           has_re = TRUE,
+                           re_min_k = NULL) {
 
   if (!inherits(model, "bayesma")) {
     cli::cli_abort("{.arg model} must be a {.cls bayesma} object.")
@@ -61,7 +62,8 @@ forest_data_fn <- function(data,
     subgroup_order    = subgroup_order,
     add_pred          = add_pred,
     add_pred_subgroup = add_pred_subgroup,
-    has_re            = has_re
+    has_re            = has_re,
+    re_min_k          = re_min_k
   )
 }
 
@@ -79,7 +81,8 @@ forest_data_fn_bayesma <- function(data,
                                    subgroup_order = NULL,
                                    add_pred = FALSE,
                                    add_pred_subgroup = FALSE,
-                                   has_re = TRUE) {
+                                   has_re = TRUE,
+                                   re_min_k = NULL) {
 
   if (isFALSE(subgroup) && "Subgroup" %in% names(data)) {
     data <- data |> dplyr::select(-Subgroup)
@@ -112,9 +115,37 @@ forest_data_fn_bayesma <- function(data,
     # ---- Subgroup: refit bayesma on each subgroup ----
     subgroup_df <- data |>
       tidyr::nest(.by = Subgroup) |>
+      dplyr::mutate(study_count = purrr::map_int(data, nrow))
+
+    if (!is.null(re_min_k)) {
+      downgraded <- subgroup_df |>
+        dplyr::filter(study_count < re_min_k)
+
+      if (nrow(downgraded) > 0) {
+        group_labels <- glue::glue_data(
+          downgraded,
+          "{Subgroup} (k = {study_count})"
+        )
+        cli::cli_warn(c(
+          "!" = "{nrow(downgraded)} subgroup{?s} switched to common-effect \\
+                 (< re_min_k = {re_min_k} studies): \\
+                 {paste(group_labels, collapse = ', ')}.",
+          "i" = "Random-effects estimation is unstable with fewer than {re_min_k} studies."
+        ))
+      }
+    }
+
+    subgroup_df <- subgroup_df |>
       dplyr::mutate(
-        subgroup_model = purrr::map(data, ~ refit_bayesma(model, .x)),
-        study_count = purrr::map_int(data, nrow)
+        subgroup_model = purrr::map(data, function(sub_data) {
+          suppressWarnings(
+            if (!is.null(re_min_k)) {
+              refit_bayesma_update(model, sub_data, re_min_k = re_min_k)
+            } else {
+              refit_bayesma(model, sub_data)
+            }
+          )
+        })
       )
 
     # Overall effect draws from the main (full-data) model
@@ -137,6 +168,19 @@ forest_data_fn_bayesma <- function(data,
           list(subgroup_model, data, study_count),
           function(sub_model, sub_data, n_studies) {
             draws <- extract_forest_draws(sub_model)
+
+            # For CE subgroups, clear study-level b_Intercept so shrinkage
+            # density and column stay blank (CE has no per-study shrinkage).
+            special_authors <- c("Pooled Effect", "No Pooled Effect",
+                                 "Prediction", "Overall Effect")
+            if (sub_model$meta$model_type != "random_effect") {
+              draws <- draws |>
+                dplyr::mutate(
+                  b_Intercept = dplyr::if_else(
+                    Author %in% special_authors, b_Intercept, NA_real_
+                  )
+                )
+            }
 
             # Remap Author names to match disambiguated subgroup data
             draws <- remap_draws_authors(draws, sub_model, sub_data)
@@ -217,7 +261,8 @@ forest.data.summary_fn <- function(spread_df,
                                    subgroup = FALSE,
                                    add_pred = FALSE,
                                    add_pred_subgroup = FALSE,
-                                   has_re = TRUE) {
+                                   has_re = TRUE,
+                                   incl_shrinkage = TRUE) {
   # Get effect size properties
   props <- get_measure_properties(estimand)
 
@@ -301,24 +346,49 @@ forest.data.summary_fn <- function(spread_df,
         paste0(sprintf("%.2f", exp(yi)), " [", sprintf("%.2f", exp(yi - 1.96 * sqrt(vi))), ", ", sprintf("%.2f", exp(yi + 1.96 * sqrt(vi))), "]")
       })
 
+  # shrinkage_display: what goes in the "Shrinkage OR" column.
+  # Blank for CE-forced study rows (b_Intercept = NA) and CE-forced subgroup
+  # pooled rows (tau = NA when the top-level model is still RE).
+  pooled_authors <- c("Pooled Effect", "Overall Effect", "Prediction")
+  forest.data.summary <- forest.data.summary |>
+    dplyr::mutate(
+      shrinkage_display = dplyr::case_when(
+        is.na(b_Intercept) & !Author %in% pooled_authors       ~ "",
+        is.na(sd_Author__Intercept) & Author == "Pooled Effect" &
+          isTRUE(has_re)                                        ~ "",
+        .default = weighted_effect
+      )
+    )
+
+  tau_str <- function(tau, lo, hi) {
+    paste0("\u03c4 = ", sprintf("%.2f", tau),
+           " [", sprintf("%.2f", lo), ", ", sprintf("%.2f", hi), "]")
+  }
+
   # Handle the Pooled/Overall/Prediction rows where yi/vi are NA
   forest.data.summary <- forest.data.summary |>
     dplyr::mutate(
       unweighted_effect = dplyr::case_when(
-        # Prediction row: always blank
-        as.character(Author) == "Prediction" ~ "",
-        # Rows with valid observed effects: keep as-is
+        # Prediction row: blank when shrinkage column shows it; posterior CrI otherwise
+        as.character(Author) == "Prediction" ~
+          if (isTRUE(incl_shrinkage)) "" else weighted_effect,
+        # Study rows with valid observed effect: keep as-is
         unweighted_effect != "NA [NA, NA]" ~ unweighted_effect,
-        # Common-effect pooled/overall rows: show posterior estimate here
-        # (since weighted_effect column will be hidden)
+        # CE (whole model) pooled/overall: show posterior (no shrinkage column)
         isFALSE(has_re) & Author %in% c("Pooled Effect", "Overall Effect") ~
           weighted_effect,
-        # Random-effect pooled/overall rows: show tau
-        !is.na(sd_Author__Intercept) ~
-          paste0("\u03c4 = ", sprintf("%.2f", sd_Author__Intercept),
-                 " [", sprintf("%.2f", .lower_sd), ", ",
-                 sprintf("%.2f", .upper_sd), "]"),
-        # Fallback
+        # incl_shrinkage = FALSE + RE pooled/overall: show posterior + tau combined
+        isFALSE(incl_shrinkage) & !is.na(sd_Author__Intercept) &
+          Author %in% c("Pooled Effect", "Overall Effect") ~
+          paste0(weighted_effect, " | ",
+                 tau_str(sd_Author__Intercept, .lower_sd, .upper_sd)),
+        # RE pooled/overall with shrinkage column visible: show tau
+        !is.na(sd_Author__Intercept) &
+          Author %in% c("Pooled Effect", "Overall Effect") ~
+          tau_str(sd_Author__Intercept, .lower_sd, .upper_sd),
+        # CE-forced subgroup pooled rows (tau = NA): show posterior
+        !is.na(b_Intercept) & Author %in% c("Pooled Effect", "Overall Effect") ~
+          weighted_effect,
         TRUE ~ ""
       )
     )

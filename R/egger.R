@@ -298,7 +298,7 @@ egger_extract <- function(fit, spec) {
   )
   if (spec$likelihood == "binomial") key_vars <- c(key_vars, "d", "tau")
 
-  summary_tbl <- cmdstan_fit$summary(variables = key_vars) |> tibble::as_tibble()
+  summary_tbl <- stan_summary(cmdstan_fit, variables = key_vars)
   draws       <- posterior::as_draws_df(cmdstan_fit$draws(variables = key_vars))
 
   # ---- Sigma (latent SE) summary for binomial ----

@@ -168,7 +168,8 @@ bayesma_spec <- function(
     custom_data      = NULL,
     estimand         = NULL,
     cate_covariate   = NULL,
-    baseline_risk    = NULL
+    baseline_risk    = NULL,
+    re_min_k         = NULL
 ) {
   likelihood   <- rlang::arg_match(likelihood)
   model_type   <- rlang::arg_match(model_type)
@@ -332,7 +333,8 @@ bayesma_spec <- function(
     robust_df        = robust_df,       robust_weight    = robust_weight,
     custom_model     = custom_model,    custom_data      = custom_data,
     estimand         = estimand,
-    cate_covariate   = cate_covariate,  baseline_risk    = baseline_risk
+    cate_covariate   = cate_covariate,  baseline_risk    = baseline_risk,
+    re_min_k         = re_min_k
   )
 
   spec <- list(
@@ -849,7 +851,7 @@ extract_effects_standard <- function(fit, spec) {
   }
   if (isTRUE(spec$robust_config$enabled)) key_vars <- c(key_vars, "pi_main")
 
-  summary_tbl <- fit$summary(variables = key_vars) |> tibble::as_tibble()
+  summary_tbl <- stan_summary(fit, variables = key_vars)
 
   draw_vars <- key_vars
   if (is_re && spec$re_dist %in% c("normal", "t", "skew_normal")) {
@@ -1027,7 +1029,7 @@ extract_effects_simple <- function(fit, spec, key_vars, draw_vars,
                                    pooled_label,
                                    extra_meta = list(),
                                    extra_study_cols = list()) {
-  summary_tbl <- fit$summary(variables = key_vars) |> tibble::as_tibble()
+  summary_tbl <- stan_summary(fit, variables = key_vars)
   draws       <- posterior::as_draws_df(fit$draws(variables = draw_vars))
   mu_draws    <- as.vector(
     posterior::subset_draws(fit$draws("mu"), variable = "mu")
@@ -1067,7 +1069,7 @@ extract_effects_custom <- function(fit, spec) {
   draws_raw <- posterior::as_draws_df(fit$draws())
   draw_vars <- setdiff(names(draws_raw), c(".chain", ".iteration", ".draw"))
   summary_tbl <- tryCatch(
-    fit$summary() |> tibble::as_tibble(),
+    stan_summary(fit),
     error = function(e) NULL
   )
 

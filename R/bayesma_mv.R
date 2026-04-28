@@ -311,8 +311,7 @@ bayesma_mv_extract <- function(fit, spec) {
 
   key_vars <- c("mu1", "mu2", "tau1", "tau2", "rho_between")
 
-  summary_tbl <- cmdstan_fit$summary(variables = key_vars) |>
-    tibble::as_tibble() |>
+  summary_tbl <- stan_summary(cmdstan_fit, variables = key_vars) |>
     dplyr::mutate(
       variable = dplyr::recode_values(
         .data$variable,

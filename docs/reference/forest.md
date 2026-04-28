@@ -56,14 +56,16 @@ forest(
   add_pred = FALSE,
   add_pred_subgroup = FALSE,
   pred_output = c("density", "pointinterval"),
-  color_pred_posterior = "forestgreen",
-  color_pred_outline = "darkgreen",
-  color_pred_pointinterval = "forestgreen",
+  color_pred_posterior = "orange",
+  color_pred_outline = "darkorange2",
+  color_pred_pointinterval = "orange",
   plot_width = 4,
   add_rob = FALSE,
   rob_tool = c("rob2", "robins_i", "quadas2", "robins_e"),
   add_rob_legend = FALSE,
   exclude_high_rob = FALSE,
+  re_min_k = NULL,
+  incl_shrinkage = TRUE,
   font = NULL
 )
 ```
@@ -312,18 +314,16 @@ forest(
 
 - color_pred_posterior:
 
-  Color for the prediction interval density fill. Default is
-  "forestgreen".
+  Color for the prediction interval density fill. Default is "orange".
 
 - color_pred_outline:
 
   Color for the prediction interval density outline. Default is
-  "darkgreen".
+  "darkorange2".
 
 - color_pred_pointinterval:
 
-  Color for the prediction interval point interval. Default is
-  "forestgreen".
+  Color for the prediction interval point interval. Default is "orange".
 
 - plot_width:
 
@@ -347,6 +347,20 @@ forest(
 
   Logical indicating whether to exclude high risk of bias studies and
   refit the model. Default is FALSE.
+
+- re_min_k:
+
+  Optional numeric. If the number of studies in a (sub)group is below
+  this threshold, the model is downgraded to common-effect for that
+  refit. Overrides any `re_min_k` stored in the original model's call
+  arguments. Default is NULL (uses the value from the original fit, if
+  any).
+
+- incl_shrinkage:
+
+  Logical. If `TRUE` (default), the shrinkage (posterior) effect column
+  is shown alongside the observed effect column. Set to `FALSE` to
+  display only the observed effect column.
 
 - font:
 

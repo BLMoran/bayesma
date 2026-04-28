@@ -167,6 +167,7 @@
 </div>
 <!-- badges: start -->
 
+<!-- badges: end -->
 <p><strong>bayesma</strong> is an R package for conducting Bayesian meta-analyses using Stan. It provides a complete, opinionated workflow from data preparation through model fitting, publication bias correction, heterogeneity assessment, and reporting — with sensible defaults and full prior control at every stage.</p>
 <div class="section level2">
 <h2 id="getting-started">Getting Started<a class="anchor" aria-label="anchor" href="#getting-started"></a>
@@ -270,7 +271,7 @@
 <h2 id="basic-usage">Basic Usage<a class="anchor" aria-label="anchor" href="#basic-usage"></a>
 </h2>
 <div class="section level3">
-<h3 id="fit-a-random-effects-meta-analysis">Fit a random-effects meta-analysis<a class="anchor" aria-label="anchor" href="#fit-a-random-effects-meta-analysis"></a>
+<h3 id="fit-a-random-effects-meta-analysis-binary-outcome">Fit a random-effects meta-analysis (binary outcome)<a class="anchor" aria-label="anchor" href="#fit-a-random-effects-meta-analysis-binary-outcome"></a>
 </h3>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">one_stage_re</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/bayesma.html">bayesma</a></span><span class="op">(</span></span>
@@ -287,67 +288,12 @@
 <span>  mu_prior   <span class="op">=</span> <span class="fu"><a href="reference/priors.html">normal</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span>,</span>
 <span>  tau_prior  <span class="op">=</span> <span class="fu"><a href="reference/priors.html">half_cauchy</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0.5</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="forest-plot">Forest plot<a class="anchor" aria-label="anchor" href="#forest-plot"></a>
-</h3>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="reference/forest.html">forest</a></span><span class="op">(</span></span>
-<span>  model    <span class="op">=</span> <span class="va">one_stage_re</span>,</span>
-<span>  data     <span class="op">=</span> <span class="va">binary_outcome</span>,</span>
-<span>  estimand <span class="op">=</span> <span class="st">"OR"</span>,</span>
-<span>  studyvar <span class="op">=</span> <span class="va">Author</span>,</span>
-<span>  xlim     <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.1</span>, <span class="fl">2.5</span><span class="op">)</span>,</span>
-<span>  add_pred <span class="op">=</span> <span class="cn">TRUE</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-<p><img src="reference/figures/forest_plot_binary.png"></p>
-</div>
-<div class="section level3">
-<h3 id="subgroup-analysis">Subgroup analysis<a class="anchor" aria-label="anchor" href="#subgroup-analysis"></a>
-</h3>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="reference/forest.html">forest</a></span><span class="op">(</span></span>
-<span>  model        <span class="op">=</span> <span class="va">one_stage_re</span>,</span>
-<span>  data         <span class="op">=</span> <span class="va">binary_outcome</span>,</span>
-<span>  estimand     <span class="op">=</span> <span class="st">"OR"</span>,</span>
-<span>  studyvar     <span class="op">=</span> <span class="va">Author</span>,</span>
-<span>  subgroup_var <span class="op">=</span> <span class="va">Surgery</span>,</span>
-<span>  xlim         <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.1</span>, <span class="fl">3.5</span><span class="op">)</span>,</span>
-<span>  add_pred     <span class="op">=</span> <span class="cn">TRUE</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-<p><img src="reference/figures/forest_plot_subgroup.png"></p>
-</div>
-<div class="section level3">
-<h3 id="risk-of-bias-columns">Risk of bias columns<a class="anchor" aria-label="anchor" href="#risk-of-bias-columns"></a>
-</h3>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="reference/forest.html">forest</a></span><span class="op">(</span></span>
-<span>  model        <span class="op">=</span> <span class="va">one_stage_re</span>,</span>
-<span>  data         <span class="op">=</span> <span class="va">binary_outcome</span>,</span>
-<span>  estimand     <span class="op">=</span> <span class="st">"OR"</span>,</span>
-<span>  studyvar     <span class="op">=</span> <span class="va">Author</span>,</span>
-<span>  subgroup_var <span class="op">=</span> <span class="va">Surgery</span>,</span>
-<span>  xlim         <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.1</span>, <span class="fl">3.5</span><span class="op">)</span>,</span>
-<span>  add_pred     <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  add_rob      <span class="op">=</span> <span class="cn">TRUE</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-<p><img src="reference/figures/forest_plot_rob.png"></p>
-</div>
-<div class="section level3">
-<h3 id="standalone-risk-of-bias-plot">Standalone risk of bias plot<a class="anchor" aria-label="anchor" href="#standalone-risk-of-bias-plot"></a>
-</h3>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="reference/rob_plot.html">rob_plot</a></span><span class="op">(</span></span>
-<span>  data           <span class="op">=</span> <span class="va">binary_outcome</span>,</span>
-<span>  rob_tool       <span class="op">=</span> <span class="st">"rob2"</span>,</span>
-<span>  add_rob_legend <span class="op">=</span> <span class="cn">TRUE</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-<p><img src="reference/figures/rob_viz.png"></p>
+<p><img src="reference/figures/bayesma.png" width="413"></p>
 </div>
 <div class="section level3">
 <h3 id="bayesian-egger-regression-and-funnel-plot">Bayesian Egger regression and funnel plot<a class="anchor" aria-label="anchor" href="#bayesian-egger-regression-and-funnel-plot"></a>
 </h3>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">egger_fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/egger.html">egger</a></span><span class="op">(</span></span>
 <span>  data       <span class="op">=</span> <span class="va">binary_outcome</span>,</span>
 <span>  studyvar   <span class="op">=</span> <span class="st">"Author"</span>,</span>
@@ -356,15 +302,74 @@
 <span>  n_ctrl     <span class="op">=</span> <span class="st">"N_Control"</span>,</span>
 <span>  n_int      <span class="op">=</span> <span class="st">"N_Intervention"</span>,</span>
 <span>  likelihood <span class="op">=</span> <span class="st">"binomial"</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu"><a href="reference/egger_plot.html">egger_plot</a></span><span class="op">(</span><span class="va">egger_fit</span>, type <span class="op">=</span> <span class="st">"both"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="reference/figures/egger_plot.png"></p>
+<span><span class="op">)</span></span></code></pre></div>
+<p><img src="reference/figures/egger.png" width="481"></p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="reference/egger_plot.html">egger_plot</a></span><span class="op">(</span><span class="va">egger_fit</span>, type <span class="op">=</span> <span class="st">"both"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="reference/figures/egger_plot.png" width="541"></p>
+</div>
+<div class="section level3">
+<h3 id="forest-plot">Forest plot<a class="anchor" aria-label="anchor" href="#forest-plot"></a>
+</h3>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="reference/forest.html">forest</a></span><span class="op">(</span></span>
+<span>  model <span class="op">=</span> <span class="va">one_stage_re</span>,</span>
+<span>  data <span class="op">=</span> <span class="va">binary_outcome</span>,</span>
+<span>  estimand <span class="op">=</span> <span class="st">"OR"</span>,</span>
+<span>  studyvar <span class="op">=</span> <span class="va">Author</span>,</span>
+<span>  xlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.1</span>, <span class="fl">2.5</span><span class="op">)</span>,</span>
+<span>  add_pred <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p><img src="reference/figures/forest_plot.png"></p>
+</div>
+<div class="section level3">
+<h3 id="subgroup-analysis">Subgroup analysis<a class="anchor" aria-label="anchor" href="#subgroup-analysis"></a>
+</h3>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="reference/forest.html">forest</a></span><span class="op">(</span></span>
+<span>  model <span class="op">=</span> <span class="va">one_stage_re</span>,</span>
+<span>  data <span class="op">=</span> <span class="va">binary_outcome</span>,</span>
+<span>  estimand <span class="op">=</span> <span class="st">"OR"</span>,</span>
+<span>  studyvar <span class="op">=</span> <span class="va">Author</span>,</span>
+<span>  subgroup <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  subgroup_var <span class="op">=</span> <span class="va">Surgery</span>,</span>
+<span>  xlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.1</span>, <span class="fl">3.5</span><span class="op">)</span>,</span>
+<span>  add_pred <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  re_min_k <span class="op">=</span> <span class="fl">4</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p><img src="reference/figures/forest_plot_subgroup.png" width="739"></p>
+</div>
+<div class="section level3">
+<h3 id="risk-of-bias-columns">Risk of bias columns<a class="anchor" aria-label="anchor" href="#risk-of-bias-columns"></a>
+</h3>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="reference/forest.html">forest</a></span><span class="op">(</span></span>
+<span>  model <span class="op">=</span> <span class="va">one_stage_re</span>,</span>
+<span>  data <span class="op">=</span> <span class="va">binary_outcome</span>,</span>
+<span>  estimand <span class="op">=</span> <span class="st">"OR"</span>,</span>
+<span>  studyvar <span class="op">=</span> <span class="va">Author</span>,</span>
+<span>  subgroup_var <span class="op">=</span> <span class="va">Surgery</span>,</span>
+<span>  xlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.1</span>, <span class="fl">3.5</span><span class="op">)</span>,</span>
+<span>  add_pred <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  add_rob  <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p><img src="reference/figures/forest_plot_rob.png" width="816"></p>
+</div>
+<div class="section level3">
+<h3 id="standalone-risk-of-bias-plot">Standalone risk of bias plot<a class="anchor" aria-label="anchor" href="#standalone-risk-of-bias-plot"></a>
+</h3>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="reference/rob_plot.html">rob_plot</a></span><span class="op">(</span></span>
+<span>  data           <span class="op">=</span> <span class="va">binary_outcome</span>,</span>
+<span>  rob_tool       <span class="op">=</span> <span class="st">"rob2"</span>,</span>
+<span>  add_rob_legend <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p><img src="reference/figures/rob_viz.png" width="524"></p>
 </div>
 <div class="section level3">
 <h3 id="overall-posterior-plot">Overall posterior plot<a class="anchor" aria-label="anchor" href="#overall-posterior-plot"></a>
 </h3>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/overall_plot.html">overall_plot</a></span><span class="op">(</span></span>
 <span>  data             <span class="op">=</span> <span class="va">binary_outcome</span>,</span>
 <span>  model            <span class="op">=</span> <span class="va">one_stage_re</span>,</span>
@@ -382,7 +387,7 @@
 <div class="section level3">
 <h3 id="sensitivity-analysis">Sensitivity analysis<a class="anchor" aria-label="anchor" href="#sensitivity-analysis"></a>
 </h3>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/sensitivity_plot.html">sensitivity_plot</a></span><span class="op">(</span></span>
 <span>  model           <span class="op">=</span> <span class="va">one_stage_re</span>,</span>
 <span>  data            <span class="op">=</span> <span class="va">binary_outcome</span>,</span>
@@ -407,7 +412,7 @@
 <div class="section level3">
 <h3 id="ecdf-plot">ECDF plot<a class="anchor" aria-label="anchor" href="#ecdf-plot"></a>
 </h3>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">ecdf_plot</span><span class="op">(</span></span>
 <span>  model            <span class="op">=</span> <span class="va">one_stage_re</span>,</span>
 <span>  data             <span class="op">=</span> <span class="va">binary_outcome</span>,</span>
@@ -573,13 +578,13 @@
 <h2 id="citation">Citation<a class="anchor" aria-label="anchor" href="#citation"></a>
 </h2>
 <p>If you use bayesma in your research, please cite:</p>
-<div class="sourceCode" id="cb12"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a><span class="sc">@</span>Manual{,</span>
-<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a>  title  <span class="ot">=</span> {bayesma<span class="sc">:</span> Bayesian Meta<span class="sc">-</span>Analysis using Stan <span class="cf">in</span> R},</span>
-<span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a>  author <span class="ot">=</span> {Benjamin Moran and Thomas Payne},</span>
-<span id="cb12-4"><a href="#cb12-4" tabindex="-1"></a>  year   <span class="ot">=</span> {<span class="dv">2026</span>},</span>
-<span id="cb12-5"><a href="#cb12-5" tabindex="-1"></a>  note   <span class="ot">=</span> {R package version <span class="dv">0</span>.<span class="dv">0</span>.<span class="fl">0.9000</span>},</span>
-<span id="cb12-6"><a href="#cb12-6" tabindex="-1"></a>  url    <span class="ot">=</span> {https<span class="sc">:</span><span class="er">//</span>github.com<span class="sc">/</span>BLMoran<span class="sc">/</span>bayesma},</span>
-<span id="cb12-7"><a href="#cb12-7" tabindex="-1"></a>}</span></code></pre></div>
+<div class="sourceCode" id="cb13"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a><span class="sc">@</span>Manual{,</span>
+<span id="cb13-2"><a href="#cb13-2" tabindex="-1"></a>  title  <span class="ot">=</span> {bayesma<span class="sc">:</span> Bayesian Meta<span class="sc">-</span>Analysis using Stan <span class="cf">in</span> R},</span>
+<span id="cb13-3"><a href="#cb13-3" tabindex="-1"></a>  author <span class="ot">=</span> {Benjamin Moran and Thomas Payne},</span>
+<span id="cb13-4"><a href="#cb13-4" tabindex="-1"></a>  year   <span class="ot">=</span> {<span class="dv">2026</span>},</span>
+<span id="cb13-5"><a href="#cb13-5" tabindex="-1"></a>  note   <span class="ot">=</span> {R package version <span class="dv">0</span>.<span class="dv">0</span>.<span class="fl">0.9000</span>},</span>
+<span id="cb13-6"><a href="#cb13-6" tabindex="-1"></a>  url    <span class="ot">=</span> {https<span class="sc">:</span><span class="er">//</span>github.com<span class="sc">/</span>BLMoran<span class="sc">/</span>bayesma},</span>
+<span id="cb13-7"><a href="#cb13-7" tabindex="-1"></a>}</span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="feedback-issues-and-contributing">Feedback, Issues, and Contributing<a class="anchor" aria-label="anchor" href="#feedback-issues-and-contributing"></a>

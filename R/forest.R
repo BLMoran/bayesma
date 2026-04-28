@@ -77,17 +77,24 @@
 #' @param pred_output Character string specifying the visualisation for the
 #'   prediction interval row. Options: "density" (default) or "pointinterval".
 #' @param color_pred_posterior Color for the prediction interval density fill.
-#'   Default is "forestgreen".
+#'   Default is "orange".
 #' @param color_pred_outline Color for the prediction interval density outline.
-#'   Default is "darkgreen".
+#'   Default is "darkorange2".
 #' @param color_pred_pointinterval Color for the prediction interval point
-#'   interval. Default is "forestgreen".
+#'   interval. Default is "orange".
 #' @param plot_width Numeric value specifying the relative width of the plot component. Default is 4.
 #' @param add_rob Logical indicating whether to add Risk of Bias assessment. Default is FALSE.
 #' @param rob_tool Character string specifying RoB tool. Options: "rob2" (default).
 #' @param add_rob_legend Logical indicating whether to add RoB legend. Default is FALSE.
 #' @param exclude_high_rob Logical indicating whether to exclude high risk of bias studies
 #'   and refit the model. Default is FALSE.
+#' @param re_min_k Optional numeric. If the number of studies in a (sub)group is below
+#'   this threshold, the model is downgraded to common-effect for that refit.
+#'   Overrides any \code{re_min_k} stored in the original model's call arguments.
+#'   Default is NULL (uses the value from the original fit, if any).
+#' @param incl_shrinkage Logical. If \code{TRUE} (default), the shrinkage
+#'   (posterior) effect column is shown alongside the observed effect column.
+#'   Set to \code{FALSE} to display only the observed effect column.
 #' @param font Character string specifying the font family to use throughout the plot.
 #'   Default is NULL (uses system defaults).
 #'
@@ -144,14 +151,16 @@ forest <- function(model,
                          add_pred = FALSE,
                          add_pred_subgroup = FALSE,
                          pred_output = c("density", "pointinterval"),
-                         color_pred_posterior = "forestgreen",
-                         color_pred_outline = "darkgreen",
-                         color_pred_pointinterval = "forestgreen",
+                         color_pred_posterior = "orange",
+                         color_pred_outline = "darkorange2",
+                         color_pred_pointinterval = "orange",
                          plot_width = 4,
                          add_rob = FALSE,
                          rob_tool = c("rob2", "robins_i", "quadas2", "robins_e"),
                          add_rob_legend = FALSE,
                          exclude_high_rob = FALSE,
+                         re_min_k = NULL,
+                         incl_shrinkage = TRUE,
                          font = NULL) {
 
   # Match pred_output argument
@@ -285,7 +294,11 @@ forest <- function(model,
 
       message("Re-fitting model after excluding high risk of bias studies...")
 
-        model <- refit_bayesma(model, data)
+        model <- if (!is.null(re_min_k)) {
+          refit_bayesma_update(model, data, re_min_k = re_min_k)
+        } else {
+          refit_bayesma(model, data)
+        }
       }
     }
 
@@ -354,7 +367,8 @@ forest <- function(model,
       subgroup_order  = NULL,
       add_pred        = add_pred,
       add_pred_subgroup = FALSE,
-      has_re          = has_re
+      has_re          = has_re,
+      re_min_k        = re_min_k
     )
 
     # Create the density plot
@@ -397,14 +411,15 @@ forest <- function(model,
 
     # Create summary data for tables
     forest.data.summary <- forest.data.summary_fn(
-      spread_df = study.effect.draws,
-      data = data,
-      estimand = estimand,
+      spread_df      = study.effect.draws,
+      data           = data,
+      estimand       = estimand,
       sort_studies_by = sort_studies_by,
-      subgroup = FALSE,
-      add_pred = add_pred,
+      subgroup       = FALSE,
+      add_pred       = add_pred,
       add_pred_subgroup = add_pred_subgroup,
-      has_re = has_re
+      has_re         = has_re,
+      incl_shrinkage = incl_shrinkage
     )
 
   } else {
@@ -418,7 +433,8 @@ forest <- function(model,
       subgroup_order    = subgroup_order,
       add_pred          = add_pred,
       add_pred_subgroup = add_pred_subgroup,
-      has_re            = has_re
+      has_re            = has_re,
+      re_min_k          = re_min_k
     )
 
     # Create subgroup summary
@@ -429,13 +445,14 @@ forest <- function(model,
       dplyr::mutate(
         spread_df = purrr::map2(spread_df, Subgroup, ~ dplyr::mutate(.x, Subgroup = .y)),
         subgroup.forest.summary = purrr::map(spread_df, ~ forest.data.summary_fn(
-          spread_df = .x,
-          data = data,
-          estimand = estimand,
+          spread_df       = .x,
+          data            = data,
+          estimand        = estimand,
           sort_studies_by = sort_studies_by,
-          add_pred = add_pred,
+          add_pred        = add_pred,
           add_pred_subgroup = add_pred_subgroup,
-          has_re = has_re))) |>
+          has_re          = has_re,
+          incl_shrinkage  = incl_shrinkage))) |>
       tidyr::unnest(subgroup.forest.summary) |>
       dplyr::select(-spread_df)
 
@@ -579,12 +596,13 @@ forest <- function(model,
 
   # Create right table (effect sizes and optionally RoB)
   forest.table.right <- forest_table_right_fn(
-    df       = forest.data.summary,
-    subgroup = subgroup,
-    add_rob  = add_rob,
-    estimand = estimand,
-    has_re   = has_re,
-    font     = font
+    df             = forest.data.summary,
+    subgroup       = subgroup,
+    add_rob        = add_rob,
+    estimand       = estimand,
+    has_re         = has_re,
+    incl_shrinkage = incl_shrinkage,
+    font           = font
   )
 
   # Validate RoB legend parameters
@@ -617,5 +635,19 @@ forest <- function(model,
   attr(forest_plot, "recommended_height") <- recommended_height
   attr(forest_plot, "recommended_width")  <- 14
 
+  class(forest_plot) <- c("bayesma_forest", class(forest_plot))
   return(forest_plot)
+}
+
+#' @export
+print.bayesma_forest <- function(x, ...) {
+  withCallingHandlers(
+    NextMethod(),
+    simpleWarning = function(w) {
+      msg <- conditionMessage(w)
+      if (grepl("rlnorm|NAs produced|NaNs produced|outside the scale range", msg)) {
+        invokeRestart("muffleWarning")
+      }
+    }
+  )
 }

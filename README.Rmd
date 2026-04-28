@@ -4,11 +4,12 @@ output: github_document
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# bayesma: Bayesian Meta-Analysis using Stan <img src="man/figures/logo.png" align="right" width="200" />
+# bayesma: Bayesian Meta-Analysis using Stan <img src="man/figures/logo.png" align="right" width="200"/>
 
 <!-- badges: start -->
-[![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
-[![R-CMD-check](https://github.com/BLMoran/bayesma/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/BLMoran/bayesma/actions/workflows/R-CMD-check.yaml)
+
+[![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental) [![R-CMD-check](https://github.com/BLMoran/bayesma/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/BLMoran/bayesma/actions/workflows/R-CMD-check.yaml)
+
 <!-- badges: end -->
 
 **bayesma** is an R package for conducting Bayesian meta-analyses using Stan. It provides a complete, opinionated workflow from data preparation through model fitting, publication bias correction, heterogeneity assessment, and reporting — with sensible defaults and full prior control at every stage.
@@ -17,25 +18,24 @@ output: github_document
 
 If you are new to Bayesian Meta Analysis, it is recommended to read the workflow vignette and other vignettes in addition to these other resources:
 
-- [Bayesian Meta-Analysis: A Practical Introduction](https://bayesian-ma.net)
-- [bayesmeta package vignettes](https://cran.r-project.org/web/packages/bayesmeta/vignettes/bayesmeta.html)
-- [Matti Vuorre's Blog: Meta-analysis is a special case of Bayesian multilevel modeling](https://vuorre.com/posts/bayesian-meta-analysis/index.html)
-- Solomon Kurz's blog- Bayesian meta-analysis in brms: [Part I](https://solomonkurz.netlify.app/blog/bayesian-meta-analysis/) and [Part II](https://solomonkurz.netlify.app/blog/2020-10-16-bayesian-meta-analysis-in-brms-ii/)
-- [Doing Meta Analysis in R- Chapter 13: Bayesian Meta-Analysis](https://doing-meta.guide/bayesian-ma)
-
+-   [Bayesian Meta-Analysis: A Practical Introduction](https://bayesian-ma.net)
+-   [bayesmeta package vignettes](https://cran.r-project.org/web/packages/bayesmeta/vignettes/bayesmeta.html)
+-   [Matti Vuorre's Blog: Meta-analysis is a special case of Bayesian multilevel modeling](https://vuorre.com/posts/bayesian-meta-analysis/index.html)
+-   Solomon Kurz's blog- Bayesian meta-analysis in brms: [Part I](https://solomonkurz.netlify.app/blog/bayesian-meta-analysis/) and [Part II](https://solomonkurz.netlify.app/blog/2020-10-16-bayesian-meta-analysis-in-brms-ii/)
+-   [Doing Meta Analysis in R- Chapter 13: Bayesian Meta-Analysis](https://doing-meta.guide/bayesian-ma)
 
 ## Installation
 
 Install the development version from GitHub:
 
-```r
+``` r
 # install.packages("remotes")
 remotes::install_github("BLMoran/bayesma")
 ```
 
 bayesma uses [cmdstanr](https://mc-stan.org/cmdstanr/) as its Stan backend. If you do not already have it:
 
-```r
+``` r
 install.packages("cmdstanr", repos = c("https://stan-dev.r-universe.dev", getOption("repos")))
 cmdstanr::install_cmdstan()
 ```
@@ -47,7 +47,7 @@ A C++ toolchain is required: [Rtools](https://cran.r-project.org/bin/windows/Rto
 bayesma covers the full Bayesian meta-analysis workflow:
 
 | Stage | What bayesma provides |
-|-------|-----------------------|
+|-------------------|-----------------------------------------------------|
 | **Data** | Structured input for binary, continuous, and count outcomes |
 | **Trustworthiness** | INSPECT-SR assessment with tabular and visual output |
 | **Exploration** | PRIMED: dependence structure, effect-size distribution, moderators |
@@ -65,17 +65,15 @@ A full walkthrough of each stage is available in the [workflow vignette](https:/
 
 ## Workflow
 
-```{=html}
 <!-- workflow diagram below (rendered via the pkgdown site) -->
-```
 
-#[![Workflow diagram](man/figures/workflow-diagram.png)](https://blmoran.github.io/bayesma/articles/workflow-guide.html)
+\#[![Workflow diagram](man/figures/workflow-diagram.png)](https://blmoran.github.io/bayesma/articles/workflow-guide.html)
 
 ## Basic Usage
 
-### Fit a random-effects meta-analysis
+### Fit a random-effects meta-analysis (binary outcome)
 
-```r
+``` r
 one_stage_re <- bayesma(
   data       = binary_outcome,
   studyvar   = "Author",
@@ -92,69 +90,11 @@ one_stage_re <- bayesma(
 )
 ```
 
-### Forest plot
-
-```r
-forest(
-  model    = one_stage_re,
-  data     = binary_outcome,
-  estimand = "OR",
-  studyvar = Author,
-  xlim     = c(0.1, 2.5),
-  add_pred = TRUE
-)
-```
-
-![](man/figures/forest_plot_binary.png)
-
-### Subgroup analysis
-
-```r
-forest(
-  model        = one_stage_re,
-  data         = binary_outcome,
-  estimand     = "OR",
-  studyvar     = Author,
-  subgroup_var = Surgery,
-  xlim         = c(0.1, 3.5),
-  add_pred     = TRUE
-)
-```
-
-![](man/figures/forest_plot_subgroup.png)
-
-### Risk of bias columns
-
-```r
-forest(
-  model        = one_stage_re,
-  data         = binary_outcome,
-  estimand     = "OR",
-  studyvar     = Author,
-  subgroup_var = Surgery,
-  xlim         = c(0.1, 3.5),
-  add_pred     = TRUE,
-  add_rob      = TRUE
-)
-```
-
-![](man/figures/forest_plot_rob.png)
-
-### Standalone risk of bias plot
-
-```r
-rob_plot(
-  data           = binary_outcome,
-  rob_tool       = "rob2",
-  add_rob_legend = TRUE
-)
-```
-
-![](man/figures/rob_viz.png)
+![](man/figures/bayesma.png){width="413"}
 
 ### Bayesian Egger regression and funnel plot
 
-```r
+``` r
 egger_fit <- egger(
   data       = binary_outcome,
   studyvar   = "Author",
@@ -164,15 +104,81 @@ egger_fit <- egger(
   n_int      = "N_Intervention",
   likelihood = "binomial"
 )
+```
 
+![](man/figures/egger.png){width="481"}
+
+``` r
 egger_plot(egger_fit, type = "both")
 ```
 
-![](man/figures/egger_plot.png)
+![](man/figures/egger_plot.png){width="541"}
+
+### Forest plot
+
+``` r
+forest(
+  model = one_stage_re,
+  data = binary_outcome,
+  estimand = "OR",
+  studyvar = Author,
+  xlim = c(0.1, 2.5),
+  add_pred = TRUE
+)
+```
+
+![](man/figures/forest_plot.png)
+
+### Subgroup analysis
+
+``` r
+forest(
+  model = one_stage_re,
+  data = binary_outcome,
+  estimand = "OR",
+  studyvar = Author,
+  subgroup = TRUE,
+  subgroup_var = Surgery,
+  xlim = c(0.1, 3.5),
+  add_pred = TRUE,
+  re_min_k = 4
+)
+```
+
+![](man/figures/forest_plot_subgroup.png){width="739"}
+
+### Risk of bias columns
+
+``` r
+forest(
+  model = one_stage_re,
+  data = binary_outcome,
+  estimand = "OR",
+  studyvar = Author,
+  subgroup_var = Surgery,
+  xlim = c(0.1, 3.5),
+  add_pred = TRUE,
+  add_rob  = TRUE
+)
+```
+
+![](man/figures/forest_plot_rob.png){width="816"}
+
+### Standalone risk of bias plot
+
+``` r
+rob_plot(
+  data           = binary_outcome,
+  rob_tool       = "rob2",
+  add_rob_legend = TRUE
+)
+```
+
+![](man/figures/rob_viz.png){width="524"}
 
 ### Overall posterior plot
 
-```r
+``` r
 overall_plot(
   data             = binary_outcome,
   model            = one_stage_re,
@@ -191,7 +197,7 @@ overall_plot(
 
 ### Sensitivity analysis
 
-```r
+``` r
 sensitivity_plot(
   model           = one_stage_re,
   data            = binary_outcome,
@@ -217,7 +223,7 @@ sensitivity_plot(
 
 ### ECDF plot
 
-```r
+``` r
 ecdf_plot(
   model            = one_stage_re,
   data             = binary_outcome,
@@ -244,20 +250,20 @@ bayesma expects a tidy data frame with one row per study.
 
 **Binary outcomes** (`likelihood = "binomial"`)
 
-| Column | Description |
-|--------|-------------|
-| `Author` | Study label |
-| `Event_Control` | Events in control arm |
+| Column               | Description                |
+|----------------------|----------------------------|
+| `Author`             | Study label                |
+| `Event_Control`      | Events in control arm      |
 | `Event_Intervention` | Events in intervention arm |
-| `N_Control` | Total in control arm |
-| `N_Intervention` | Total in intervention arm |
-| `Surgery` | Subgroup variable |
-| `D1`–`D5`, `Overall` | Risk of bias domains |
+| `N_Control`          | Total in control arm       |
+| `N_Intervention`     | Total in intervention arm  |
+| `Surgery`            | Subgroup variable          |
+| `D1`–`D5`, `Overall` | Risk of bias domains       |
 
 **Continuous outcomes** (`likelihood = "gaussian"`)
 
 | Column | Description |
-|--------|-------------|
+|----------------------------|--------------------------------------------|
 | `Author` | Study label |
 | `Mean_Control`, `SD_Control`, `N_Control` | Control arm summary statistics |
 | `Mean_Intervention`, `SD_Intervention`, `N_Intervention` | Intervention arm summary statistics |
@@ -270,45 +276,45 @@ Example datasets (`binary_outcome` and `cont_outcome`) are included in the packa
 
 **Core**
 
-- [cmdstanr](https://mc-stan.org/cmdstanr/) + [CmdStan](https://mc-stan.org/users/interfaces/cmdstan) — Stan interface for MCMC sampling
+-   [cmdstanr](https://mc-stan.org/cmdstanr/) + [CmdStan](https://mc-stan.org/users/interfaces/cmdstan) — Stan interface for MCMC sampling
 
 **Modelling**
 
-- [posterior](https://mc-stan.org/posterior/) — MCMC summaries and draws
-- [loo](https://mc-stan.org/loo/) — leave-one-out cross-validation
-- [bridgesampling](https://cran.r-project.org/package=bridgesampling) — Bayes factor computation
-- [distributional](https://pkg.mitchelloharawild.com/distributional/) — prior distribution objects
+-   [posterior](https://mc-stan.org/posterior/) — MCMC summaries and draws
+-   [loo](https://mc-stan.org/loo/) — leave-one-out cross-validation
+-   [bridgesampling](https://cran.r-project.org/package=bridgesampling) — Bayes factor computation
+-   [distributional](https://pkg.mitchelloharawild.com/distributional/) — prior distribution objects
 
 **Visualisation**
 
-- [ggplot2](https://ggplot2.tidyverse.org) — base plotting
-- [ggdist](https://mjskay.github.io/ggdist/) — posterior density plotting
-- [patchwork](https://patchwork.data-imaginist.com) — multi-panel figures
-- [bayesplot](https://mc-stan.org/bayesplot/) — posterior predictive checks
-- [ggrepel](https://ggrepel.slowkow.com) — label positioning
-- [paletteer](https://emilhvitfeldt.github.io/paletteer/), [RColorBrewer](https://cran.r-project.org/package=RColorBrewer) — colour palettes
-- [fontawesome](https://rstudio.github.io/fontawesome/) — risk of bias icons
+-   [ggplot2](https://ggplot2.tidyverse.org) — base plotting
+-   [ggdist](https://mjskay.github.io/ggdist/) — posterior density plotting
+-   [patchwork](https://patchwork.data-imaginist.com) — multi-panel figures
+-   [bayesplot](https://mc-stan.org/bayesplot/) — posterior predictive checks
+-   [ggrepel](https://ggrepel.slowkow.com) — label positioning
+-   [paletteer](https://emilhvitfeldt.github.io/paletteer/), [RColorBrewer](https://cran.r-project.org/package=RColorBrewer) — colour palettes
+-   [fontawesome](https://rstudio.github.io/fontawesome/) — risk of bias icons
 
 **Data manipulation**
 
-- [dplyr](https://dplyr.tidyverse.org), [tidyr](https://tidyr.tidyverse.org), [purrr](https://purrr.tidyverse.org), [tibble](https://tibble.tidyverse.org), [forcats](https://forcats.tidyverse.org) — tidyverse data tools
-- [stringr](https://stringr.tidyverse.org), [glue](https://glue.tidyverse.org) — string handling
-- [scales](https://scales.r-lib.org) — axis and colour scale transformations
+-   [dplyr](https://dplyr.tidyverse.org), [tidyr](https://tidyr.tidyverse.org), [purrr](https://purrr.tidyverse.org), [tibble](https://tibble.tidyverse.org), [forcats](https://forcats.tidyverse.org) — tidyverse data tools
+-   [stringr](https://stringr.tidyverse.org), [glue](https://glue.tidyverse.org) — string handling
+-   [scales](https://scales.r-lib.org) — axis and colour scale transformations
 
 **Output**
 
-- [gt](https://gt.rstudio.com) — formatted summary tables
-- [cli](https://cli.r-lib.org), [rlang](https://rlang.r-lib.org) — messages and tidy evaluation
+-   [gt](https://gt.rstudio.com) — formatted summary tables
+-   [cli](https://cli.r-lib.org), [rlang](https://rlang.r-lib.org) — messages and tidy evaluation
 
 **Parallel**
 
-- [mirai](https://mirai.r-lib.org) — parallel MCMC chain execution
+-   [mirai](https://mirai.r-lib.org) — parallel MCMC chain execution
 
 ## Citation
 
 If you use bayesma in your research, please cite:
 
-```
+```         
 @Manual{,
   title  = {bayesma: Bayesian Meta-Analysis using Stan in R},
   author = {Benjamin Moran and Thomas Payne},

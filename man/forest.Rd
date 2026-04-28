@@ -54,14 +54,16 @@ forest(
   add_pred = FALSE,
   add_pred_subgroup = FALSE,
   pred_output = c("density", "pointinterval"),
-  color_pred_posterior = "forestgreen",
-  color_pred_outline = "darkgreen",
-  color_pred_pointinterval = "forestgreen",
+  color_pred_posterior = "orange",
+  color_pred_outline = "darkorange2",
+  color_pred_pointinterval = "orange",
   plot_width = 4,
   add_rob = FALSE,
   rob_tool = c("rob2", "robins_i", "quadas2", "robins_e"),
   add_rob_legend = FALSE,
   exclude_high_rob = FALSE,
+  re_min_k = NULL,
+  incl_shrinkage = TRUE,
   font = NULL
 )
 }
@@ -188,13 +190,13 @@ overall pooled effect. Ignored when \code{subgroup = FALSE}.}
 prediction interval row. Options: "density" (default) or "pointinterval".}
 
 \item{color_pred_posterior}{Color for the prediction interval density fill.
-Default is "forestgreen".}
+Default is "orange".}
 
 \item{color_pred_outline}{Color for the prediction interval density outline.
-Default is "darkgreen".}
+Default is "darkorange2".}
 
 \item{color_pred_pointinterval}{Color for the prediction interval point
-interval. Default is "forestgreen".}
+interval. Default is "orange".}
 
 \item{plot_width}{Numeric value specifying the relative width of the plot component. Default is 4.}
 
@@ -206,6 +208,15 @@ interval. Default is "forestgreen".}
 
 \item{exclude_high_rob}{Logical indicating whether to exclude high risk of bias studies
 and refit the model. Default is FALSE.}
+
+\item{re_min_k}{Optional numeric. If the number of studies in a (sub)group is below
+this threshold, the model is downgraded to common-effect for that refit.
+Overrides any \code{re_min_k} stored in the original model's call arguments.
+Default is NULL (uses the value from the original fit, if any).}
+
+\item{incl_shrinkage}{Logical. If \code{TRUE} (default), the shrinkage
+(posterior) effect column is shown alongside the observed effect column.
+Set to \code{FALSE} to display only the observed effect column.}
 
 \item{font}{Character string specifying the font family to use throughout the plot.
 Default is NULL (uses system defaults).}

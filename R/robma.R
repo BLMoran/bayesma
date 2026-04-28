@@ -326,7 +326,7 @@ summary.bayesma_robma <- function(object, ...) {
     cli::cli_h2("Spike-and-Slab Parameter Summaries")
     fit <- object$component_fits[[1]]$fit
     tryCatch({
-      summ <- fit$summary()
+      summ <- stan_summary(fit)
       key_pars <- c("mu", "mu_raw", "tau", "tau_raw",
                     "pip_effect", "pip_hetero", "pip_bias")
       summ_filt <- dplyr::filter(summ, .data$variable %in% key_pars)

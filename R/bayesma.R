@@ -193,7 +193,8 @@ bayesma <- function(
     custom_data      = custom_data,
     estimand         = estimand,
     cate_covariate   = cate_covariate,
-    baseline_risk    = baseline_risk
+    baseline_risk    = baseline_risk,
+    re_min_k         = re_min_k
   )
 
   code      <- bayesma_stan_code(spec)

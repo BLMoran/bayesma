@@ -1,13 +1,14 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# bayesma: Bayesian Meta-Analysis using Stan <img src="man/figures/logo.png" align="right" width="200" />
+# bayesma: Bayesian Meta-Analysis using Stan <img src="man/figures/logo.png" align="right" width="200"/>
 
 <!-- badges: start -->
 
 [![Lifecycle:
 experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 [![R-CMD-check](https://github.com/BLMoran/bayesma/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/BLMoran/bayesma/actions/workflows/R-CMD-check.yaml)
+
 <!-- badges: end -->
 
 **bayesma** is an R package for conducting Bayesian meta-analyses using
@@ -88,7 +89,7 @@ diagram](man/figures/workflow-diagram.png)](https://blmoran.github.io/bayesma/ar
 
 ## Basic Usage
 
-### Fit a random-effects meta-analysis
+### Fit a random-effects meta-analysis (binary outcome)
 
 ``` r
 one_stage_re <- bayesma(
@@ -107,65 +108,7 @@ one_stage_re <- bayesma(
 )
 ```
 
-### Forest plot
-
-``` r
-forest(
-  model    = one_stage_re,
-  data     = binary_outcome,
-  estimand = "OR",
-  studyvar = Author,
-  xlim     = c(0.1, 2.5),
-  add_pred = TRUE
-)
-```
-
-![](man/figures/forest_plot_binary.png)
-
-### Subgroup analysis
-
-``` r
-forest(
-  model        = one_stage_re,
-  data         = binary_outcome,
-  estimand     = "OR",
-  studyvar     = Author,
-  subgroup_var = Surgery,
-  xlim         = c(0.1, 3.5),
-  add_pred     = TRUE
-)
-```
-
-![](man/figures/forest_plot_subgroup.png)
-
-### Risk of bias columns
-
-``` r
-forest(
-  model        = one_stage_re,
-  data         = binary_outcome,
-  estimand     = "OR",
-  studyvar     = Author,
-  subgroup_var = Surgery,
-  xlim         = c(0.1, 3.5),
-  add_pred     = TRUE,
-  add_rob      = TRUE
-)
-```
-
-![](man/figures/forest_plot_rob.png)
-
-### Standalone risk of bias plot
-
-``` r
-rob_plot(
-  data           = binary_outcome,
-  rob_tool       = "rob2",
-  add_rob_legend = TRUE
-)
-```
-
-![](man/figures/rob_viz.png)
+<img src="man/figures/bayesma.png" width="413" />
 
 ### Bayesian Egger regression and funnel plot
 
@@ -179,11 +122,77 @@ egger_fit <- egger(
   n_int      = "N_Intervention",
   likelihood = "binomial"
 )
+```
 
+<img src="man/figures/egger.png" width="481" />
+
+``` r
 egger_plot(egger_fit, type = "both")
 ```
 
-![](man/figures/egger_plot.png)
+<img src="man/figures/egger_plot.png" width="541" />
+
+### Forest plot
+
+``` r
+forest(
+  model = one_stage_re,
+  data = binary_outcome,
+  estimand = "OR",
+  studyvar = Author,
+  xlim = c(0.1, 2.5),
+  add_pred = TRUE
+)
+```
+
+![](man/figures/forest_plot.png)
+
+### Subgroup analysis
+
+``` r
+forest(
+  model = one_stage_re,
+  data = binary_outcome,
+  estimand = "OR",
+  studyvar = Author,
+  subgroup = TRUE,
+  subgroup_var = Surgery,
+  xlim = c(0.1, 3.5),
+  add_pred = TRUE,
+  re_min_k = 4
+)
+```
+
+<img src="man/figures/forest_plot_subgroup.png" width="739" />
+
+### Risk of bias columns
+
+``` r
+forest(
+  model = one_stage_re,
+  data = binary_outcome,
+  estimand = "OR",
+  studyvar = Author,
+  subgroup_var = Surgery,
+  xlim = c(0.1, 3.5),
+  add_pred = TRUE,
+  add_rob  = TRUE
+)
+```
+
+<img src="man/figures/forest_plot_rob.png" width="816" />
+
+### Standalone risk of bias plot
+
+``` r
+rob_plot(
+  data           = binary_outcome,
+  rob_tool       = "rob2",
+  add_rob_legend = TRUE
+)
+```
+
+<img src="man/figures/rob_viz.png" width="524" />
 
 ### Overall posterior plot
 

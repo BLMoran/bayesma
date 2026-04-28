@@ -128,11 +128,12 @@ forest_table_right_fn <- function(df,
                                   estimand = "OR",
                                   add_rob = FALSE,
                                   has_re = TRUE,
+                                  incl_shrinkage = TRUE,
                                   font = NULL) {
 
   # Determine which effect columns to include
-  if (isTRUE(has_re)) {
-    effect_cols <- c("weighted_effect", "unweighted_effect")
+  if (isTRUE(has_re) && isTRUE(incl_shrinkage)) {
+    effect_cols <- c("shrinkage_display", "unweighted_effect")
   } else {
     effect_cols <- c("unweighted_effect")
   }
@@ -194,7 +195,7 @@ forest_table_right_fn <- function(df,
   forest.table.right <- forest.table.right |>
     gt::tab_options(column_labels.font.weight = "bold") |>
     gt::cols_align(align = "right") |>
-    gt::cols_label(.list = create_rob_labels(df, estimand, has_re = has_re)) |>
+    gt::cols_label(.list = create_rob_labels(df, estimand, has_re = has_re, incl_shrinkage = incl_shrinkage)) |>
     gt::tab_options(
       table.border.top.color = "white",
       table.border.bottom.color = "white",

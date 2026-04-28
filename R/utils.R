@@ -20,6 +20,18 @@ utils::globalVariables(c(
   "x_val", "xdist", "y", "yi"
 ))
 
+# ---- CmdStan summary helper ----
+
+#' @noRd
+stan_summary <- function(fit, variables = NULL) {
+  fit$summary(
+    variables = variables,
+    "median", "mean", "mad", "sd",
+    ~posterior::quantile2(.x, probs = c(0.025, 0.975)),
+    "ess_bulk", "ess_tail", "rhat"
+  ) |> tibble::as_tibble()
+}
+
 # ---- CmdStan model cache (compile once per Stan code hash) ----
 .bayesma_cmdstan_cache <- new.env(parent = emptyenv())
 

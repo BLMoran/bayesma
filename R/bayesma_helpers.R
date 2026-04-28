@@ -969,7 +969,7 @@ build_output_simple <- function(fit, key_vars, draw_vars,
                                 extra_meta = list(),
                                 extra_study_cols = list()) {
 
-  summary_tbl <- fit$summary(variables = key_vars) |> tibble::as_tibble()
+  summary_tbl <- stan_summary(fit, variables = key_vars)
 
   draws <- posterior::as_draws_df(fit$draws(variables = draw_vars))
 
@@ -1058,7 +1058,7 @@ build_output <- function(fit, likelihood, model_type, re_dist,
   }
   if (use_robust) key_vars <- c(key_vars, "pi_main")
 
-  summary_tbl <- fit$summary(variables = key_vars) |> tibble::as_tibble()
+  summary_tbl <- stan_summary(fit, variables = key_vars)
 
   # Draws
   draw_vars <- key_vars
@@ -1279,7 +1279,7 @@ summary.bayesma <- function(object, ...) {
 
   # ---- MCMC diagnostics ----
   fit      <- object$fit
-  var_info <- fit$summary(variables = c("mu")) |> tibble::as_tibble()
+  var_info <- stan_summary(fit, variables = "mu")
 
   # Try to infer iter/warmup/chains from the fit metadata
   md <- tryCatch(fit$metadata(), error = function(e) NULL)
@@ -1309,7 +1309,7 @@ summary.bayesma <- function(object, ...) {
   )
 
   # ---- Pooled effect table ----
-  mu_vars  <- fit$summary(variables = "mu") |> tibble::as_tibble()
+  mu_vars  <- stan_summary(fit, variables = "mu")
   pooled   <- build_summary_table(mu_vars, row_label = "mu")
 
   # ---- Heterogeneity table ----
@@ -1318,15 +1318,14 @@ summary.bayesma <- function(object, ...) {
 
   if (is_re) {
     tau_vars <- tryCatch(
-      fit$summary(variables = "tau") |> tibble::as_tibble(),
+      stan_summary(fit, variables = "tau"),
       error = function(e) NULL
     )
     if (!is.null(tau_vars)) {
       heterogeneity <- build_summary_table(tau_vars, row_label = "tau")
 
-      # Add nu (t-dist df) if present
       nu_vars <- tryCatch(
-        fit$summary(variables = "nu") |> tibble::as_tibble(),
+        stan_summary(fit, variables = "nu"),
         error = function(e) NULL
       )
       if (!is.null(nu_vars)) {
@@ -1336,9 +1335,8 @@ summary.bayesma <- function(object, ...) {
         )
       }
 
-      # Add alpha_skew if present
       as_vars <- tryCatch(
-        fit$summary(variables = "alpha_skew") |> tibble::as_tibble(),
+        stan_summary(fit, variables = "alpha_skew"),
         error = function(e) NULL
       )
       if (!is.null(as_vars)) {

@@ -2,6 +2,7 @@ url: https://blmoran.github.io/bayesma/
 
 template:
   bootstrap: 5
+  bootswatch: cosmo
   bslib:
     primary:   "#3191bf"
     secondary: "#4F6D8A"

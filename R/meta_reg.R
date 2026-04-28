@@ -394,8 +394,7 @@ meta_reg_extract <- function(fit, spec) {
   key_vars <- c("mu", paste0("beta[", seq_len(K), "]"))
   if (is_re) key_vars <- c(key_vars, "tau")
 
-  summary_tbl <- cmdstan_fit$summary(variables = key_vars) |>
-    tibble::as_tibble() |>
+  summary_tbl <- stan_summary(cmdstan_fit, variables = key_vars) |>
     dplyr::mutate(
       coef_name = c("(Intercept)", spec$coef_names,
                     if (is_re) "tau" else NULL)

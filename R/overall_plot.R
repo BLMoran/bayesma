@@ -60,8 +60,8 @@ overall_plot <- function(model,
                          add_mu_prior = FALSE,
                          add_tau_prior = FALSE,
                          add_pred = FALSE,
-                         color_pred_posterior = "forestgreen",
-                         color_pred_posterior_outline = "darkgreen",
+                         color_pred_posterior = "orange",
+                         color_pred_posterior_outline = "darkorange2",
                          null_value = NULL,
                          null_range = NULL,
                          add_null_range = FALSE,
@@ -99,9 +99,13 @@ overall_plot <- function(model,
 
   tau_x_label <- if (estimand %in% c("MD", "SMD") ||
                      (is_marginal_estimand(estimand) && model$meta$likelihood == "gaussian")) {
-    "Standard Deviation"
+    "SD"
+  } else if (estimand %in% c("OR", "RR", "HR")) {
+    paste0("SD (log-", estimand, ")")
+  } else if (estimand == "IRR") {
+    "SD (log-IRR)"
   } else {
-    "Standard Deviation (Log Scale)"
+    "SD (log scale)"
   }
 
   # Set default tau outline color (darker version of base color)

@@ -76,7 +76,7 @@ diagram](reference/figures/workflow-diagram.png)](https://blmoran.github.io/baye
 
 ## Basic Usage
 
-### Fit a random-effects meta-analysis
+### Fit a random-effects meta-analysis (binary outcome)
 
 ``` r
 one_stage_re <- bayesma(
@@ -95,32 +95,58 @@ one_stage_re <- bayesma(
 )
 ```
 
+![](reference/figures/bayesma.png)
+
+### Bayesian Egger regression and funnel plot
+
+``` r
+egger_fit <- egger(
+  data       = binary_outcome,
+  studyvar   = "Author",
+  event_ctrl = "Event_Control",
+  event_int  = "Event_Intervention",
+  n_ctrl     = "N_Control",
+  n_int      = "N_Intervention",
+  likelihood = "binomial"
+)
+```
+
+![](reference/figures/egger.png)
+
+``` r
+egger_plot(egger_fit, type = "both")
+```
+
+![](reference/figures/egger_plot.png)
+
 ### Forest plot
 
 ``` r
 forest(
-  model    = one_stage_re,
-  data     = binary_outcome,
+  model = one_stage_re,
+  data = binary_outcome,
   estimand = "OR",
   studyvar = Author,
-  xlim     = c(0.1, 2.5),
+  xlim = c(0.1, 2.5),
   add_pred = TRUE
 )
 ```
 
-![](reference/figures/forest_plot_binary.png)
+![](reference/figures/forest_plot.png)
 
 ### Subgroup analysis
 
 ``` r
 forest(
-  model        = one_stage_re,
-  data         = binary_outcome,
-  estimand     = "OR",
-  studyvar     = Author,
+  model = one_stage_re,
+  data = binary_outcome,
+  estimand = "OR",
+  studyvar = Author,
+  subgroup = TRUE,
   subgroup_var = Surgery,
-  xlim         = c(0.1, 3.5),
-  add_pred     = TRUE
+  xlim = c(0.1, 3.5),
+  add_pred = TRUE,
+  re_min_k = 4
 )
 ```
 
@@ -130,14 +156,14 @@ forest(
 
 ``` r
 forest(
-  model        = one_stage_re,
-  data         = binary_outcome,
-  estimand     = "OR",
-  studyvar     = Author,
+  model = one_stage_re,
+  data = binary_outcome,
+  estimand = "OR",
+  studyvar = Author,
   subgroup_var = Surgery,
-  xlim         = c(0.1, 3.5),
-  add_pred     = TRUE,
-  add_rob      = TRUE
+  xlim = c(0.1, 3.5),
+  add_pred = TRUE,
+  add_rob  = TRUE
 )
 ```
 
@@ -154,24 +180,6 @@ rob_plot(
 ```
 
 ![](reference/figures/rob_viz.png)
-
-### Bayesian Egger regression and funnel plot
-
-``` r
-egger_fit <- egger(
-  data       = binary_outcome,
-  studyvar   = "Author",
-  event_ctrl = "Event_Control",
-  event_int  = "Event_Intervention",
-  n_ctrl     = "N_Control",
-  n_int      = "N_Intervention",
-  likelihood = "binomial"
-)
-
-egger_plot(egger_fit, type = "both")
-```
-
-![](reference/figures/egger_plot.png)
 
 ### Overall posterior plot
 
