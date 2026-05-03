@@ -3,9 +3,9 @@ library(bslib)
 library(DT)
 library(dplyr)
 
-# ── Constants ─────────────────���────────────────────────────���─────────────────
+# ── Constants ──────────────────────────────────────────────────────────────────
 
-STUDY_COLS <- c("Author", "Year", "Subgroup", "Control", "Intervention")
+BASE_STUDY_COLS <- c("Author", "Year", "Subgroup", "Control", "Intervention")
 
 OUTCOME_EXTRA <- list(
   binary     = c("N_Control", "N_Intervention",
@@ -66,30 +66,35 @@ INSPECT_COLS <- c(
   "d1_1", "d1_2", "d1_3",
   "d2_1", "d2_2", "d2_3", "d2_4", "d2_5",
   "d3_1", "d3_2",
-  "d4_1", "d4_2", "d4_4", "d4_5", "d4_7", "d4_10", "d4_11"
+  "d4_1", "d4_2", "d4_3", "d4_4", "d4_5",
+  "d4_6", "d4_7", "d4_8", "d4_9", "d4_10", "d4_11"
 )
 
 INSPECT_LABELS <- c(
-  d1_1 = "D1.1 Registration prospective",
-  d1_2 = "D1.2 Registration consistent",
-  d1_3 = "D1.3 SAP consistent",
-  d2_1 = "D2.1 Ethical approval",
-  d2_2 = "D2.2 Primary registry",
-  d2_3 = "D2.3 Registered before enrolment",
-  d2_4 = "D2.4 Protocol vs conduct",
-  d2_5 = "D2.5 Other conduct concerns",
-  d3_1 = "D3.1 All outcomes reported",
-  d3_2 = "D3.2 Selective reporting",
-  d4_1 = "D4.1 Flow consistent",
-  d4_2 = "D4.2 Analysis populations",
-  d4_4 = "D4.4 Data errors",
-  d4_5 = "D4.5 Data duplication",
-  d4_7 = "D4.7 Per guidelines",
+  d1_1  = "D1.1 Registration prospective",
+  d1_2  = "D1.2 Registration consistent",
+  d1_3  = "D1.3 SAP consistent",
+  d2_1  = "D2.1 Ethical approval",
+  d2_2  = "D2.2 Primary registry",
+  d2_3  = "D2.3 Registered before enrolment",
+  d2_4  = "D2.4 Protocol vs conduct",
+  d2_5  = "D2.5 Other conduct concerns",
+  d3_1  = "D3.1 All outcomes reported",
+  d3_2  = "D3.2 Selective reporting",
+  d4_1  = "D4.1 Flow consistent",
+  d4_2  = "D4.2 Analysis populations",
+  d4_3  = "D4.3 Carlisle test",
+  d4_4  = "D4.4 Data errors",
+  d4_5  = "D4.5 Data duplication",
+  d4_6  = "D4.6 N-consistency",
+  d4_7  = "D4.7 Per guidelines",
+  d4_8  = "D4.8 GRIM test",
+  d4_9  = "D4.9 p-value verify",
   d4_10 = "D4.10 Retraction",
   d4_11 = "D4.11 Other concerns"
 )
 
-# ── Helpers ────────────────────────────────────────────��─────────────────────
+# ── Helpers ────────────────────────────────────────────────────────────────────
 
 empty_df <- function(cols) {
   structure(
@@ -105,8 +110,6 @@ blank_row <- function(cols, vals = list()) {
   for (nm in names(vals)) row[[nm]] <- vals[[nm]]
   as.data.frame(row, stringsAsFactors = FALSE)
 }
-
-study_key <- function(df) paste(df$Author, df$Year, sep = "|||")
 
 sync_rows <- function(target, study_df, target_id_cols, extra_cols) {
   all_cols <- c(target_id_cols, extra_cols)
@@ -162,7 +165,20 @@ dt_base <- function(df, id, sel_mode = "single", editable = TRUE) {
   )
 }
 
-# ── CSS ──────────────���───────────────────────���───────────────────────────────
+read_uploaded <- function(file) {
+  ext <- tolower(tools::file_ext(file$name))
+  if (ext == "csv") {
+    read.csv(file$datapath, stringsAsFactors = FALSE, check.names = FALSE)
+  } else if (ext %in% c("xls", "xlsx")) {
+    if (!requireNamespace("readxl", quietly = TRUE))
+      stop("readxl is required for Excel files. Please use CSV format.")
+    as.data.frame(readxl::read_excel(file$datapath), stringsAsFactors = FALSE)
+  } else {
+    stop("Unsupported file type. Please use CSV or XLSX.")
+  }
+}
+
+# ── CSS ────────────────────────────────────────────────────────────────────────
 
 app_css <- "
 body { font-size: 0.9rem; }
@@ -173,9 +189,6 @@ body { font-size: 0.9rem; }
   display: flex; align-items: center; justify-content: space-between;
 }
 .card-header-custom h5 { margin: 0; font-size: 1rem; }
-.card-header-custom .form-select, .card-header-custom .form-check-inline {
-  font-size: 0.85rem;
-}
 .btn-rob-low      { background:#77bb41; color:white; border:none; }
 .btn-rob-low:hover { background:#5e9430; color:white; }
 .btn-rob-some     { background:#f5c518; color:#2E3A4A; border:none; }
@@ -207,13 +220,12 @@ body { font-size: 0.9rem; }
 .dl-row { display:flex; flex-wrap:wrap; gap:10px; align-items:flex-start; }
 "
 
-# ── UI ────────���──────────────────────────────────���───────────────────────────
+# ── UI ─────────────────────────────────────────────────────────────────────────
 
 ui <- fluidPage(
   theme = bs_theme(bootswatch = "cosmo", primary = "#3191bf"),
   tags$head(tags$style(HTML(app_css))),
 
-  # Page header
   div(
     style = "background:#4F6D8A; color:white; padding:14px 20px; margin-bottom:20px;",
     h3("bayesma — Data Entry", style = "margin:0;"),
@@ -224,16 +236,49 @@ ui <- fluidPage(
   div(
     style = "max-width:1400px; margin:0 auto; padding:0 16px;",
 
-    # ── 1. Study Details ────��─────────────────────────────────────────────────
+    # ── Upload ─────────────────────────────────────────────────────────────────
+    div(
+      class = "section-card",
+      div(class = "card-header-custom", h5("Upload Data")),
+      div(
+        class = "card-body border border-top-0 rounded-bottom p-3",
+        fluidRow(
+          column(4,
+            fileInput("upload_file", "Choose file",
+                      accept = c(".csv", ".xls", ".xlsx"),
+                      placeholder = "CSV or XLSX")
+          ),
+          column(4,
+            selectInput("upload_target", "Load into section",
+                        choices = c(
+                          "Study Details"  = "study",
+                          "Outcome Details" = "outcome",
+                          "Risk of Bias"   = "rob",
+                          "INSPECT-SR"     = "inspect"
+                        ))
+          ),
+          column(4,
+            br(),
+            actionButton("upload_confirm", "Load file",
+                         icon = icon("upload"),
+                         class = "btn-primary btn-sm mt-1")
+          )
+        )
+      )
+    ),
+
+    # ── Study Details ──────────────────────────────────────────────────────────
     div(
       class = "section-card",
       div(
         class = "card-header-custom",
-        h5("1  Study Details"),
+        h5("Study Details"),
         div(
-          actionButton("add_study", "Add study", icon = icon("plus"),
+          actionButton("add_study",   "Add study",    icon = icon("plus"),
                        class = "btn-sm btn-light"),
-          actionButton("del_study", "Remove selected", icon = icon("minus"),
+          actionButton("add_col_study", "Add column", icon = icon("columns"),
+                       class = "btn-sm btn-outline-light ms-2"),
+          actionButton("del_study",   "Remove selected", icon = icon("minus"),
                        class = "btn-sm btn-danger ms-2")
         )
       ),
@@ -245,12 +290,12 @@ ui <- fluidPage(
       )
     ),
 
-    # ── 2. Outcome Details ────────���───────────────────────────────────────���──
+    # ── Outcome Details ────────────────────────────────────────────────────────
     div(
       class = "section-card",
       div(
         class = "card-header-custom",
-        h5("2  Outcome Details"),
+        h5("Outcome Details"),
         div(
           style = "display:flex; gap:14px; align-items:center;",
           span("Outcome type:", style = "font-size:0.85rem;"),
@@ -276,12 +321,12 @@ ui <- fluidPage(
       )
     ),
 
-    # ── 3. Risk of Bias ──────────��───────────────────────────────────────────
+    # ── Risk of Bias ───────────────────────────────────────────────────────────
     div(
       class = "section-card",
       div(
         class = "card-header-custom",
-        h5("3  Risk of Bias"),
+        h5("Risk of Bias"),
         div(
           style = "display:flex; gap:8px; align-items:center;",
           span("Tool:", style = "font-size:0.85rem;"),
@@ -309,16 +354,12 @@ ui <- fluidPage(
       )
     ),
 
-    # ── 4. INSPECT-SR ──────────────────────────────────────────────��─────────
+    # ── INSPECT-SR ─────────────────────────────────────────────────────────────
     div(
       class = "section-card",
-      div(class = "card-header-custom", h5("4  INSPECT-SR  (manual judgements)")),
+      div(class = "card-header-custom", h5("INSPECT-SR")),
       div(
         class = "card-body border border-top-0 rounded-bottom p-3",
-        p(class = "text-muted small mb-2",
-          "Items D4.3 (Carlisle), D4.6 (N-consistency), D4.8 (GRIM), and D4.9 (p-value) ",
-          "are computed automatically by ",
-          code("inspect_sr()"), " — they are not entered here."),
         div(
           class = "btn-bar",
           span(class = "label", "Insert:"),
@@ -338,7 +379,7 @@ ui <- fluidPage(
       )
     ),
 
-    # ── Download ─────────���───────────────────────────────��───────────────────
+    # ── Download ───────────────────────────────────────────────────────────────
     div(
       class = "section-card",
       div(class = "card-header-custom", h5("Download")),
@@ -373,21 +414,46 @@ ui <- fluidPage(
   )
 )
 
-# ── Server ──────────────────────────────────────────���────────────────────────
+# ── Server ─────────────────────────────────────────────────────────────────────
 
 server <- function(input, output, session) {
 
-  # ── Reactive stores ──────��────────────────────────────────────���───────────
   rv <- reactiveValues(
-    study   = empty_df(STUDY_COLS),
-    outcome = empty_df(c("Author", "Year", OUTCOME_EXTRA[["binary"]])),
-    rob     = empty_df(c("Author", "Year", ROB_DOMAIN_COLS[["rob2"]])),
-    inspect = empty_df(c("study", INSPECT_COLS)),
-    sel_rob     = NULL,   # list(row, col_name, label)
+    study       = empty_df(BASE_STUDY_COLS),
+    outcome     = empty_df(c("Author", "Year", OUTCOME_EXTRA[["binary"]])),
+    rob         = empty_df(c("Author", "Year", ROB_DOMAIN_COLS[["rob2"]])),
+    inspect     = empty_df(c("study", INSPECT_COLS)),
+    sel_rob     = NULL,
     sel_inspect = NULL
   )
 
-  # ── 1. Study Details ──────────────────────────────────────────────────────
+  # ── Upload ──────────────────────────────────────────────────────────────────
+
+  observeEvent(input$upload_confirm, {
+    req(input$upload_file)
+    df <- tryCatch(
+      read_uploaded(input$upload_file),
+      error = function(e) {
+        showNotification(conditionMessage(e), type = "error", duration = 8)
+        NULL
+      }
+    )
+    if (is.null(df)) return()
+    df[] <- lapply(df, as.character)
+
+    switch(input$upload_target,
+      study   = { rv$study   <- df },
+      outcome = { rv$outcome <- df },
+      rob     = { rv$rob     <- df },
+      inspect = { rv$inspect <- df }
+    )
+    showNotification(
+      paste0("Loaded ", nrow(df), " rows into ", input$upload_target, "."),
+      type = "message"
+    )
+  })
+
+  # ── Study Details ────────────────────────────────────────────────────────────
 
   output$study_tbl <- renderDT(dt_base(rv$study, "study_tbl"))
 
@@ -397,7 +463,7 @@ server <- function(input, output, session) {
   })
 
   observeEvent(input$add_study, {
-    rv$study <- bind_rows(rv$study, blank_row(STUDY_COLS))
+    rv$study <- bind_rows(rv$study, blank_row(names(rv$study)))
   })
 
   observeEvent(input$del_study, {
@@ -405,26 +471,44 @@ server <- function(input, output, session) {
     if (length(sel)) rv$study <- rv$study[-sel, , drop = FALSE]
   })
 
-  # ── 2. Outcome Details ──────────────���─────────────────────────────────────
+  observeEvent(input$add_col_study, {
+    showModal(modalDialog(
+      title = "Add column to Study Details",
+      textInput("new_col_name", "Column name", placeholder = "e.g. Country"),
+      footer = tagList(
+        modalButton("Cancel"),
+        actionButton("confirm_add_col", "Add", class = "btn-primary")
+      ),
+      easyClose = TRUE
+    ))
+  })
+
+  observeEvent(input$confirm_add_col, {
+    col_name <- trimws(input$new_col_name)
+    if (nzchar(col_name) && !col_name %in% names(rv$study)) {
+      rv$study[[col_name]] <- ""
+    }
+    removeModal()
+  })
+
+  # ── Outcome Details ───────────────────────────────────────────────────────────
 
   observeEvent(input$outcome_type, {
-    cols <- c("Author", "Year", OUTCOME_EXTRA[[input$outcome_type]])
-    # Rebuild, preserving Author/Year that already exist
-    existing <- rv$outcome |> select(any_of(c("Author", "Year")))
-    new_df   <- empty_df(cols)
-    if (nrow(existing) > 0) {
-      new_df <- bind_rows(new_df, bind_cols(
-        existing,
-        empty_df(setdiff(cols, c("Author", "Year")))[
-          rep(1L, nrow(existing)), , drop = FALSE]
-      ))
-    }
+    cols   <- c("Author", "Year", OUTCOME_EXTRA[[input$outcome_type]])
+    id_df  <- rv$outcome[, intersect(names(rv$outcome), c("Author", "Year")), drop = FALSE]
+    n      <- nrow(id_df)
+    extras <- setdiff(cols, c("Author", "Year"))
+    extra_df <- if (n > 0)
+      as.data.frame(setNames(replicate(length(extras), rep("", n), simplify = FALSE), extras),
+                    stringsAsFactors = FALSE)
+    else
+      empty_df(extras)
+    new_df <- empty_df(cols)
+    if (n > 0) new_df <- rbind(new_df, cbind(id_df, extra_df))
     rv$outcome <- new_df
   }, ignoreInit = TRUE)
 
-  output$outcome_tbl <- renderDT({
-    dt_base(rv$outcome, "outcome_tbl")
-  })
+  output$outcome_tbl <- renderDT(dt_base(rv$outcome, "outcome_tbl"))
 
   observeEvent(input$outcome_tbl_cell_edit, {
     e <- input$outcome_tbl_cell_edit
@@ -432,30 +516,28 @@ server <- function(input, output, session) {
   })
 
   observeEvent(input$sync_outcome, {
-    cols <- c("Author", "Year", OUTCOME_EXTRA[[input$outcome_type]])
     rv$outcome <- sync_rows(rv$outcome, rv$study, c("Author", "Year"),
                             OUTCOME_EXTRA[[input$outcome_type]])
   })
 
-  # ── 3. Risk of Bias ────────────────────────────────────────��──────────────
+  # ── Risk of Bias ─────────────────────────────────────────────────────────────
 
-  # Rebuild rob table when tool changes
   observeEvent(input$rob_tool, {
-    cols <- c("Author", "Year", ROB_DOMAIN_COLS[[input$rob_tool]])
-    existing <- rv$rob |> select(any_of(c("Author", "Year")))
-    new_df   <- empty_df(cols)
-    if (nrow(existing) > 0) {
-      new_df <- bind_rows(new_df, bind_cols(
-        existing,
-        empty_df(setdiff(cols, c("Author", "Year")))[
-          rep(1L, nrow(existing)), , drop = FALSE]
-      ))
-    }
-    rv$rob      <- new_df
-    rv$sel_rob  <- NULL
+    cols  <- c("Author", "Year", ROB_DOMAIN_COLS[[input$rob_tool]])
+    id_df <- rv$rob[, intersect(names(rv$rob), c("Author", "Year")), drop = FALSE]
+    n     <- nrow(id_df)
+    extras <- setdiff(cols, c("Author", "Year"))
+    extra_df <- if (n > 0)
+      as.data.frame(setNames(replicate(length(extras), rep("", n), simplify = FALSE), extras),
+                    stringsAsFactors = FALSE)
+    else
+      empty_df(extras)
+    new_df <- empty_df(cols)
+    if (n > 0) new_df <- rbind(new_df, cbind(id_df, extra_df))
+    rv$rob     <- new_df
+    rv$sel_rob <- NULL
   }, ignoreInit = TRUE)
 
-  # Button bar — changes based on tool
   output$rob_btn_bar <- renderUI({
     tool <- req(input$rob_tool)
     if (tool == "newcastle_ottawa") {
@@ -486,8 +568,7 @@ server <- function(input, output, session) {
         div(class = "btn-bar",
             span(class = "label", "Insert:"),
             lapply(btns, function(b)
-              actionButton(b$id, b$label,
-                           class = paste("btn-sm", b$cls))),
+              actionButton(b$id, b$label, class = paste("btn-sm", b$cls))),
             actionButton("btn_rob_clear", "Clear",
                          class = "btn-sm btn-outline-secondary")
         ),
@@ -516,13 +597,12 @@ server <- function(input, output, session) {
     ci <- input$rob_tbl_cell_clicked
     if (is.null(ci$row) || length(ci$row) == 0) return()
     col_idx <- ci$col + 1L
-    if (col_idx <= 2L) return()           # skip Author / Year
-    col_name <- names(rv$rob)[col_idx]
+    if (col_idx <= 2L) return()
+    col_name  <- names(rv$rob)[col_idx]
     study_lbl <- paste(rv$rob$Author[ci$row], rv$rob$Year[ci$row])
     rv$sel_rob <- list(row = ci$row, col_name = col_name, study = study_lbl)
   })
 
-  # Helper to fill selected RoB cell
   fill_rob <- function(val) {
     sel <- rv$sel_rob
     if (!is.null(sel) && sel$row <= nrow(rv$rob))
@@ -543,7 +623,7 @@ server <- function(input, output, session) {
                         ROB_DOMAIN_COLS[[input$rob_tool]])
   })
 
-  # ── 4. INSPECT-SR ─────────────��───────────────────────────────────────────
+  # ── INSPECT-SR ────────────────────────────────────────────────────────────────
 
   output$inspect_sel_info <- renderUI({
     sel <- rv$sel_inspect
@@ -554,8 +634,7 @@ server <- function(input, output, session) {
   })
 
   output$inspect_tbl <- renderDT({
-    df <- rv$inspect
-    # Short column headers in the display
+    df   <- rv$inspect
     nmap <- INSPECT_LABELS[intersect(names(INSPECT_LABELS), names(df))]
     names(df)[names(df) %in% names(nmap)] <- nmap[names(df)[names(df) %in% names(nmap)]]
     dt_base(df, "inspect_tbl")
@@ -572,7 +651,7 @@ server <- function(input, output, session) {
     ci <- input$inspect_tbl_cell_clicked
     if (is.null(ci$row) || length(ci$row) == 0) return()
     col_idx <- ci$col + 1L
-    if (col_idx <= 1L) return()           # skip study column
+    if (col_idx <= 1L) return()
     col_name <- names(rv$inspect)[col_idx]
     rv$sel_inspect <- list(row = ci$row, col_name = col_name,
                            study = rv$inspect$study[ci$row])
@@ -593,41 +672,30 @@ server <- function(input, output, session) {
     rv$inspect <- sync_inspect_rows(rv$inspect, rv$study)
   })
 
-  # ── Downloads ───────────────────��──────────────────────────���──────────────
-
-  save_rda <- function(obj_name, data) {
-    function(file) {
-      assign(obj_name, data)
-      save(list = obj_name, file = file, envir = environment())
-    }
-  }
+  # ── Downloads ─────────────────────────────────────────────────────────────────
 
   output$dl_study <- downloadHandler(
     filename = "study_details.rda",
     content  = function(file) {
-      study_details <- rv$study
-      save(study_details, file = file)
+      study_details <- rv$study; save(study_details, file = file)
     }
   )
   output$dl_outcome <- downloadHandler(
     filename = function() paste0("outcome_data_", input$outcome_type, ".rda"),
     content  = function(file) {
-      outcome_data <- rv$outcome
-      save(outcome_data, file = file)
+      outcome_data <- rv$outcome; save(outcome_data, file = file)
     }
   )
   output$dl_rob <- downloadHandler(
     filename = "rob_data.rda",
     content  = function(file) {
-      rob_data <- rv$rob
-      save(rob_data, file = file)
+      rob_data <- rv$rob; save(rob_data, file = file)
     }
   )
   output$dl_inspect <- downloadHandler(
     filename = "inspect_sr.rda",
     content  = function(file) {
-      inspect_sr <- rv$inspect
-      save(inspect_sr, file = file)
+      inspect_sr <- rv$inspect; save(inspect_sr, file = file)
     }
   )
   output$dl_all <- downloadHandler(
