@@ -138,6 +138,7 @@
     <li><a class="dropdown-item" href="../articles/reporting-checklist.html">Reporting Checklist</a></li>
   </ul>
 </li>
+<li class="nav-item"><a class="nav-link" href="../articles/data-entry.html">Data Entry</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-reference" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Reference</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-reference">
@@ -195,6 +196,8 @@
 <strong>Model Fitting</strong> — Fit Bayesian models (standard, bias-corrected, selection, robust)</li>
 <li>
 <strong>Model Comparison</strong> — Compare competing models via LOSO-CV or LOO-IC</li>
+<li>
+<strong>Model Diagnostics</strong> — Assess MCMC convergence and posterior fit</li>
 <li>
 <strong>Heterogeneity Assessment</strong> — Evaluate between-study variation</li>
 <li>
@@ -727,13 +730,105 @@
 <li>
 <strong>Miscalibration</strong>: Mean |empirical − nominal| across coverage levels. Zero is perfect.</li>
 </ul>
-<hr></section></section><section class="level2"><h2 id="stage-8-heterogeneity-assessment">Stage 8: Heterogeneity Assessment<a class="anchor" aria-label="anchor" href="#stage-8-heterogeneity-assessment"></a>
+<hr></section></section><section class="level2"><h2 id="stage-8-model-diagnostics">Stage 8: Model Diagnostics<a class="anchor" aria-label="anchor" href="#stage-8-model-diagnostics"></a>
+</h2>
+<p><strong>When to use:</strong> After fitting any model — before proceeding to comparison, bias assessment, or inference.</p>
+<p><strong>What it does:</strong> Evaluates MCMC convergence (trace plots, Rhat, ESS, autocorrelation) and model fit (posterior predictive check). Poor convergence invalidates downstream inference; a poor predictive check suggests the model misrepresents the data.</p>
+<section class="level3"><h3 id="all-in-one-diagnostic-page">All-in-One Diagnostic Page<a class="anchor" aria-label="anchor" href="#all-in-one-diagnostic-page"></a>
+</h3>
+<p><code><a href="../reference/diagnostics.html">diagnostics()</a></code> produces a single patchwork panel combining all key diagnostics:</p>
+<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">bayesma</span><span class="fu">::</span><span class="fu"><a href="../reference/diagnostics.html">diagnostics</a></span><span class="op">(</span><span class="va">fit_re</span><span class="op">)</span></span></code></pre></div>
+<p>The page contains six panels:</p>
+<ul>
+<li>
+<strong>Trace plots</strong> — chains should mix freely around a stable centre</li>
+<li>
+<strong>Posterior predictive check</strong> — replicated data should resemble observed data</li>
+<li>
+<strong>Rhat</strong> — all parameters should be &lt; 1.01</li>
+<li>
+<strong>Effective sample size (bulk)</strong> — should be &gt; 400 per parameter</li>
+<li>
+<strong>Autocorrelation</strong> — should decay to zero within 10–20 lags</li>
+<li>
+<strong>MCMC diagnostics table</strong> — divergences, max treedepth, E-BFMI</li>
+</ul></section><section class="level3"><h3 id="posterior-predictive-check">Posterior Predictive Check<a class="anchor" aria-label="anchor" href="#posterior-predictive-check"></a>
+</h3>
+<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Default: density overlay</span></span>
+<span><span class="fu">bayesma</span><span class="fu">::</span><span class="fu"><a href="../reference/pp_check.html">pp_check</a></span><span class="op">(</span><span class="va">fit_re</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Alternative plot types</span></span>
+<span><span class="fu">bayesma</span><span class="fu">::</span><span class="fu"><a href="../reference/pp_check.html">pp_check</a></span><span class="op">(</span><span class="va">fit_re</span>, type <span class="op">=</span> <span class="st">"ecdf_overlay"</span><span class="op">)</span></span>
+<span><span class="fu">bayesma</span><span class="fu">::</span><span class="fu"><a href="../reference/pp_check.html">pp_check</a></span><span class="op">(</span><span class="va">fit_re</span>, type <span class="op">=</span> <span class="st">"stat"</span>, stat <span class="op">=</span> <span class="st">"mean"</span><span class="op">)</span></span>
+<span><span class="fu">bayesma</span><span class="fu">::</span><span class="fu"><a href="../reference/pp_check.html">pp_check</a></span><span class="op">(</span><span class="va">fit_re</span>, type <span class="op">=</span> <span class="st">"stat"</span>, stat <span class="op">=</span> <span class="st">"sd"</span><span class="op">)</span></span></code></pre></div>
+<p>For a <strong>prior predictive check</strong> (verify priors are sensible <em>before</em> seeing data):</p>
+<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">fit_prior</span> <span class="op">&lt;-</span> <span class="fu">bayesma</span><span class="fu">::</span><span class="fu"><a href="../reference/bayesma.html">bayesma</a></span><span class="op">(</span></span>
+<span>  data <span class="op">=</span> <span class="va">meta_data</span>,</span>
+<span>  studyvar <span class="op">=</span> <span class="va">study</span>,</span>
+<span>  <span class="co"># ... outcome columns and model spec ...</span></span>
+<span>  sample_prior <span class="op">=</span> <span class="cn">TRUE</span>   <span class="co"># Sample from prior, not posterior</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Visualize prior predictions vs. plausible data range</span></span>
+<span><span class="fu">bayesma</span><span class="fu">::</span><span class="fu"><a href="../reference/pp_check.html">pp_check</a></span><span class="op">(</span><span class="va">fit_prior</span><span class="op">)</span></span></code></pre></div>
+</section><section class="level3"><h3 id="convergence-thresholds">Convergence Thresholds<a class="anchor" aria-label="anchor" href="#convergence-thresholds"></a>
+</h3>
+<table class="table caption-top">
+<thead><tr class="header">
+<th>Diagnostic</th>
+<th>Target</th>
+<th>Action if violated</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>Rhat</td>
+<td>&lt; 1.01</td>
+<td>Increase <code>iter_warmup</code>, check model</td>
+</tr>
+<tr class="even">
+<td>ESS bulk</td>
+<td>&gt; 400</td>
+<td>Increase <code>iter_sampling</code>
+</td>
+</tr>
+<tr class="odd">
+<td>Divergences</td>
+<td>0</td>
+<td>Increase <code>adapt_delta</code> (e.g. 0.99)</td>
+</tr>
+<tr class="even">
+<td>Max treedepth</td>
+<td>0 hits</td>
+<td>Increase <code>max_treedepth</code>
+</td>
+</tr>
+<tr class="odd">
+<td>E-BFMI</td>
+<td>&gt; 0.3</td>
+<td>Reparameterise or adjust priors</td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Re-run with stricter sampler settings if diagnostics flag issues</span></span>
+<span><span class="va">fit_re</span> <span class="op">&lt;-</span> <span class="fu">bayesma</span><span class="fu">::</span><span class="fu"><a href="../reference/bayesma.html">bayesma</a></span><span class="op">(</span></span>
+<span>  data <span class="op">=</span> <span class="va">meta_data</span>,</span>
+<span>  <span class="co"># ...</span></span>
+<span>  adapt_delta   <span class="op">=</span> <span class="fl">0.99</span>,</span>
+<span>  max_treedepth <span class="op">=</span> <span class="fl">14</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">bayesma</span><span class="fu">::</span><span class="fu"><a href="../reference/diagnostics.html">diagnostics</a></span><span class="op">(</span><span class="va">fit_re</span><span class="op">)</span></span></code></pre></div>
+<hr></section></section><section class="level2"><h2 id="stage-9-heterogeneity-assessment">Stage 9: Heterogeneity Assessment<a class="anchor" aria-label="anchor" href="#stage-9-heterogeneity-assessment"></a>
 </h2>
 <p><strong>When to use:</strong> Understanding variation between studies.</p>
 <p><strong>What it does:</strong> Estimates and visualizes between-study variance (τ²) and intra-class correlation.</p>
 <section class="level3"><h3 id="extract-heterogeneity-estimates">Extract Heterogeneity Estimates<a class="anchor" aria-label="anchor" href="#extract-heterogeneity-estimates"></a>
 </h3>
-<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb37"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># From standard meta-analysis</span></span>
 <span><span class="va">tau_summary</span> <span class="op">&lt;-</span> <span class="va">fit</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">bayesma</span><span class="fu">::</span><span class="fu">extract_summary</span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
@@ -747,7 +842,7 @@
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"95% CrI for τ:"</span>, <span class="va">tau_summary</span><span class="op">$</span><span class="va">q2.5</span>, <span class="st">"to"</span>, <span class="va">tau_summary</span><span class="op">$</span><span class="va">q97.5</span>, <span class="st">"\n"</span><span class="op">)</span></span></code></pre></div>
 </section><section class="level3"><h3 id="visualizations">Visualizations<a class="anchor" aria-label="anchor" href="#visualizations"></a>
 </h3>
-<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb38"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Prior-posterior plot for tau</span></span>
 <span><span class="fu">bayesma</span><span class="fu">::</span><span class="fu">build_tau_prior_overlay</span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span>
 <span></span>
@@ -756,7 +851,7 @@
 </section><section class="level3"><h3 id="predictive-distribution">Predictive Distribution<a class="anchor" aria-label="anchor" href="#predictive-distribution"></a>
 </h3>
 <p>What to expect in a new study:</p>
-<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb39"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Extract predictive draws for a new study</span></span>
 <span><span class="va">pred_draws</span> <span class="op">&lt;-</span> <span class="va">fit</span><span class="op">$</span><span class="va">draws</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">posterior</span><span class="fu">::</span><span class="fu"><a href="https://mc-stan.org/posterior/reference/subset_draws.html" class="external-link">subset_draws</a></span><span class="op">(</span>variable <span class="op">=</span> <span class="st">"mu_new"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
@@ -796,13 +891,13 @@
 </tr>
 </tbody>
 </table>
-<hr></section></section><section class="level2"><h2 id="stage-9-bias-assessment">Stage 9: Bias Assessment<a class="anchor" aria-label="anchor" href="#stage-9-bias-assessment"></a>
+<hr></section></section><section class="level2"><h2 id="stage-10-bias-assessment">Stage 10: Bias Assessment<a class="anchor" aria-label="anchor" href="#stage-10-bias-assessment"></a>
 </h2>
 <p><strong>When to use:</strong> Evaluating whether publication bias, small-study effects, or systematic bias affect results.</p>
 <p><strong>What it does:</strong> Fits models with bias-handling mechanisms and compares results to unbiased model.</p>
 <section class="level3"><h3 id="publication-bias-selection-models">Publication Bias (Selection Models)<a class="anchor" aria-label="anchor" href="#publication-bias-selection-models"></a>
 </h3>
-<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb40"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Fit selection model</span></span>
 <span><span class="va">fit_selection</span> <span class="op">&lt;-</span> <span class="fu">bayesma</span><span class="fu">::</span><span class="fu"><a href="../reference/bayesma.html">bayesma</a></span><span class="op">(</span></span>
 <span>  data <span class="op">=</span> <span class="va">meta_data</span>,</span>
@@ -828,7 +923,7 @@
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">comparison_bias</span><span class="op">)</span></span></code></pre></div>
 </section><section class="level3"><h3 id="small-study-effects-pet-peese">Small-Study Effects (PET-PEESE)<a class="anchor" aria-label="anchor" href="#small-study-effects-pet-peese"></a>
 </h3>
-<div class="sourceCode" id="cb37"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb41"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># PET-PEESE regression</span></span>
 <span><span class="va">fit_pet_peese</span> <span class="op">&lt;-</span> <span class="fu">bayesma</span><span class="fu">::</span><span class="fu"><a href="../reference/bayesma.html">bayesma</a></span><span class="op">(</span></span>
 <span>  data <span class="op">=</span> <span class="va">meta_data</span>,</span>
@@ -846,7 +941,7 @@
 <span><span class="fu">bayesma</span><span class="fu">::</span><span class="fu"><a href="../reference/overall_plot.html">overall_plot</a></span><span class="op">(</span><span class="va">fit_pet_peese</span>, data <span class="op">=</span> <span class="va">meta_data</span><span class="op">)</span></span></code></pre></div>
 </section><section class="level3"><h3 id="systematic-study-bias-bias-corrected-model">Systematic Study Bias (Bias-Corrected Model)<a class="anchor" aria-label="anchor" href="#systematic-study-bias-bias-corrected-model"></a>
 </h3>
-<div class="sourceCode" id="cb38"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb42"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Bias-corrected model: assumes some studies have systematic bias</span></span>
 <span><span class="va">fit_bias_corrected</span> <span class="op">&lt;-</span> <span class="fu">bayesma</span><span class="fu">::</span><span class="fu"><a href="../reference/bayesma.html">bayesma</a></span><span class="op">(</span></span>
 <span>  data <span class="op">=</span> <span class="va">meta_data</span>,</span>
@@ -871,7 +966,7 @@
 </section><section class="level3"><h3 id="robust-model-averaging-robma-1">Robust Model Averaging (RoBMA)<a class="anchor" aria-label="anchor" href="#robust-model-averaging-robma-1"></a>
 </h3>
 <p>Fit multiple bias models simultaneously and average:</p>
-<div class="sourceCode" id="cb39"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb43"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">robma_fit</span> <span class="op">&lt;-</span> <span class="fu">bayesma</span><span class="fu">::</span><span class="fu"><a href="../reference/robma.html">robma</a></span><span class="op">(</span></span>
 <span>  data <span class="op">=</span> <span class="va">meta_data</span>,</span>
 <span>  studyvar <span class="op">=</span> <span class="va">study</span>,</span>
@@ -890,7 +985,7 @@
 </section><section class="level3"><h3 id="egger-regression">Egger Regression<a class="anchor" aria-label="anchor" href="#egger-regression"></a>
 </h3>
 <p>Visual test for publication bias:</p>
-<div class="sourceCode" id="cb40"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb44"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fit_egger</span> <span class="op">&lt;-</span> <span class="fu">bayesma</span><span class="fu">::</span><span class="fu"><a href="../reference/egger.html">egger</a></span><span class="op">(</span></span>
 <span>  data <span class="op">=</span> <span class="va">meta_data</span>,</span>
 <span>  studyvar <span class="op">=</span> <span class="va">study</span>,</span>
@@ -913,19 +1008,19 @@
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">slope_summary</span><span class="op">)</span></span></code></pre></div>
 </section><section class="level3"><h3 id="funnel-plot">Funnel Plot<a class="anchor" aria-label="anchor" href="#funnel-plot"></a>
 </h3>
-<div class="sourceCode" id="cb41"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb45"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Standard funnel plot</span></span>
 <span><span class="fu">bayesma</span><span class="fu">::</span><span class="fu"><a href="../reference/funnel_plot.html">funnel_plot</a></span><span class="op">(</span><span class="va">fit_re</span>, data <span class="op">=</span> <span class="va">meta_data</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># With publication bias correction</span></span>
 <span><span class="fu">bayesma</span><span class="fu">::</span><span class="fu"><a href="../reference/funnel_plot.html">funnel_plot</a></span><span class="op">(</span><span class="va">fit_selection</span>, data <span class="op">=</span> <span class="va">meta_data</span><span class="op">)</span></span></code></pre></div>
-<hr></section></section><section class="level2"><h2 id="stage-10-subgroup-moderation-analysis">Stage 10: Subgroup &amp; Moderation Analysis<a class="anchor" aria-label="anchor" href="#stage-10-subgroup-moderation-analysis"></a>
+<hr></section></section><section class="level2"><h2 id="stage-11-subgroup-moderation-analysis">Stage 11: Subgroup &amp; Moderation Analysis<a class="anchor" aria-label="anchor" href="#stage-11-subgroup-moderation-analysis"></a>
 </h2>
 <p><strong>When to use:</strong> Exploring effect modification (e.g., does efficacy vary by age group, intervention type, or study quality?)</p>
 <p><strong>What it does:</strong> Fits meta-regression models with study-level moderators.</p>
 <section class="level3"><h3 id="model-specification">Model Specification<a class="anchor" aria-label="anchor" href="#model-specification"></a>
 </h3>
-<div class="sourceCode" id="cb42"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb46"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">spec</span> <span class="op">&lt;-</span> <span class="fu">bayesma</span><span class="fu">::</span><span class="fu">meta_reg_spec</span><span class="op">(</span></span>
 <span>  data <span class="op">=</span> <span class="va">meta_data</span>,</span>
 <span>  studyvar <span class="op">=</span> <span class="va">study</span>,</span>
@@ -948,7 +1043,7 @@
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">spec</span><span class="op">)</span></span></code></pre></div>
 </section><section class="level3"><h3 id="fitting">Fitting<a class="anchor" aria-label="anchor" href="#fitting"></a>
 </h3>
-<div class="sourceCode" id="cb43"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb47"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">mreg_fit</span> <span class="op">&lt;-</span> <span class="fu">bayesma</span><span class="fu">::</span><span class="fu"><a href="../reference/meta_reg.html">meta_reg</a></span><span class="op">(</span></span>
 <span>  data <span class="op">=</span> <span class="va">meta_data</span>,</span>
 <span>  studyvar <span class="op">=</span> <span class="va">study</span>,</span>
@@ -966,7 +1061,7 @@
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">mreg_fit</span><span class="op">)</span></span></code></pre></div>
 </section><section class="level3"><h3 id="results">Results<a class="anchor" aria-label="anchor" href="#results"></a>
 </h3>
-<div class="sourceCode" id="cb44"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb48"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Extract moderator coefficients</span></span>
 <span><span class="va">mreg_effects</span> <span class="op">&lt;-</span> <span class="fu">bayesma</span><span class="fu">::</span><span class="fu">extract_summary</span><span class="op">(</span><span class="va">mreg_fit</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">grepl</a></span><span class="op">(</span><span class="st">"beta"</span>, <span class="va">variable</span><span class="op">)</span><span class="op">)</span></span>
@@ -989,7 +1084,7 @@
 </section><section class="level3"><h3 id="continuous-moderators">Continuous Moderators<a class="anchor" aria-label="anchor" href="#continuous-moderators"></a>
 </h3>
 <p>For a continuous moderator (e.g., study year), plot the regression surface:</p>
-<div class="sourceCode" id="cb45"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb49"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Data with new study years to predict</span></span>
 <span><span class="va">new_years</span> <span class="op">&lt;-</span> <span class="fu">tibble</span><span class="fu">::</span><span class="fu"><a href="https://tibble.tidyverse.org/reference/tibble.html" class="external-link">tibble</a></span><span class="op">(</span>study_year <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">2010</span>, <span class="fl">2025</span>, by <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
@@ -1005,7 +1100,7 @@
 </section><section class="level3"><h3 id="categorical-moderators">Categorical Moderators<a class="anchor" aria-label="anchor" href="#categorical-moderators"></a>
 </h3>
 <p>For categorical moderators (e.g., intervention type), compare subgroups:</p>
-<div class="sourceCode" id="cb46"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb50"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Summarize effects by subgroup</span></span>
 <span><span class="va">subgroup_summary</span> <span class="op">&lt;-</span> <span class="va">mreg_fit</span><span class="op">$</span><span class="va">summary</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">grepl</a></span><span class="op">(</span><span class="st">"beta_intervention"</span>, <span class="va">variable</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
@@ -1014,14 +1109,14 @@
 <span>  <span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">subgroup_summary</span><span class="op">)</span></span></code></pre></div>
-<hr></section></section><section class="level2"><h2 id="stage-11-sensitivity-analysis">Stage 11: Sensitivity Analysis<a class="anchor" aria-label="anchor" href="#stage-11-sensitivity-analysis"></a>
+<hr></section></section><section class="level2"><h2 id="stage-12-sensitivity-analysis">Stage 12: Sensitivity Analysis<a class="anchor" aria-label="anchor" href="#stage-12-sensitivity-analysis"></a>
 </h2>
 <p><strong>When to use:</strong> Assessing robustness to modeling assumptions and data decisions.</p>
 <p><strong>What it does:</strong> Refits models under different assumptions and summarizes how results change.</p>
 <section class="level3"><h3 id="prior-sensitivity">Prior Sensitivity<a class="anchor" aria-label="anchor" href="#prior-sensitivity"></a>
 </h3>
 <p>Does the posterior depend on the prior?</p>
-<div class="sourceCode" id="cb47"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb51"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Fit with weak prior</span></span>
 <span><span class="va">spec_weak</span> <span class="op">&lt;-</span> <span class="fu">bayesma</span><span class="fu">::</span><span class="fu">bayesma_spec</span><span class="op">(</span></span>
 <span>  data <span class="op">=</span> <span class="va">meta_data</span>,</span>
@@ -1055,7 +1150,7 @@
 </section><section class="level3"><h3 id="studies-included-sensitivity">Studies-Included Sensitivity<a class="anchor" aria-label="anchor" href="#studies-included-sensitivity"></a>
 </h3>
 <p>Does the conclusion hold when excluding studies?</p>
-<div class="sourceCode" id="cb48"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb52"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Remove outliers or studies with concerns</span></span>
 <span><span class="va">meta_subset</span> <span class="op">&lt;-</span> <span class="va">meta_data</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="op">!</span><span class="va">study</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Outlier 2020"</span>, <span class="st">"Flagged 2021"</span><span class="op">)</span><span class="op">)</span></span>
@@ -1075,7 +1170,7 @@
 </section><section class="level3"><h3 id="robma-sensitivity">ROBMA Sensitivity<a class="anchor" aria-label="anchor" href="#robma-sensitivity"></a>
 </h3>
 <p>Automated sensitivity across multiple bias assumptions:</p>
-<div class="sourceCode" id="cb49"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb53"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># RoBMA includes implicit sensitivity via model averaging</span></span>
 <span><span class="va">robma_fit</span> <span class="op">&lt;-</span> <span class="fu">bayesma</span><span class="fu">::</span><span class="fu"><a href="../reference/robma.html">robma</a></span><span class="op">(</span></span>
 <span>  data <span class="op">=</span> <span class="va">meta_data</span>,</span>
@@ -1093,7 +1188,7 @@
 </section><section class="level3"><h3 id="likelihood-sensitivity-one-stage-vs-two-stage">Likelihood Sensitivity (One-Stage vs Two-Stage)<a class="anchor" aria-label="anchor" href="#likelihood-sensitivity-one-stage-vs-two-stage"></a>
 </h3>
 <p>Does the stage of analysis matter?</p>
-<div class="sourceCode" id="cb50"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb54"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fit_1s</span> <span class="op">&lt;-</span> <span class="fu">bayesma</span><span class="fu">::</span><span class="fu"><a href="../reference/bayesma.html">bayesma</a></span><span class="op">(</span></span>
 <span>  data <span class="op">=</span> <span class="va">meta_data</span>,</span>
 <span>  studyvar <span class="op">=</span> <span class="va">study</span>,</span>
@@ -1120,7 +1215,7 @@
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">comparison_stage</span><span class="op">)</span></span></code></pre></div>
 </section><section class="level3"><h3 id="random-effects-distribution-sensitivity">Random Effects Distribution Sensitivity<a class="anchor" aria-label="anchor" href="#random-effects-distribution-sensitivity"></a>
 </h3>
-<div class="sourceCode" id="cb51"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb55"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fit_normal</span> <span class="op">&lt;-</span> <span class="fu">bayesma</span><span class="fu">::</span><span class="fu"><a href="../reference/bayesma.html">bayesma</a></span><span class="op">(</span></span>
 <span>  data <span class="op">=</span> <span class="va">meta_data</span>,</span>
 <span>  studyvar <span class="op">=</span> <span class="va">study</span>,</span>
@@ -1153,7 +1248,7 @@
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">comparison_re</span><span class="op">)</span></span></code></pre></div>
 </section><section class="level3"><h3 id="automated-sensitivity-plots">Automated Sensitivity Plots<a class="anchor" aria-label="anchor" href="#automated-sensitivity-plots"></a>
 </h3>
-<div class="sourceCode" id="cb52"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb56"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Create sensitivity plot object</span></span>
 <span><span class="va">sens_plot</span> <span class="op">&lt;-</span> <span class="fu">bayesma</span><span class="fu">::</span><span class="fu"><a href="../reference/sensitivity_plot.html">sensitivity_plot</a></span><span class="op">(</span></span>
 <span>  <span class="va">fit_re</span>,</span>
@@ -1172,7 +1267,7 @@
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">sens_rendered</span><span class="op">)</span></span></code></pre></div>
 </section><section class="level3"><h3 id="for-robma-robust-model-averaging-sensitivity">For RoBMA: Robust Model Averaging Sensitivity<a class="anchor" aria-label="anchor" href="#for-robma-robust-model-averaging-sensitivity"></a>
 </h3>
-<div class="sourceCode" id="cb53"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb57"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># RoBMA automatically averages over multiple bias assumptions</span></span>
 <span><span class="va">robma_fit</span> <span class="op">&lt;-</span> <span class="fu">bayesma</span><span class="fu">::</span><span class="fu"><a href="../reference/robma.html">robma</a></span><span class="op">(</span></span>
 <span>  data <span class="op">=</span> <span class="va">meta_data</span>,</span>
@@ -1190,7 +1285,7 @@
 <span><span class="fu">bayesma</span><span class="fu">::</span><span class="fu">bayes_forest</span><span class="op">(</span><span class="va">robma_fit</span>, data <span class="op">=</span> <span class="va">meta_data</span><span class="op">)</span></span></code></pre></div>
 </section><section class="level3"><h3 id="robma-sensitivity-plot">ROBMA Sensitivity Plot<a class="anchor" aria-label="anchor" href="#robma-sensitivity-plot"></a>
 </h3>
-<div class="sourceCode" id="cb54"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb58"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Visualize robustness: how does effect estimate change with assumption?</span></span>
 <span><span class="va">robma_sensitivity</span> <span class="op">&lt;-</span> <span class="fu">bayesma</span><span class="fu">::</span><span class="fu"><a href="../reference/robma_sensitivity.html">robma_sensitivity</a></span><span class="op">(</span></span>
 <span>  <span class="va">robma_fit</span>,</span>
@@ -1203,13 +1298,13 @@
 <span></span>
 <span><span class="co"># Plot</span></span>
 <span><span class="fu">bayesma</span><span class="fu">::</span><span class="fu"><a href="../reference/render_sensitivity_patchwork.html">render_sensitivity_patchwork</a></span><span class="op">(</span><span class="va">robma_sensitivity</span><span class="op">)</span></span></code></pre></div>
-<hr></section></section><section class="level2"><h2 id="stage-12-interpretation-reporting">Stage 12: Interpretation &amp; Reporting<a class="anchor" aria-label="anchor" href="#stage-12-interpretation-reporting"></a>
+<hr></section></section><section class="level2"><h2 id="stage-13-interpretation-reporting">Stage 13: Interpretation &amp; Reporting<a class="anchor" aria-label="anchor" href="#stage-13-interpretation-reporting"></a>
 </h2>
 <p><strong>When to use:</strong> Summarizing findings for publication or stakeholders.</p>
 <p><strong>What it does:</strong> Extracts and formats results, confidence intervals, and evidential summaries.</p>
 <section class="level3"><h3 id="summary-statistics">Summary Statistics<a class="anchor" aria-label="anchor" href="#summary-statistics"></a>
 </h3>
-<div class="sourceCode" id="cb55"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb59"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Get all summary statistics</span></span>
 <span><span class="va">summary_df</span> <span class="op">&lt;-</span> <span class="va">fit_re</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">bayesma</span><span class="fu">::</span><span class="fu">extract_summary</span><span class="op">(</span><span class="op">)</span></span>
@@ -1233,7 +1328,7 @@
 <span>    <span class="st">"("</span>, <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">tau_summary</span><span class="op">$</span><span class="va">q2.5</span>, <span class="fl">3</span><span class="op">)</span>, <span class="st">" to "</span>, <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">tau_summary</span><span class="op">$</span><span class="va">q97.5</span>, <span class="fl">3</span><span class="op">)</span>, <span class="st">")\n"</span><span class="op">)</span></span></code></pre></div>
 </section><section class="level3"><h3 id="probability-of-effect-direction-magnitude">Probability of Effect Direction &amp; Magnitude<a class="anchor" aria-label="anchor" href="#probability-of-effect-direction-magnitude"></a>
 </h3>
-<div class="sourceCode" id="cb56"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb60"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># P(θ &gt; 0) — probability effect is positive</span></span>
 <span><span class="va">theta_draws</span> <span class="op">&lt;-</span> <span class="va">fit_re</span><span class="op">$</span><span class="va">draws</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">posterior</span><span class="fu">::</span><span class="fu"><a href="https://mc-stan.org/posterior/reference/subset_draws.html" class="external-link">subset_draws</a></span><span class="op">(</span>variable <span class="op">=</span> <span class="st">"mu"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
@@ -1248,7 +1343,7 @@
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"P(effect in [−0.1, 0.1]):"</span>, <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">prob_null</span>, <span class="fl">3</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span></code></pre></div>
 </section><section class="level3"><h3 id="bayes-factor-coefficient-of-evidence">Bayes Factor &amp; Coefficient of Evidence<a class="anchor" aria-label="anchor" href="#bayes-factor-coefficient-of-evidence"></a>
 </h3>
-<div class="sourceCode" id="cb57"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb61"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Bayes factor: null (θ = 0) vs. alternative</span></span>
 <span><span class="va">bf_null</span> <span class="op">&lt;-</span> <span class="fu">bayesma</span><span class="fu">::</span><span class="fu"><a href="../reference/coefficient_evidence.html">coefficient_evidence</a></span><span class="op">(</span><span class="va">fit_re</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">bf_null</span><span class="op">)</span></span>
@@ -1264,7 +1359,7 @@
 <span><span class="op">}</span></span></code></pre></div>
 </section><section class="level3"><h3 id="model-weights-robma">Model Weights (RoBMA)<a class="anchor" aria-label="anchor" href="#model-weights-robma"></a>
 </h3>
-<div class="sourceCode" id="cb58"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb62"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Posterior model probabilities</span></span>
 <span><span class="va">robma_summary</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">robma_fit</span><span class="op">)</span></span>
 <span></span>
@@ -1282,7 +1377,7 @@
 <span>    <span class="st">"("</span>, <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">effect_weighted</span><span class="op">$</span><span class="va">q2.5</span>, <span class="fl">3</span><span class="op">)</span>, <span class="st">" to "</span>, <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">effect_weighted</span><span class="op">$</span><span class="va">q97.5</span>, <span class="fl">3</span><span class="op">)</span>, <span class="st">")\n"</span><span class="op">)</span></span></code></pre></div>
 </section><section class="level3"><h3 id="publication-ready-tables">Publication-Ready Tables<a class="anchor" aria-label="anchor" href="#publication-ready-tables"></a>
 </h3>
-<div class="sourceCode" id="cb59"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb63"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Forest plot table</span></span>
 <span><span class="va">forest_table</span> <span class="op">&lt;-</span> <span class="fu">bayesma</span><span class="fu">::</span><span class="fu">bayes_forest</span><span class="op">(</span><span class="va">fit_re</span>, data <span class="op">=</span> <span class="va">meta_data</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">forest_table</span><span class="op">)</span></span>
@@ -1299,31 +1394,6 @@
 <span><span class="va">robma_sens</span> <span class="op">&lt;-</span> <span class="fu">bayesma</span><span class="fu">::</span><span class="fu"><a href="../reference/robma_sensitivity.html">robma_sensitivity</a></span><span class="op">(</span><span class="va">robma_fit</span>, data <span class="op">=</span> <span class="va">meta_data</span>, studyvar <span class="op">=</span> <span class="va">study</span><span class="op">)</span></span>
 <span><span class="va">sensitivity_table</span> <span class="op">&lt;-</span> <span class="fu">bayesma</span><span class="fu">::</span><span class="fu"><a href="../reference/robma_table.html">robma_table</a></span><span class="op">(</span><span class="va">robma_sens</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">sensitivity_table</span><span class="op">)</span></span></code></pre></div>
-</section><section class="level3"><h3 id="diagnostic-plots">Diagnostic Plots<a class="anchor" aria-label="anchor" href="#diagnostic-plots"></a>
-</h3>
-<p><strong>MCMC Diagnostics:</strong></p>
-<div class="sourceCode" id="cb60"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Trace plots (visual inspection for convergence)</span></span>
-<span><span class="fu">bayesplot</span><span class="fu">::</span><span class="fu"><a href="https://mc-stan.org/bayesplot/reference/MCMC-traces.html" class="external-link">mcmc_trace</a></span><span class="op">(</span><span class="va">fit_re</span><span class="op">$</span><span class="va">fit</span><span class="op">$</span><span class="fu">draws</span><span class="op">(</span><span class="op">)</span>, variables <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"mu"</span>, <span class="st">"tau"</span><span class="op">)</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Rhat (potential scale reduction factor; should be &lt; 1.01)</span></span>
-<span><span class="va">fit_re</span><span class="op">$</span><span class="va">fit</span><span class="op">$</span><span class="fu">summary</span><span class="op">(</span>variables <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"mu"</span>, <span class="st">"tau"</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">variable</span>, <span class="va">rhat</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Effective sample size</span></span>
-<span><span class="va">fit_re</span><span class="op">$</span><span class="va">fit</span><span class="op">$</span><span class="fu">summary</span><span class="op">(</span>variables <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"mu"</span>, <span class="st">"tau"</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">variable</span>, <span class="va">ess_bulk</span>, <span class="va">ess_tail</span><span class="op">)</span></span></code></pre></div>
-<p><strong>Posterior Predictive Checks:</strong></p>
-<div class="sourceCode" id="cb61"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Do the posterior predictions match the observed data?</span></span>
-<span><span class="fu">bayesma</span><span class="fu">::</span><span class="fu"><a href="../reference/pp_check.html">pp_check</a></span><span class="op">(</span><span class="va">fit_re</span>, type <span class="op">=</span> <span class="st">"dens_overlay"</span><span class="op">)</span></span>
-<span><span class="fu">bayesma</span><span class="fu">::</span><span class="fu"><a href="../reference/pp_check.html">pp_check</a></span><span class="op">(</span><span class="va">fit_re</span>, type <span class="op">=</span> <span class="st">"stat"</span>, stat <span class="op">=</span> <span class="st">"median"</span><span class="op">)</span></span></code></pre></div>
-<p><strong>Bias Diagnostics:</strong></p>
-<div class="sourceCode" id="cb62"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Pareto k values (influential observations)</span></span>
-<span><span class="fu">bayesma</span><span class="fu">::</span><span class="fu"><a href="../reference/diagnostics.html">diagnostics</a></span><span class="op">(</span><span class="va">fit_re</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># If high k values, those studies are influential</span></span></code></pre></div>
 </section><section class="level3"><h3 id="publication-checklist">Publication Checklist<a class="anchor" aria-label="anchor" href="#publication-checklist"></a>
 </h3>
 <p>Ensure you report:</p>
@@ -1335,6 +1405,7 @@
 <li><label><input type="checkbox"><strong>Main Result</strong> — Pooled effect (point estimate + 95% CrI), τ (heterogeneity)</label></li>
 <li><label><input type="checkbox"><strong>Model Justification</strong> — Why random-effects? Why this likelihood? Prior specification.</label></li>
 <li><label><input type="checkbox"><strong>Model Comparison</strong> — LOSO-CV or LOO-IC results comparing main models</label></li>
+<li><label><input type="checkbox"><strong>Model Diagnostics</strong> — Rhat &lt; 1.01, ESS &gt; 400, zero divergences, posterior predictive check</label></li>
 <li><label><input type="checkbox"><strong>Bias Assessment</strong> — Selection models, PET-PEESE, egger plots, robustness to model choice</label></li>
 <li><label><input type="checkbox"><strong>Subgroup Analysis</strong> — Meta-regression results (if applicable)</label></li>
 <li><label><input type="checkbox"><strong>Sensitivity Analysis</strong> — Prior sensitivity, studies-excluded sensitivity, random-effects distribution sensitivity</label></li>
@@ -1344,7 +1415,7 @@
 <hr></section></section><section class="level2"><h2 id="example-workflow-end-to-end">Example Workflow End-to-End<a class="anchor" aria-label="anchor" href="#example-workflow-end-to-end"></a>
 </h2>
 <p>Below is a condensed example for a binary outcome:</p>
-<div class="sourceCode" id="cb63"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb64"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Load data</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">dat.smith2021</span>, package <span class="op">=</span> <span class="st">"bayesma"</span><span class="op">)</span></span>
 <span><span class="va">meta_data</span> <span class="op">&lt;-</span> <span class="va">dat.smith2021</span></span>
@@ -1402,16 +1473,20 @@
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">comparison</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Stage 8: Heterogeneity</span></span>
+<span><span class="co"># Stage 8: Model diagnostics</span></span>
+<span><span class="fu">bayesma</span><span class="fu">::</span><span class="fu"><a href="../reference/diagnostics.html">diagnostics</a></span><span class="op">(</span><span class="va">fit_re</span><span class="op">)</span></span>
+<span><span class="fu">bayesma</span><span class="fu">::</span><span class="fu"><a href="../reference/pp_check.html">pp_check</a></span><span class="op">(</span><span class="va">fit_re</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Stage 9: Heterogeneity</span></span>
 <span><span class="va">tau</span> <span class="op">&lt;-</span> <span class="fu">bayesma</span><span class="fu">::</span><span class="fu">extract_summary</span><span class="op">(</span><span class="va">fit_re</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">variable</span> <span class="op">==</span> <span class="st">"tau"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">tau</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Stage 9: Bias assessment</span></span>
+<span><span class="co"># Stage 10: Bias assessment</span></span>
 <span><span class="fu">bayesma</span><span class="fu">::</span><span class="fu"><a href="../reference/egger_plot.html">egger_plot</a></span><span class="op">(</span><span class="va">fit_selection</span>, data <span class="op">=</span> <span class="va">meta_data</span><span class="op">)</span></span>
 <span><span class="fu">bayesma</span><span class="fu">::</span><span class="fu"><a href="../reference/funnel_plot.html">funnel_plot</a></span><span class="op">(</span><span class="va">fit_re</span>, data <span class="op">=</span> <span class="va">meta_data</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Stage 10: Meta-regression (if moderators available)</span></span>
+<span><span class="co"># Stage 11: Meta-regression (if moderators available)</span></span>
 <span><span class="va">mreg_fit</span> <span class="op">&lt;-</span> <span class="fu">bayesma</span><span class="fu">::</span><span class="fu"><a href="../reference/meta_reg.html">meta_reg</a></span><span class="op">(</span></span>
 <span>  data <span class="op">=</span> <span class="va">meta_data</span>,</span>
 <span>  studyvar <span class="op">=</span> <span class="va">study</span>,</span>
@@ -1424,7 +1499,7 @@
 <span>  chains <span class="op">=</span> <span class="fl">4</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Stage 11: Sensitivity via ROBMA</span></span>
+<span><span class="co"># Stage 12: Sensitivity via ROBMA</span></span>
 <span><span class="va">robma_fit</span> <span class="op">&lt;-</span> <span class="fu">bayesma</span><span class="fu">::</span><span class="fu"><a href="../reference/robma.html">robma</a></span><span class="op">(</span></span>
 <span>  data <span class="op">=</span> <span class="va">meta_data</span>,</span>
 <span>  studyvar <span class="op">=</span> <span class="va">study</span>,</span>
@@ -1440,7 +1515,7 @@
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">robma_fit</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Stage 12: Results &amp; reporting</span></span>
+<span><span class="co"># Stage 13: Results &amp; reporting</span></span>
 <span><span class="va">summary_main</span> <span class="op">&lt;-</span> <span class="fu">bayesma</span><span class="fu">::</span><span class="fu">extract_summary</span><span class="op">(</span><span class="va">fit_re</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">variable</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"mu"</span>, <span class="st">"tau"</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>

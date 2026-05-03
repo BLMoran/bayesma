@@ -353,7 +353,7 @@ forest.data.summary_fn <- function(spread_df,
   forest.data.summary <- forest.data.summary |>
     dplyr::mutate(
       shrinkage_display = dplyr::case_when(
-        is.na(b_Intercept) & !Author %in% pooled_authors       ~ "",
+        is.na(b_Intercept) & !Author %in% pooled_authors       ~ "—",
         is.na(sd_Author__Intercept) & Author == "Pooled Effect" &
           isTRUE(has_re)                                        ~ "",
         .default = weighted_effect

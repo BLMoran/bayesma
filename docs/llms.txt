@@ -564,6 +564,17 @@ Preliminary investigation of meta-analytic data structure.
 - [`cont_outcome`](https://blmoran.github.io/bayesma/reference/cont_outcome.md)
   : Example Continuous Outcome Dataset
 
+## Data entry
+
+Tools for entering, formatting, and downloading study data.
+
+- [`study_table()`](https://blmoran.github.io/bayesma/reference/study_table.md)
+  : Create a Table of Included Studies
+- [`download_template()`](https://blmoran.github.io/bayesma/reference/download_template.md)
+  : Download a Data Entry Template
+- [`launch_data_entry()`](https://blmoran.github.io/bayesma/reference/launch_data_entry.md)
+  : Launch the bayesma Data Entry App
+
 ## Utilities
 
 - [`stan_code()`](https://blmoran.github.io/bayesma/reference/stan_code.md)

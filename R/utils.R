@@ -20,6 +20,25 @@ utils::globalVariables(c(
   "x_val", "xdist", "y", "yi"
 ))
 
+# ---- CmdStan output file check ----
+
+#' @noRd
+check_fit_accessible <- function(fit, call = rlang::caller_env()) {
+  files   <- tryCatch(fit$output_files(), error = function(e) character(0))
+  missing <- files[!file.exists(files)]
+  if (length(missing) > 0) {
+    cli::cli_abort(
+      c(
+        "Stan output files no longer exist.",
+        "i" = "cmdstanr stores draws in temporary CSV files that are deleted when the R session ends.",
+        "i" = "Re-run your model to restore the fit."
+      ),
+      call = call
+    )
+  }
+  invisible(TRUE)
+}
+
 # ---- CmdStan summary helper ----
 
 #' @noRd

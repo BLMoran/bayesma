@@ -22,13 +22,14 @@ meta-analysis. The stages are:
     selection, robust)
 7.  **Model Comparison** — Compare competing models via LOSO-CV or
     LOO-IC
-8.  **Heterogeneity Assessment** — Evaluate between-study variation
-9.  **Bias Assessment** — Detect and adjust for publication/reporting
+8.  **Model Diagnostics** — Assess MCMC convergence and posterior fit
+9.  **Heterogeneity Assessment** — Evaluate between-study variation
+10. **Bias Assessment** — Detect and adjust for publication/reporting
     bias
-10. **Subgroup & Moderation Analysis** — Explore effect modification
+11. **Subgroup & Moderation Analysis** — Explore effect modification
     (meta-regression)
-11. **Sensitivity Analysis** — Assess robustness to modeling choices
-12. **Interpretation & Reporting** — Summarize findings and communicate
+12. **Sensitivity Analysis** — Assess robustness to modeling choices
+13. **Interpretation & Reporting** — Summarize findings and communicate
     uncertainty
 
 ------------------------------------------------------------------------
@@ -673,7 +674,87 @@ bayesma::compare_table(comparison)
 
 ------------------------------------------------------------------------
 
-## Stage 8: Heterogeneity Assessment
+## Stage 8: Model Diagnostics
+
+**When to use:** After fitting any model — before proceeding to
+comparison, bias assessment, or inference.
+
+**What it does:** Evaluates MCMC convergence (trace plots, Rhat, ESS,
+autocorrelation) and model fit (posterior predictive check). Poor
+convergence invalidates downstream inference; a poor predictive check
+suggests the model misrepresents the data.
+
+### All-in-One Diagnostic Page
+
+[`diagnostics()`](https://blmoran.github.io/bayesma/reference/diagnostics.md)
+produces a single patchwork panel combining all key diagnostics:
+
+``` r
+bayesma::diagnostics(fit_re)
+```
+
+The page contains six panels:
+
+- **Trace plots** — chains should mix freely around a stable centre
+- **Posterior predictive check** — replicated data should resemble
+  observed data
+- **Rhat** — all parameters should be \< 1.01
+- **Effective sample size (bulk)** — should be \> 400 per parameter
+- **Autocorrelation** — should decay to zero within 10–20 lags
+- **MCMC diagnostics table** — divergences, max treedepth, E-BFMI
+
+### Posterior Predictive Check
+
+``` r
+# Default: density overlay
+bayesma::pp_check(fit_re)
+
+# Alternative plot types
+bayesma::pp_check(fit_re, type = "ecdf_overlay")
+bayesma::pp_check(fit_re, type = "stat", stat = "mean")
+bayesma::pp_check(fit_re, type = "stat", stat = "sd")
+```
+
+For a **prior predictive check** (verify priors are sensible *before*
+seeing data):
+
+``` r
+fit_prior <- bayesma::bayesma(
+  data = meta_data,
+  studyvar = study,
+  # ... outcome columns and model spec ...
+  sample_prior = TRUE   # Sample from prior, not posterior
+)
+
+# Visualize prior predictions vs. plausible data range
+bayesma::pp_check(fit_prior)
+```
+
+### Convergence Thresholds
+
+| Diagnostic    | Target  | Action if violated                  |
+|---------------|---------|-------------------------------------|
+| Rhat          | \< 1.01 | Increase `iter_warmup`, check model |
+| ESS bulk      | \> 400  | Increase `iter_sampling`            |
+| Divergences   | 0       | Increase `adapt_delta` (e.g. 0.99)  |
+| Max treedepth | 0 hits  | Increase `max_treedepth`            |
+| E-BFMI        | \> 0.3  | Reparameterise or adjust priors     |
+
+``` r
+# Re-run with stricter sampler settings if diagnostics flag issues
+fit_re <- bayesma::bayesma(
+  data = meta_data,
+  # ...
+  adapt_delta   = 0.99,
+  max_treedepth = 14
+)
+
+bayesma::diagnostics(fit_re)
+```
+
+------------------------------------------------------------------------
+
+## Stage 9: Heterogeneity Assessment
 
 **When to use:** Understanding variation between studies.
 
@@ -733,7 +814,7 @@ cat("95% prediction interval:",
 
 ------------------------------------------------------------------------
 
-## Stage 9: Bias Assessment
+## Stage 10: Bias Assessment
 
 **When to use:** Evaluating whether publication bias, small-study
 effects, or systematic bias affect results.
@@ -876,7 +957,7 @@ bayesma::funnel_plot(fit_selection, data = meta_data)
 
 ------------------------------------------------------------------------
 
-## Stage 10: Subgroup & Moderation Analysis
+## Stage 11: Subgroup & Moderation Analysis
 
 **When to use:** Exploring effect modification (e.g., does efficacy vary
 by age group, intervention type, or study quality?)
@@ -990,7 +1071,7 @@ print(subgroup_summary)
 
 ------------------------------------------------------------------------
 
-## Stage 11: Sensitivity Analysis
+## Stage 12: Sensitivity Analysis
 
 **When to use:** Assessing robustness to modeling assumptions and data
 decisions.
@@ -1205,7 +1286,7 @@ bayesma::render_sensitivity_patchwork(robma_sensitivity)
 
 ------------------------------------------------------------------------
 
-## Stage 12: Interpretation & Reporting
+## Stage 13: Interpretation & Reporting
 
 **When to use:** Summarizing findings for publication or stakeholders.
 
@@ -1314,40 +1395,6 @@ sensitivity_table <- bayesma::robma_table(robma_sens)
 print(sensitivity_table)
 ```
 
-### Diagnostic Plots
-
-**MCMC Diagnostics:**
-
-``` r
-# Trace plots (visual inspection for convergence)
-bayesplot::mcmc_trace(fit_re$fit$draws(), variables = c("mu", "tau"))
-
-# Rhat (potential scale reduction factor; should be < 1.01)
-fit_re$fit$summary(variables = c("mu", "tau")) |>
-  dplyr::select(variable, rhat)
-
-# Effective sample size
-fit_re$fit$summary(variables = c("mu", "tau")) |>
-  dplyr::select(variable, ess_bulk, ess_tail)
-```
-
-**Posterior Predictive Checks:**
-
-``` r
-# Do the posterior predictions match the observed data?
-bayesma::pp_check(fit_re, type = "dens_overlay")
-bayesma::pp_check(fit_re, type = "stat", stat = "median")
-```
-
-**Bias Diagnostics:**
-
-``` r
-# Pareto k values (influential observations)
-bayesma::diagnostics(fit_re)
-
-# If high k values, those studies are influential
-```
-
 ### Publication Checklist
 
 Ensure you report:
@@ -1369,6 +1416,9 @@ outcome, baseline characteristics)
 specification.
 
 **Model Comparison** — LOSO-CV or LOO-IC results comparing main models
+
+**Model Diagnostics** — Rhat \< 1.01, ESS \> 400, zero divergences,
+posterior predictive check
 
 **Bias Assessment** — Selection models, PET-PEESE, egger plots,
 robustness to model choice
@@ -1446,16 +1496,20 @@ comparison <- bayesma::compare_models(
 
 print(comparison)
 
-# Stage 8: Heterogeneity
+# Stage 8: Model diagnostics
+bayesma::diagnostics(fit_re)
+bayesma::pp_check(fit_re)
+
+# Stage 9: Heterogeneity
 tau <- bayesma::extract_summary(fit_re) |>
   dplyr::filter(variable == "tau")
 print(tau)
 
-# Stage 9: Bias assessment
+# Stage 10: Bias assessment
 bayesma::egger_plot(fit_selection, data = meta_data)
 bayesma::funnel_plot(fit_re, data = meta_data)
 
-# Stage 10: Meta-regression (if moderators available)
+# Stage 11: Meta-regression (if moderators available)
 mreg_fit <- bayesma::meta_reg(
   data = meta_data,
   studyvar = study,
@@ -1468,7 +1522,7 @@ mreg_fit <- bayesma::meta_reg(
   chains = 4
 )
 
-# Stage 11: Sensitivity via ROBMA
+# Stage 12: Sensitivity via ROBMA
 robma_fit <- bayesma::robma(
   data = meta_data,
   studyvar = study,
@@ -1484,7 +1538,7 @@ robma_fit <- bayesma::robma(
 
 print(robma_fit)
 
-# Stage 12: Results & reporting
+# Stage 13: Results & reporting
 summary_main <- bayesma::extract_summary(fit_re) |>
   dplyr::filter(variable %in% c("mu", "tau"))
 

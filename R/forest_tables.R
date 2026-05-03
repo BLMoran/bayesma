@@ -196,6 +196,11 @@ forest_table_right_fn <- function(df,
     gt::tab_options(column_labels.font.weight = "bold") |>
     gt::cols_align(align = "right") |>
     gt::cols_label(.list = create_rob_labels(df, estimand, has_re = has_re, incl_shrinkage = incl_shrinkage)) |>
+    gt::tab_style(
+      style = gt::cell_text(align = "center"),
+      locations = gt::cells_body(
+        columns = dplyr::any_of("shrinkage_display"),
+        rows = shrinkage_display == "—")) |>
     gt::tab_options(
       table.border.top.color = "white",
       table.border.bottom.color = "white",

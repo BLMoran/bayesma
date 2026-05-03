@@ -14,6 +14,7 @@
 <url><loc>https://blmoran.github.io/bayesma/articles/common-effect-random-effect.html</loc></url>
 <url><loc>https://blmoran.github.io/bayesma/articles/convergence-diagnostics.html</loc></url>
 <url><loc>https://blmoran.github.io/bayesma/articles/custom-models.html</loc></url>
+<url><loc>https://blmoran.github.io/bayesma/articles/data-entry.html</loc></url>
 <url><loc>https://blmoran.github.io/bayesma/articles/funnel-plots.html</loc></url>
 <url><loc>https://blmoran.github.io/bayesma/articles/index.html</loc></url>
 <url><loc>https://blmoran.github.io/bayesma/articles/inspect_sr.html</loc></url>
@@ -101,6 +102,7 @@
 <url><loc>https://blmoran.github.io/bayesma/reference/compute_null_range_probs.html</loc></url>
 <url><loc>https://blmoran.github.io/bayesma/reference/cont_outcome.html</loc></url>
 <url><loc>https://blmoran.github.io/bayesma/reference/diagnostics.html</loc></url>
+<url><loc>https://blmoran.github.io/bayesma/reference/download_template.html</loc></url>
 <url><loc>https://blmoran.github.io/bayesma/reference/ecdf_model_plot.html</loc></url>
 <url><loc>https://blmoran.github.io/bayesma/reference/ecdf_plot.html</loc></url>
 <url><loc>https://blmoran.github.io/bayesma/reference/ecdf_prior_plot.html</loc></url>
@@ -126,6 +128,7 @@
 <url><loc>https://blmoran.github.io/bayesma/reference/inspect_sr_table.html</loc></url>
 <url><loc>https://blmoran.github.io/bayesma/reference/inspect_summary_plot.html</loc></url>
 <url><loc>https://blmoran.github.io/bayesma/reference/interpret.html</loc></url>
+<url><loc>https://blmoran.github.io/bayesma/reference/launch_data_entry.html</loc></url>
 <url><loc>https://blmoran.github.io/bayesma/reference/meta_reg.html</loc></url>
 <url><loc>https://blmoran.github.io/bayesma/reference/meta_reg_extract.html</loc></url>
 <url><loc>https://blmoran.github.io/bayesma/reference/meta_reg_fit.html</loc></url>
@@ -167,6 +170,7 @@
 <url><loc>https://blmoran.github.io/bayesma/reference/sens_add.html</loc></url>
 <url><loc>https://blmoran.github.io/bayesma/reference/sensitivity_plot.html</loc></url>
 <url><loc>https://blmoran.github.io/bayesma/reference/stan_code.html</loc></url>
+<url><loc>https://blmoran.github.io/bayesma/reference/study_table.html</loc></url>
 <url><loc>https://blmoran.github.io/bayesma/reference/summary.bayesma.html</loc></url>
 <url><loc>https://blmoran.github.io/bayesma/reference/summary.bayesma_egger.html</loc></url>
 <url><loc>https://blmoran.github.io/bayesma/reference/verify_pvalue.html</loc></url>

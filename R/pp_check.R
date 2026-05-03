@@ -65,6 +65,9 @@ pp_check <- function(object, type = "dens_overlay", ndraws = 100, ...) {
     )
   }
 
+  # ---- Verify Stan output files still exist ----
+  check_fit_accessible(object$fit)
+
   # ---- Extract y_rep ----
   all_vars   <- posterior::variables(object$fit$draws())
   y_rep_vars <- grep("^y_rep\\[", all_vars, value = TRUE)

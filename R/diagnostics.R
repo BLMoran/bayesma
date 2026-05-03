@@ -49,6 +49,8 @@ diagnostics.bayesma <- function(object, pars = NULL, ndraws = 100, ...) {
     stop("object$fit is NULL. Expected a CmdStanMCMC object.", call. = FALSE)
   }
 
+  check_fit_accessible(object$fit)
+
   # ---- resolve stage and measure ----
   stage   <- object$meta$stage   %||% "unknown"
   measure <- object$meta$effect_label %||% "unknown"
