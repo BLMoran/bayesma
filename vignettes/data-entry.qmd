@@ -10,6 +10,9 @@ format:
     embed-resources: false
     resources:
       - shinylive-sw.js
+    include-in-header:
+      text: |
+        <script>document.head.insertAdjacentHTML('beforeend','<meta name="shinylive:serviceworker_dir" content=".">');</script>
 filters:
   - shinylive
 ---
