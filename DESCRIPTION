@@ -51,8 +51,12 @@ Imports:
     tidybayes,
     tidyr
 Suggests:
+    bslib,
     cmdstanr,
+    DT,
     quarto,
+    shiny,
+    shinylive,
     testthat (>= 3.0.0),
     tidyverse,
     withr

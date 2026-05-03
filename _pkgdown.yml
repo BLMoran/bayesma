@@ -37,6 +37,7 @@ navbar:
       - bias-heterogeneity
       - stan-code
       - workflow
+      - data-entry
       - reference
     right:
       - search
@@ -190,6 +191,10 @@ navbar:
         - text: Reporting Checklist
           href: articles/reporting-checklist.html
 
+    data-entry:
+      text: Data Entry
+      href: articles/data-entry.html
+
     reference:
       text: Reference
       menu:
@@ -287,6 +292,11 @@ articles:
       - stan-robust-outlier
       - stan-bias-adjusted-verde
       - stan-bias-adjusted-jung
+
+  - title: Data Entry
+    navbar: ~
+    contents:
+      - data-entry
 
   - title: The Meta-Analysis Workflow
     navbar: ~
@@ -425,6 +435,13 @@ reference:
     contents:
       - binary_outcome
       - cont_outcome
+
+  - title: Data entry
+    desc: Tools for entering, formatting, and downloading study data.
+    contents:
+      - study_table
+      - download_template
+      - launch_data_entry
 
   - title: Utilities
     contents:
