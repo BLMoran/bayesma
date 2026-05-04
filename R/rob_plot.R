@@ -12,7 +12,8 @@
 #' @param sort_subgroup_by Character string or vector specifying subgroup ordering.
 #'   Options: "alphabetical" (default) or a character vector of subgroup names in desired order.
 #' @param rob_tool Character string specifying the risk of bias tool used.
-#'   Options: "rob2" (default), "robins_i", "robins_e", or "quadas2".
+#'   Options: "rob2" (default), "rob2_crt", "rob2_xo", "robins_i", "robins_ii",
+#'   "robins_e", or "quadas2".
 #' @param add_rob_legend Logical indicating whether to add a legend explaining risk of bias symbols (default: FALSE).
 #' @param font Character string specifying the font family to use for the plot.
 #' @param title Character string for the plot title.
@@ -56,7 +57,9 @@ rob_plot <- function(data,
                      sort_studies_by = "author",
                      subgroup = FALSE,
                      sort_subgroup_by = "alphabetical",
-                     rob_tool = c("rob2", "robins_i", "robins_e", "quadas2"),
+                     rob_tool = c("rob2", "rob2_crt", "rob2_xo",
+                     "robins_i", "robins_ii", "robins_e",
+                     "quadas2"),
                      add_rob_legend = FALSE,
                      font = NULL,
                      title = NULL,
@@ -79,6 +82,14 @@ rob_plot <- function(data,
 
   if (!sort_studies_by %in% c("author", "year", "effect")) {
     stop("sort_studies_by must be one of 'author', 'year', or 'effect'")
+  }
+
+  # Collapse arm-level rows to one row per study — RoB is study-level.
+  dedupe_keys <- intersect(c("Author", "Year", if (isTRUE(subgroup)) "Subgroup"),
+                           names(data))
+  if (length(dedupe_keys) >= 2) {
+    data <- data |> dplyr::distinct(dplyr::pick(dplyr::all_of(dedupe_keys)),
+                                    .keep_all = TRUE)
   }
 
   # Handle different workflows for single vs subgroup plots

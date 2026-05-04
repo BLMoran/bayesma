@@ -1,0 +1,10 @@
+name: bayesma-data-entry
+title:
+username: blmoran
+account: blmoran
+server: connect.posit.cloud
+hostUrl: https://api.connect.posit.cloud/v1
+appId: 019df2c0-f0e0-e1fe-274c-b80a87774a31
+bundleId:
+url: https://connect.posit.cloud/blmoran/content/019df2c0-f0e0-e1fe-274c-b80a87774a31
+version: 1

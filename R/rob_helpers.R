@@ -102,7 +102,9 @@ create_rob_legend <- function(rob_tool, font = NULL) {
 #' Internal function to create risk of bias legend table
 #'
 #' @noRd
-rob_legend_fn <- function(rob_tool = c("rob2", "robins_i", "quadas2", "robins_e", "nos"),
+rob_legend_fn <- function(rob_tool = c("rob2", "rob2_crt", "rob2_xo",
+                                       "robins_i", "robins_ii", "robins_e",
+                                       "quadas2", "nos"),
                           font = NULL) {
 
   # Get domains for the specified tool
@@ -197,46 +199,78 @@ rob_legend_fn <- function(rob_tool = c("rob2", "robins_i", "quadas2", "robins_e"
 #' Internal function to get RoB domains for RoB legend
 #'
 #' @noRd
-get_rob_domains <- function(rob_tool = c("rob2", "robins_i", "quadas2", "robins_e"),
+get_rob_domains <- function(rob_tool = c("rob2", "rob2_crt", "rob2_xo",
+                                         "robins_i", "robins_ii", "robins_e",
+                                         "quadas2"),
                             full_text = TRUE) {
   rob_tool <- rlang::arg_match(rob_tool)
 
   domains <- switch(rob_tool,
-                    rob2 = c(
-                      D1 = "Bias arising from the randomization process",
-                      D2 = "Bias due to deviations from intended interventions",
-                      D3 = "Bias due to missing outcome data",
-                      D4 = "Bias in measurement of the outcome",
-                      D5 = "Bias in selection of the reported result",
-                      Overall = "Overall risk of bias"
-                    ),
-                    robins_i = c(
-                      D1 = "Bias due to confounding",
-                      D2 = "Bias in selection of participants into the study",
-                      D3 = "Bias in classification of interventions",
-                      D4 = "Bias due to deviations from intended interventions",
-                      D5 = "Bias due to missing data",
-                      D6 = "Bias in measurement of outcomes",
-                      D7 = "Bias in selection of the reported result",
-                      Overall = "Overall risk of bias"
-                    ),
-                    quadas2 = c(
-                      D1 = "Patient selection",
-                      D2 = "Index test(s)",
-                      D3 = "Reference standard",
-                      D4 = "Flow and timing",
-                      Overall = "Overall risk of bias"
-                    ),
-                    robins_e = c(
-                      D1 = "Bias due to confounding",
-                      D2 = "Bias in selection of participants into the study",
-                      D3 = "Bias in classification of exposures",
-                      D4 = "Bias due to departures from intended exposures",
-                      D5 = "Bias due to missing data",
-                      D6 = "Bias in measurement of outcomes",
-                      D7 = "Bias in selection of the reported result",
-                      Overall = "Overall risk of bias"
-                    )
+    rob2 = c(
+      D1 = "Bias arising from the randomisation process",
+      D2 = "Bias due to deviations from intended interventions",
+      D3 = "Bias due to missing outcome data",
+      D4 = "Bias in measurement of the outcome",
+      D5 = "Bias in selection of the reported result",
+      Overall = "Overall risk of bias"
+    ),
+    rob2_crt = c(
+      D1 = "Bias arising from the randomisation process",
+      D2 = "Bias in identification and recruitment of participants within clusters",
+      D3 = "Bias due to deviations from intended interventions",
+      D4 = "Bias due to missing outcome data",
+      D5 = "Bias in measurement of the outcome",
+      D6 = "Bias in selection of the reported result",
+      Overall = "Overall risk of bias"
+    ),
+    rob2_xo = c(
+      D1 = "Bias arising from the randomisation process (incl. carry-over and period effects)",
+      D2 = "Bias due to deviations from intended interventions",
+      D3 = "Bias due to missing outcome data",
+      D4 = "Bias in measurement of the outcome",
+      D5 = "Bias in selection of the reported result",
+      Overall = "Overall risk of bias"
+    ),
+    robins_i = c(
+      D1 = "Bias due to confounding",
+      D2 = "Bias in selection of participants into the study",
+      D3 = "Bias in classification of interventions",
+      D4 = "Bias due to deviations from intended interventions",
+      D5 = "Bias due to missing data",
+      D6 = "Bias in measurement of outcomes",
+      D7 = "Bias in selection of the reported result",
+      Overall = "Overall risk of bias"
+    ),
+    robins_ii = c(
+      D1 = "Bias due to confounding",
+      D2 = "Bias in selection of participants into the study",
+      D3 = "Bias in classification of interventions",
+      D4 = "Bias due to deviations from intended interventions",
+      D5 = "Bias due to missing data",
+      D6 = "Bias in measurement of outcomes",
+      D7 = "Bias in selection of the reported result",
+      Overall = "Overall risk of bias"
+    ),
+    robins_e = c(
+      D1 = "Bias due to confounding",
+      D2 = "Bias in selection of participants into the study",
+      D3 = "Bias in classification of exposures",
+      D4 = "Bias due to departures from intended exposures",
+      D5 = "Bias due to missing data",
+      D6 = "Bias in measurement of outcomes",
+      D7 = "Bias in selection of the reported result",
+      Overall = "Overall risk of bias"
+    ),
+    quadas2 = c(
+      PD1 = "Patient selection",
+      PD2 = "Index test(s)",
+      PD3 = "Reference standard",
+      PD4 = "Flow and timing",
+      AC1 = "Applicability: patient selection",
+      AC2 = "Applicability: index test",
+      AC3 = "Applicability: reference standard",
+      Overall = "Overall risk of bias"
+    )
   )
 
   if (isTRUE(full_text)){

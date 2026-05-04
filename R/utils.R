@@ -500,71 +500,101 @@ calc_fig_height <- function(n_rows, has_title = TRUE, per_row = 0.55, base = 1.5
 
 #' Internal function to get certain properties dependent on measure
 #'
+#' Likelihood-estimand-data mapping:
+#' - Binomial  → OR, RR, RD  (binary: Event_Control/Intervention, N_Control/Intervention)
+#' - Gaussian  → MD, SMD      (continuous: Mean, SD, N per arm)
+#' - Poisson   → IRR          (count/rate: Count + Exposure per arm)
+#' - Log-normal summary → HR  (pre-aggregated: HR and SE_HR)
+#' - Binomial single-arm → Proportion (N and Events, one arm)
+#'
 #' @noRd
 get_measure_properties <- function(measure) {
   switch(measure,
-         "OR" = list(
-           null_value = 1,
-           log_scale = TRUE,
-           x_label = "Odds Ratio (log scale)",
-           data_cols = c("Event_Control", "N_Control", "Event_Intervention", "N_Intervention")
-         ),
-         "HR" = list(
-           null_value = 1,
-           log_scale = TRUE,
-           x_label = "Hazard Ratio (log scale)",
-           data_cols = c("Event_Control", "N_Control", "Event_Intervention", "N_Intervention")
-         ),
-         "RR" = list(
-           null_value = 1,
-           log_scale = TRUE,
-           x_label = "Risk Ratio (log scale)",
-           data_cols = c("Event_Control", "N_Control", "Event_Intervention", "N_Intervention")
-         ),
-         "IRR" = list(
-           null_value = 1,
-           log_scale = TRUE,
-           x_label = "Incident Rate Ratio (log scale)",
-           data_cols = c("Event_Control", "N_Control", "Time_Control", "Event_Intervention", "N_Intervention", "Time_Intervention")
-         ),
-         "MD" = list(
-           null_value = 0,
-           log_scale = FALSE,
-           x_label = "Mean Difference",
-           data_cols = c("Mean_Control", "SD_Control", "N_Control", "Mean_Intervention", "SD_Intervention", "N_Intervention")
-         ),
-         "SMD" = list(
-           null_value = 0,
-           log_scale = FALSE,
-           x_label = "Standardised Mean Difference",
-           data_cols = c("Mean_Control", "SD_Control", "N_Control", "Mean_Intervention", "SD_Intervention", "N_Intervention")
-         ),
-         "RD" = ,
-         "ARR" = list(
-           null_value = 0,
-           log_scale = FALSE,
-           x_label = "Risk Difference",
-           data_cols = NULL
-         ),
-         "ATE" = list(
-           null_value = 0,
-           log_scale = FALSE,
-           x_label = "Average Treatment Effect",
-           data_cols = NULL
-         ),
-         "ATT" = list(
-           null_value = 0,
-           log_scale = FALSE,
-           x_label = "Average Treatment Effect on the Treated",
-           data_cols = NULL
-         ),
-         "CATE" = list(
-           null_value = 0,
-           log_scale = FALSE,
-           x_label = "Conditional Average Treatment Effect",
-           data_cols = NULL
-         ),
-         cli::cli_abort("Effect size must be one of: {.val OR}, {.val HR}, {.val RR}, {.val IRR}, {.val MD}, {.val SMD}, {.val RD}, {.val ARR}, {.val ATE}, {.val ATT}, {.val CATE}.")
+    "OR" = list(
+      null_value = 1,
+      log_scale  = TRUE,
+      likelihood = "binomial",
+      x_label    = "Odds Ratio (log scale)",
+      data_cols  = c("Event_Control", "N_Control", "Event_Intervention", "N_Intervention")
+    ),
+    "RR" = list(
+      null_value = 1,
+      log_scale  = TRUE,
+      likelihood = "binomial",
+      x_label    = "Risk Ratio (log scale)",
+      data_cols  = c("Event_Control", "N_Control", "Event_Intervention", "N_Intervention")
+    ),
+    "RD" = ,
+    "ARR" = list(
+      null_value = 0,
+      log_scale  = FALSE,
+      likelihood = "binomial",
+      x_label    = "Risk Difference",
+      data_cols  = c("Event_Control", "N_Control", "Event_Intervention", "N_Intervention")
+    ),
+    "HR" = list(
+      null_value = 1,
+      log_scale  = TRUE,
+      likelihood = "normal",
+      x_label    = "Hazard Ratio (log scale)",
+      data_cols  = c("N_Control", "N_Intervention", "HR", "CI_Lower", "CI_Upper")
+    ),
+    "IRR" = list(
+      null_value = 1,
+      log_scale  = TRUE,
+      likelihood = "poisson",
+      x_label    = "Incidence Rate Ratio (log scale)",
+      data_cols  = c("N_Control", "N_Intervention",
+                     "Count_Control", "Time_Control",
+                     "Count_Intervention", "Time_Intervention")
+    ),
+    "MD" = list(
+      null_value = 0,
+      log_scale  = FALSE,
+      likelihood = "gaussian",
+      x_label    = "Mean Difference",
+      data_cols  = c("Mean_Control", "SD_Control", "N_Control",
+                     "Mean_Intervention", "SD_Intervention", "N_Intervention")
+    ),
+    "SMD" = list(
+      null_value = 0,
+      log_scale  = FALSE,
+      likelihood = "gaussian",
+      x_label    = "Standardised Mean Difference",
+      data_cols  = c("Mean_Control", "SD_Control", "N_Control",
+                     "Mean_Intervention", "SD_Intervention", "N_Intervention")
+    ),
+    "Proportion" = list(
+      null_value = NULL,
+      log_scale  = FALSE,
+      likelihood = "binomial",
+      x_label    = "Proportion",
+      data_cols  = c("N", "Events")
+    ),
+    "ATE" = list(
+      null_value = 0,
+      log_scale  = FALSE,
+      likelihood = NULL,
+      x_label    = "Average Treatment Effect",
+      data_cols  = NULL
+    ),
+    "ATT" = list(
+      null_value = 0,
+      log_scale  = FALSE,
+      likelihood = NULL,
+      x_label    = "Average Treatment Effect on the Treated",
+      data_cols  = NULL
+    ),
+    "CATE" = list(
+      null_value = 0,
+      log_scale  = FALSE,
+      likelihood = NULL,
+      x_label    = "Conditional Average Treatment Effect",
+      data_cols  = NULL
+    ),
+    cli::cli_abort(
+      "Measure must be one of: {.val OR}, {.val RR}, {.val RD}, {.val ARR}, {.val HR}, {.val IRR}, {.val MD}, {.val SMD}, {.val Proportion}, {.val ATE}, {.val ATT}, {.val CATE}."
+    )
   )
 }
 

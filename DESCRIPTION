@@ -55,11 +55,12 @@ Suggests:
     cmdstanr,
     DT,
     quarto,
+    readxl,
     shiny,
-    shinylive,
     testthat (>= 3.0.0),
     tidyverse,
-    withr
+    withr,
+    writexl
 Additional_repositories:
     https://stan-dev.r-universe.dev
 VignetteBuilder: quarto
