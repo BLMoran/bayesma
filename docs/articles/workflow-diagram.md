@@ -112,9 +112,9 @@ Stage 8
 
 Trace plots, Rhat, ESS, posterior predictive check
 
-![](reference/figures/trace_plot.png)
+![](figures/trace_plot.png)
 
-![](reference/figures/pp_check.png)
+![](figures/pp_check.png)
 
 ![](data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjgiIHZpZXdib3g9IjAgMCAyMCAyOCI+PHBhdGggZD0iTTEwIDAgVjIyIE00IDE3IEwxMCAyNCBMMTYgMTciIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzlDQUFCOCIgc3Ryb2tlLXdpZHRoPSIxLjgiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgLz48L3N2Zz4=)
 
