@@ -169,6 +169,8 @@ navbar:
       text: The Meta-Analysis Workflow
       menu:
         - text: Overview & Workflow Diagram
+          href: articles/workflow-diagram.html
+        - text: Workflow Guide
           href: articles/workflow-guide.html
         - text: "---"
         - text: INSPECT-SR
@@ -301,6 +303,7 @@ articles:
   - title: The Meta-Analysis Workflow
     navbar: ~
     contents:
+      - workflow-diagram
       - workflow-guide
       - inspect_sr
       - primed
