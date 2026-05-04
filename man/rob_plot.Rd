@@ -10,7 +10,8 @@ rob_plot(
   sort_studies_by = "author",
   subgroup = FALSE,
   sort_subgroup_by = "alphabetical",
-  rob_tool = c("rob2", "robins_i", "robins_e", "quadas2"),
+  rob_tool = c("rob2", "rob2_crt", "rob2_xo", "robins_i", "robins_ii", "robins_e",
+    "quadas2"),
   add_rob_legend = FALSE,
   font = NULL,
   title = NULL,
@@ -33,7 +34,8 @@ Options: "author" (default), "year", or "effect".}
 Options: "alphabetical" (default) or a character vector of subgroup names in desired order.}
 
 \item{rob_tool}{Character string specifying the risk of bias tool used.
-Options: "rob2" (default), "robins_i", "robins_e", or "quadas2".}
+Options: "rob2" (default), "rob2_crt", "rob2_xo", "robins_i", "robins_ii",
+"robins_e", or "quadas2".}
 
 \item{add_rob_legend}{Logical indicating whether to add a legend explaining risk of bias symbols (default: FALSE).}
 

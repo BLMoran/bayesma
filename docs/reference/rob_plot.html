@@ -93,7 +93,8 @@ with options for single studies or subgroup analyses."><meta property="og:image"
   </ul></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-the-meta-analysis-workflow" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">The Meta-Analysis Workflow</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-the-meta-analysis-workflow"><li><a class="dropdown-item" href="../articles/workflow-guide.html">Overview &amp; Workflow Diagram</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-the-meta-analysis-workflow"><li><a class="dropdown-item" href="../articles/workflow-diagram.html">Overview &amp; Workflow Diagram</a></li>
+    <li><a class="dropdown-item" href="../articles/workflow-guide.html">Workflow Guide</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><a class="dropdown-item" href="../articles/inspect_sr.html">INSPECT-SR</a></li>
     <li><a class="dropdown-item" href="../articles/primed.html">PRIMED</a></li>
@@ -143,7 +144,8 @@ with options for single studies or subgroup analyses.</p>
 <span>  sort_studies_by <span class="op">=</span> <span class="st">"author"</span>,</span>
 <span>  subgroup <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  sort_subgroup_by <span class="op">=</span> <span class="st">"alphabetical"</span>,</span>
-<span>  rob_tool <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"rob2"</span>, <span class="st">"robins_i"</span>, <span class="st">"robins_e"</span>, <span class="st">"quadas2"</span><span class="op">)</span>,</span>
+<span>  rob_tool <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"rob2"</span>, <span class="st">"rob2_crt"</span>, <span class="st">"rob2_xo"</span>, <span class="st">"robins_i"</span>, <span class="st">"robins_ii"</span>, <span class="st">"robins_e"</span>,</span>
+<span>    <span class="st">"quadas2"</span><span class="op">)</span>,</span>
 <span>  add_rob_legend <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  font <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  title <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -181,7 +183,8 @@ Options: "alphabetical" (default) or a character vector of subgroup names in des
 
 <dt id="arg-rob-tool">rob_tool<a class="anchor" aria-label="anchor" href="#arg-rob-tool"></a></dt>
 <dd><p>Character string specifying the risk of bias tool used.
-Options: "rob2" (default), "robins_i", "robins_e", or "quadas2".</p></dd>
+Options: "rob2" (default), "rob2_crt", "rob2_xo", "robins_i", "robins_ii",
+"robins_e", or "quadas2".</p></dd>
 
 
 <dt id="arg-add-rob-legend">add_rob_legend<a class="anchor" aria-label="anchor" href="#arg-add-rob-legend"></a></dt>
