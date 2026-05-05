@@ -175,6 +175,30 @@ ALL_INSPECT_LABELS <- c(INSPECT_LABELS, INSPECT_CALC_LABELS)
 
 # ── Helpers ────────────────────────────────────────────────────────────────────
 
+COL_TYPE_CHOICES <- c("Text" = "text", "Integer" = "integer",
+                      "Numeric" = "numeric", "Date" = "date")
+
+coerce_col_type <- function(x, type) {
+  if (is.null(type) || identical(type, "text")) return(as.character(x))
+  v <- as.character(x)
+  v[v == ""] <- NA
+  out <- switch(type,
+    integer = suppressWarnings(as.integer(v)),
+    numeric = suppressWarnings(as.numeric(v)),
+    date    = suppressWarnings(as.Date(v)),
+    as.character(v)
+  )
+  out
+}
+
+apply_col_types <- function(df, types) {
+  if (is.null(types) || length(types) == 0 || nrow(df) == 0) return(df)
+  for (col in intersect(names(df), names(types))) {
+    df[[col]] <- coerce_col_type(df[[col]], types[[col]])
+  }
+  df
+}
+
 empty_df <- function(cols) {
   structure(
     replicate(length(cols), character(0), simplify = FALSE),
@@ -658,12 +682,16 @@ ui <- fluidPage(
       div(class = "card-header-custom",
         h5("Study Details"),
         div(
-          actionButton("add_study",     "Add study",
+          actionButton("add_study",      "Add study",
                        icon = icon("plus"),    class = "btn-sm btn-light"),
-          actionButton("add_col_study", "Add column",
+          actionButton("add_col_study",  "Add column",
                        icon = icon("columns"), class = "btn-sm btn-outline-light ms-2"),
-          actionButton("del_study",     "Remove selected",
-                       icon = icon("minus"),   class = "btn-sm btn-danger ms-2")
+          actionButton("manage_study",   "Manage columns",
+                       icon = icon("sliders"), class = "btn-sm btn-outline-light ms-2"),
+          actionButton("del_study",      "Remove row",
+                       icon = icon("minus"),   class = "btn-sm btn-danger ms-2"),
+          actionButton("clear_study",    "Clear section",
+                       icon = icon("trash"),   class = "btn-sm btn-danger ms-2")
         )
       ),
       div(class = "card-body border border-top-0 rounded-bottom p-3",
@@ -684,10 +712,14 @@ ui <- fluidPage(
         div(
           actionButton("add_outcome_btn",    "Add outcome",
                        icon = icon("plus"),       class = "btn-sm btn-light"),
+          actionButton("manage_outcome",     "Manage columns",
+                       icon = icon("sliders"),    class = "btn-sm btn-outline-light ms-2"),
           actionButton("del_outcome_row",    "Remove row",
                        icon = icon("minus"),      class = "btn-sm btn-danger ms-2"),
           actionButton("del_outcome_group",  "Remove outcome",
-                       icon = icon("table-columns"), class = "btn-sm btn-warning ms-2")
+                       icon = icon("table-columns"), class = "btn-sm btn-warning ms-2"),
+          actionButton("clear_outcome",      "Clear section",
+                       icon = icon("trash"),      class = "btn-sm btn-danger ms-2")
         )
       ),
       div(class = "card-body border border-top-0 rounded-bottom p-3",
@@ -737,7 +769,13 @@ ui <- fluidPage(
         div(class = "btn-bar mb-2",
           actionButton("sync_rob", "Sync studies",
                        icon = icon("arrows-rotate"), class = "btn-sm btn-outline-secondary",
-                       onclick = "$('.dataTable input:focus, .dataTable select:focus, .dataTable textarea:focus').blur();")
+                       onclick = "$('.dataTable input:focus, .dataTable select:focus, .dataTable textarea:focus').blur();"),
+          actionButton("manage_rob", "Manage columns",
+                       icon = icon("sliders"), class = "btn-sm btn-outline-secondary ms-2"),
+          actionButton("del_rob_row", "Remove row",
+                       icon = icon("minus"), class = "btn-sm btn-danger ms-2"),
+          actionButton("clear_rob", "Clear section",
+                       icon = icon("trash"), class = "btn-sm btn-danger ms-2")
         ),
         DTOutput("rob_tbl")
       )
@@ -765,7 +803,13 @@ ui <- fluidPage(
                        class = "btn-sm btn-outline-secondary"),
           actionButton("sync_inspect", "Sync studies",
                        icon = icon("arrows-rotate"), class = "btn-sm btn-outline-secondary ms-3",
-                       onclick = "$('.dataTable input:focus, .dataTable select:focus, .dataTable textarea:focus').blur();")
+                       onclick = "$('.dataTable input:focus, .dataTable select:focus, .dataTable textarea:focus').blur();"),
+          actionButton("manage_inspect", "Manage columns",
+                       icon = icon("sliders"), class = "btn-sm btn-outline-secondary ms-2"),
+          actionButton("del_inspect_row", "Remove row",
+                       icon = icon("minus"), class = "btn-sm btn-danger ms-2"),
+          actionButton("clear_inspect", "Clear section",
+                       icon = icon("trash"), class = "btn-sm btn-danger ms-2")
         ),
         uiOutput("inspect_sel_info"),
         p(class = "text-muted small mb-2",
@@ -827,6 +871,8 @@ server <- function(input, output, session) {
     outcome_defs = list(),
     rob          = empty_df(c("Author", "Year", ROB_DOMAIN_COLS[["rob2"]])),
     inspect      = empty_df(ALL_INSPECT_COLS),
+    types        = list(study = list(), outcome = list(),
+                        rob = list(), inspect = list()),
     sel_rob      = NULL,
     upload_rda_dfs = list(),
     sel_inspect  = NULL,
@@ -1560,27 +1606,181 @@ server <- function(input, output, session) {
     )
   }
 
+  # ── Manage columns / Clear section / Row delete ───────────────────────────
+
+  PROTECTED_COLS <- c("Author", "Year", "Study_Group")
+
+  open_manage_modal <- function(section) {
+    df    <- rv[[section]]
+    types <- rv$types[[section]] %||% list()
+    cols  <- names(df)
+    if (length(cols) == 0) {
+      showNotification("No columns to manage in this section.", type = "warning")
+      return()
+    }
+    rows <- lapply(seq_along(cols), function(i) {
+      col <- cols[i]
+      protected <- col %in% PROTECTED_COLS
+      div(class = "row g-2 align-items-center mb-1",
+        div(class = "col-6",
+          textInput(paste0("mc_name_", section, "_", i),
+                    label = if (i == 1) "Column name" else NULL,
+                    value = col, width = "100%")
+        ),
+        div(class = "col-5",
+          selectInput(paste0("mc_type_", section, "_", i),
+                      label = if (i == 1) "Type" else NULL,
+                      choices = COL_TYPE_CHOICES,
+                      selected = types[[col]] %||% "text",
+                      width = "100%")
+        ),
+        div(class = "col-1 text-end pt-3",
+          if (protected) tags$small("locked", class = "text-muted")
+          else checkboxInput(paste0("mc_drop_", section, "_", i),
+                             label = "drop", value = FALSE, width = "auto")
+        )
+      )
+    })
+    showModal(modalDialog(
+      title = paste("Manage columns —", tools::toTitleCase(section)),
+      size  = "l",
+      easyClose = TRUE,
+      tagList(
+        p(class = "small text-muted",
+          "Rename, set type, or drop columns. ",
+          strong(paste(PROTECTED_COLS, collapse = ", ")),
+          " cannot be dropped."),
+        do.call(tagList, rows),
+        tags$input(type = "hidden", id = paste0("mc_section"), value = section)
+      ),
+      footer = tagList(
+        modalButton("Cancel"),
+        actionButton("apply_manage_cols", "Apply", class = "btn-primary")
+      )
+    ))
+    session$userData$mc_section <- section
+  }
+
+  observeEvent(input$manage_study,   open_manage_modal("study"))
+  observeEvent(input$manage_outcome, open_manage_modal("outcome"))
+  observeEvent(input$manage_rob,     open_manage_modal("rob"))
+  observeEvent(input$manage_inspect, open_manage_modal("inspect"))
+
+  observeEvent(input$apply_manage_cols, {
+    section <- session$userData$mc_section
+    if (is.null(section)) { removeModal(); return() }
+    df    <- rv[[section]]
+    types <- rv$types[[section]] %||% list()
+    cols  <- names(df)
+    new_names <- cols
+    drop_idx  <- integer(0)
+    new_types <- list()
+    for (i in seq_along(cols)) {
+      old <- cols[i]
+      nm  <- trimws(input[[paste0("mc_name_", section, "_", i)]] %||% old)
+      tp  <- input[[paste0("mc_type_", section, "_", i)]] %||% "text"
+      drop <- isTRUE(input[[paste0("mc_drop_", section, "_", i)]])
+      if (drop && !old %in% PROTECTED_COLS) {
+        drop_idx <- c(drop_idx, i); next
+      }
+      if (!nzchar(nm) || (old %in% PROTECTED_COLS && nm != old)) nm <- old
+      new_names[i] <- nm
+      new_types[[nm]] <- tp
+    }
+    if (length(drop_idx) > 0) {
+      df <- df[, -drop_idx, drop = FALSE]
+      new_names <- new_names[-drop_idx]
+    }
+    if (anyDuplicated(new_names)) {
+      showNotification("Column names must be unique. Changes not applied.",
+                       type = "error")
+      return()
+    }
+    names(df) <- new_names
+    df <- apply_col_types(df, new_types)
+    rv[[section]]      <- df
+    rv$types[[section]] <- new_types
+    removeModal()
+    showNotification(paste("Updated", section, "columns."), type = "message")
+  })
+
+  # ── Clear section (with confirmation) ─────────────────────────────────────
+
+  open_clear_modal <- function(section) {
+    showModal(modalDialog(
+      title = paste("Clear", tools::toTitleCase(section), "section?"),
+      tagList(
+        p("This removes ", strong("all rows"), " from this section. ",
+          "Other sections are not affected. This cannot be undone."),
+        tags$input(type = "hidden", id = "clear_section_value", value = section)
+      ),
+      footer = tagList(
+        modalButton("Cancel"),
+        actionButton("confirm_clear_section", "Clear", class = "btn-danger")
+      ),
+      easyClose = TRUE
+    ))
+    session$userData$clear_section <- section
+  }
+
+  observeEvent(input$clear_study,   open_clear_modal("study"))
+  observeEvent(input$clear_outcome, open_clear_modal("outcome"))
+  observeEvent(input$clear_rob,     open_clear_modal("rob"))
+  observeEvent(input$clear_inspect, open_clear_modal("inspect"))
+
+  observeEvent(input$confirm_clear_section, {
+    section <- session$userData$clear_section
+    if (is.null(section)) { removeModal(); return() }
+    cols <- names(rv[[section]])
+    rv[[section]] <- empty_df(cols)
+    removeModal()
+    showNotification(paste("Cleared", section, "section."), type = "message")
+  })
+
+  # ── Row delete for RoB / Inspect ──────────────────────────────────────────
+
+  observeEvent(input$del_rob_row, {
+    sel <- input$rob_tbl_rows_selected
+    if (length(sel)) rv$rob <- rv$rob[-sel, , drop = FALSE]
+  })
+  observeEvent(input$del_inspect_row, {
+    sel <- input$inspect_tbl_rows_selected
+    if (length(sel)) rv$inspect <- rv$inspect[-sel, , drop = FALSE]
+  })
+
+  # ── Downloads (apply per-section types) ───────────────────────────────────
+
   output$dl_study <- downloadHandler(
     filename = function() paste0("study_details", dl_ext()),
-    content  = function(file) write_section(add_study_col(rv$study), file)
+    content  = function(file)
+      write_section(apply_col_types(add_study_col(rv$study), rv$types$study), file)
   )
   output$dl_outcome <- downloadHandler(
     filename = function() paste0("outcome_data", dl_ext()),
-    content  = function(file) write_section(add_study_col(rv$outcome), file)
+    content  = function(file)
+      write_section(apply_col_types(add_study_col(rv$outcome), rv$types$outcome), file)
   )
   output$dl_rob <- downloadHandler(
     filename = function() paste0("rob_data", dl_ext()),
-    content  = function(file) write_section(add_study_col(rv$rob), file)
+    content  = function(file)
+      write_section(apply_col_types(add_study_col(rv$rob), rv$types$rob), file)
   )
   output$dl_inspect <- downloadHandler(
     filename = function() paste0("inspect_sr", dl_ext()),
-    content  = function(file) write_section(add_study_col(rv$inspect), file)
+    content  = function(file)
+      write_section(apply_col_types(add_study_col(rv$inspect), rv$types$inspect), file)
   )
 
   output$dl_all <- downloadHandler(
     filename = function() paste0("bayesma_data", dl_ext()),
     content  = function(file) {
-      write_section(merge_all_sections(rv$study, rv$outcome, rv$rob, rv$inspect), file)
+      merged <- merge_all_sections(
+        apply_col_types(rv$study,   rv$types$study),
+        apply_col_types(rv$outcome, rv$types$outcome),
+        apply_col_types(rv$rob,     rv$types$rob),
+        apply_col_types(rv$inspect, rv$types$inspect)
+      )
+      write_section(merged, file)
     }
   )
 
