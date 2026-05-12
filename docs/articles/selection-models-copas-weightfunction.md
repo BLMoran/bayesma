@@ -209,3 +209,141 @@ analysis. *Biostatistics*, 1(3), 247–262.
 Vevea JL, Hedges LV (1995). A general linear model for estimating effect
 size in the presence of publication bias. *Psychometrika*, 60(3),
 419–435.
+
+## Stan Code
+
+### Vevea-Hedges weight-function model
+
+``` stan
+data {
+  int<lower=1> N;
+  int<lower=1> J;
+  vector[N] y;
+  vector<lower=0>[N] se;
+  array[N] int<lower=1> bin;        // p-value bin for each study
+  matrix[N, J] bin_probs;           // P(p in bin j | mu, tau) for each study
+}
+
+parameters {
+  real mu;
+  real<lower=0> tau;
+  simplex[J] w_raw;
+}
+
+transformed parameters {
+  vector[J] w = w_raw;
+  w[1] = 1.0;
+}
+
+model {
+  target += normal_lpdf(mu  | 0, 1);
+  target += cauchy_lpdf(tau | 0, 0.5);
+  for (j in 2:J) {
+    target += beta_lpdf(w[j] | 1, 1);
+  }
+
+  for (i in 1:N) {
+    real denom = dot_product(w, bin_probs[i]);
+    target += log(w[bin[i]]) + normal_lpdf(y[i] | mu, sqrt(square(se[i]) + square(tau)))
+            - log(denom);
+  }
+}
+
+generated quantities {
+  real b_Intercept = mu;
+}
+```
+
+### Copas selection model
+
+``` stan
+data {
+  int<lower=1> N;
+  vector[N] y;
+  vector<lower=0>[N] se;
+}
+
+parameters {
+  real mu;
+  real<lower=0> tau;
+  real gamma0;
+  real<lower=0> gamma1;
+  real<lower=-1, upper=1> rho;
+}
+
+model {
+  target += normal_lpdf(mu     | 0, 1);
+  target += cauchy_lpdf(tau    | 0, 0.5);
+  target += normal_lpdf(gamma0 | 0, 1);
+  target += normal_lpdf(gamma1 | 0, 1);
+  target += uniform_lpdf(rho   | -1, 1);
+
+  for (i in 1:N) {
+    real sigma_i = sqrt(square(se[i]) + square(tau));
+    real z_sel   = gamma0 + gamma1 / se[i];
+    real z_adj   = (z_sel + rho * (y[i] - mu) / sigma_i) / sqrt(1 - square(rho));
+
+    target += normal_lpdf(y[i] | mu, sigma_i) + normal_lcdf(z_adj | 0, 1)
+            - normal_lcdf(z_sel | 0, 1);
+  }
+}
+
+generated quantities {
+  real b_Intercept = mu;
+}
+```
+
+## Parameterisation
+
+**Vevea-Hedges**: The normalising denominator in the weighted likelihood
+ensures the model correctly accounts for the fact that only published
+studies are observed. The $`w_j`$ parameterisation treats the first bin
+(most significant) as the reference with $`w_1 = 1`$. Weaker
+significance bins have $`w_j \leq 1`$ by construction.
+
+**Copas**: $`\gamma_1 > 0`$ enforces the direction constraint: larger
+studies (smaller $`s_i`$) are more likely to be published. $`\rho`$
+captures the relationship between effect magnitude and publication.
+Positive $`\rho`$ means larger effects are more likely to be published
+(a common publication bias mechanism). The normalising denominator
+`normal_lcdf(z_sel | 0, 1)` corrects for the fact that only published
+studies are observed.
+
+## Known Sampling Difficulties
+
+**Vevea-Hedges**: The normalising denominator $`\sum_j w_j P(\ldots)`$
+depends on both $`\mu`$ and $`\tau`$, creating a complex likelihood
+surface. With many bins and small $`k`$, the $`w_j`$ posterior is
+multimodal. Increasing `adapt_delta` to 0.99 and using
+`iter_warmup = 2000` is recommended.
+
+**Copas**: The Copas likelihood is non-convex and can have multiple
+local modes in the $`(\mu, \rho)`$ space. Use at least 4 chains, inspect
+all traces, and run with `adapt_delta = 0.99`. The Copas model is not
+identified without prior information on either $`\gamma_0`$ or $`\rho`$;
+**bayesma** provides a sensitivity plot over a grid of
+$`(\gamma_0, \gamma_1)`$ values via
+`sensitivity_plot(fit_copas, type = "copas_grid")`.
+
+## How bayesma calls these models
+
+``` r
+# Vevea-Hedges
+bayesma(
+  data,
+  model_type       = "selection_weight",
+  p_cutoffs        = c(0.025, 0.05, 0.10, 0.25, 0.50, 1.0),
+  selection_priors = list(w2 = beta(1, 1), w3 = beta(1, 1))
+)
+
+# Copas
+bayesma(
+  data,
+  model_type = "selection_copas",
+  gamma_prior = list(gamma0 = normal(0, 1), gamma1 = half_normal(0, 1))
+)
+```
+
+`bin_probs` for the Vevea-Hedges model is computed internally by
+`bayesma_stan_data()` using the normal CDF evaluated at the bin
+boundaries.

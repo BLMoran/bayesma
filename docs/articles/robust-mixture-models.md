@@ -152,5 +152,64 @@ See
   structures. Three-component mixtures are available but rarely
   warranted in practice.
 
-For the Stan code underlying this model, see [Stan Code — RE Mixture
-Model](https://blmoran.github.io/bayesma/articles/stan-re-mixture-model.md).
+## Stan Code
+
+``` stan
+data {
+  int<lower=1> N;
+  vector[N] y;
+  vector<lower=0>[N] se;
+}
+
+parameters {
+  ordered[2] mu;
+  vector<lower=0>[2] tau;
+  real<lower=0, upper=1> pi_mix;
+}
+
+model {
+  target += beta_lpdf(pi_mix | 2, 2);
+  target += normal_lpdf(mu   | 0, 1);
+  target += cauchy_lpdf(tau  | 0, 0.5);
+
+  for (i in 1:N) {
+    target += log_mix(
+      pi_mix,
+      normal_lpdf(y[i] | mu[1], sqrt(square(tau[1]) + square(se[i]))),
+      normal_lpdf(y[i] | mu[2], sqrt(square(tau[2]) + square(se[i])))
+    );
+  }
+}
+
+generated quantities {
+  real b_Intercept = pi_mix * mu[1] + (1 - pi_mix) * mu[2];
+  real b_pi        = pi_mix;
+}
+```
+
+## Parameterisation
+
+The `ordered[2] mu` declaration enforces $`\mu_1 \leq \mu_2`$, which
+fully resolves label switching for the component means. The mixing
+weight $`\pi`$ is still identified up to the relabelling
+$`(\pi, \mu_1, \mu_2) \leftrightarrow (1-\pi, \mu_2, \mu_1)`$, but the
+ordering constraint breaks this symmetry.
+
+`b_Intercept` is the mixture-weighted mean effect — the expected true
+effect for a randomly drawn study.
+
+## Known Sampling Difficulties
+
+Mixture models are among the most challenging posteriors to sample
+efficiently in Stan. Use `adapt_delta = 0.99` and inspect per-chain
+traces.
+
+## How bayesma calls this model
+
+``` r
+bayesma(
+  data,
+  model_type = "random_effect",
+  re_dist    = "mixture"
+)
+```

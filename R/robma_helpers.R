@@ -51,7 +51,7 @@ prior_weight_function <- function(steps = c(0.025, 0.05),
 
 #' @rdname prior_bias
 #' @export
-prior_pet <- function(distribution = "cauchy", location = 0, scale = 1,
+prior_pet <- function(distribution = "normal", location = 0, scale = 1,
                       prior_weight = 1) {
   prior_bias("pet",
              parameters = list(distribution = distribution,
@@ -61,7 +61,7 @@ prior_pet <- function(distribution = "cauchy", location = 0, scale = 1,
 
 #' @rdname prior_bias
 #' @export
-prior_peese <- function(distribution = "cauchy", location = 0, scale = 5,
+prior_peese <- function(distribution = "normal", location = 0, scale = 2,
                         prior_weight = 1) {
   prior_bias("peese",
              parameters = list(distribution = distribution,
@@ -254,6 +254,40 @@ compute_null_range_probs <- function(mu_draws, null_range = NULL,
     p_positive = p_pos,
     null_range = nr_log,
     null_range_natural = nr_nat
+  )
+}
+
+# Extract bias mechanism from a model label string.
+# Returns one of: "none", "weight_function", "pet", "peese", "copas", "jung"
+.label_bias_mechanism <- function(label) {
+  lbl <- tolower(label)
+  if (grepl("no bias|no_bias", lbl))      return("none")
+  if (grepl("\\bpet\\b", lbl) &&
+      !grepl("peese", lbl))               return("pet")
+  if (grepl("\\bpeese\\b", lbl))          return("peese")
+  if (grepl("wf-", lbl))                  return("weight_function")
+  if (grepl("\\bcopas\\b", lbl))          return("copas")
+  if (grepl("\\bjung\\b", lbl))           return("jung")
+  "other"
+}
+
+# Compute per-mechanism inclusion BFs from post_probs and prior_weights.
+# Returns a named list; mechanisms with no component models return NA.
+compute_per_mechanism_bfs <- function(component_fits, post_probs, prior_weights,
+                                      finite_mask) {
+  mechanisms  <- c("weight_function", "pet", "peese", "copas", "jung")
+  labels      <- purrr::map_chr(component_fits, ~ .x$label)
+  bias_mechs  <- purrr::map_chr(labels, .label_bias_mechanism)
+  is_bias_null <- purrr::map_lgl(component_fits, ~ isTRUE(.x$is_bias_null))
+
+  purrr::map(
+    stats::setNames(mechanisms, mechanisms),
+    function(mech) {
+      is_mech   <- bias_mechs == mech & !is_bias_null
+      is_no_mech <- !(is_mech)
+      if (!any(is_mech) || !any(is_no_mech & finite_mask)) return(NA_real_)
+      compute_inclusion_bf(is_mech, post_probs, prior_weights, finite_mask)
+    }
   )
 }
 

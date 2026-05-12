@@ -34,6 +34,7 @@ robma_spec <- function(
     b_prior = NULL,
     p_bias_prior = NULL,
     p_cutoffs = c(0.025, 0.05),
+    horseshoe = FALSE,
     parallel = FALSE,
     chains = 4,
     iter_warmup = 1000,
@@ -67,6 +68,21 @@ robma_spec <- function(
       cli::cli_abort("{.arg null_range[1]} must be <= {.arg null_range[2]}.",
                      call = rlang::caller_env())
     }
+  }
+
+  if (!is.logical(horseshoe) || length(horseshoe) != 1) {
+    cli::cli_abort("{.arg horseshoe} must be a single logical value.",
+                   call = rlang::caller_env())
+  }
+  if (isTRUE(horseshoe) && method != "ss") {
+    cli::cli_abort("{.arg horseshoe} is only available for {.code method = 'ss'}.",
+                   call = rlang::caller_env())
+  }
+  if (isTRUE(horseshoe) && bias_indicator != "bias_corrected") {
+    cli::cli_abort(
+      "{.arg horseshoe} is only supported with {.code bias_indicator = 'bias_corrected'}.",
+      call = rlang::caller_env()
+    )
   }
 
   validate_custom_model(custom_model, method)
@@ -140,6 +156,7 @@ robma_spec <- function(
       b_prior = b_prior,
       p_bias_prior = p_bias_prior,
       p_cutoffs = p_cutoffs,
+      horseshoe = horseshoe,
       parallel = parallel,
       chains = chains,
       iter_warmup = iter_warmup,
@@ -177,6 +194,7 @@ robma_spec <- function(
     b_prior          = b_prior,
     p_bias_prior     = p_bias_prior,
     p_cutoffs        = p_cutoffs,
+    horseshoe        = horseshoe,
     parallel         = parallel,
     quiet            = quiet,
     custom_model     = custom_model,
@@ -299,24 +317,32 @@ robma_stan_code_ss <- function(spec) {
   mu_prior  <- spec$priors_effect[[1]]
   tau_prior <- spec$priors_heterogeneity[[1]]
 
-  res <- switch(
-    spec$bias_indicator,
-    bias_corrected   = ss_stan_jung(
+  if (isTRUE(spec$horseshoe)) {
+    res <- ss_stan_horseshoe(
       spec$es, spec$S, mu_prior, tau_prior,
-      spec$b_prior, spec$p_bias_prior),
-    pet_peese        = ss_stan_pet_peese(
-      spec$es, spec$S, spec$n_c, spec$n_i, mu_prior, tau_prior),
-    selection_weight = ss_stan_selection_weight(
-      spec$es, spec$S, mu_prior, tau_prior, spec$p_cutoffs)
-  )
+      spec$b_prior, spec$p_bias_prior)
+    label <- "horseshoe"
+  } else {
+    res <- switch(
+      spec$bias_indicator,
+      bias_corrected   = ss_stan_jung(
+        spec$es, spec$S, mu_prior, tau_prior,
+        spec$b_prior, spec$p_bias_prior),
+      pet_peese        = ss_stan_pet_peese(
+        spec$es, spec$S, spec$n_c, spec$n_i, mu_prior, tau_prior),
+      selection_weight = ss_stan_selection_weight(
+        spec$es, spec$S, mu_prior, tau_prior, spec$p_cutoffs)
+    )
+    label <- spec$bias_indicator
+  }
 
   entry <- list(
-    label    = spec$bias_indicator,
+    label    = label,
     code     = as.character(res$code),
     analytic = FALSE,
     ss_data  = res$data
   )
-  stats::setNames(list(entry), spec$bias_indicator)
+  stats::setNames(list(entry), label)
 }
 
 
@@ -425,17 +451,25 @@ robma_stan_data <- function(spec) {
   } else {
     mu_prior  <- spec$priors_effect[[1]]
     tau_prior <- spec$priors_heterogeneity[[1]]
-    res <- switch(
-      spec$bias_indicator,
-      bias_corrected   = ss_stan_jung(
+    if (isTRUE(spec$horseshoe)) {
+      res   <- ss_stan_horseshoe(
         spec$es, spec$S, mu_prior, tau_prior,
-        spec$b_prior, spec$p_bias_prior),
-      pet_peese        = ss_stan_pet_peese(
-        spec$es, spec$S, spec$n_c, spec$n_i, mu_prior, tau_prior),
-      selection_weight = ss_stan_selection_weight(
-        spec$es, spec$S, mu_prior, tau_prior, spec$p_cutoffs)
-    )
-    stats::setNames(list(res$data), spec$bias_indicator)
+        spec$b_prior, spec$p_bias_prior)
+      label <- "horseshoe"
+    } else {
+      res <- switch(
+        spec$bias_indicator,
+        bias_corrected   = ss_stan_jung(
+          spec$es, spec$S, mu_prior, tau_prior,
+          spec$b_prior, spec$p_bias_prior),
+        pet_peese        = ss_stan_pet_peese(
+          spec$es, spec$S, spec$n_c, spec$n_i, mu_prior, tau_prior),
+        selection_weight = ss_stan_selection_weight(
+          spec$es, spec$S, mu_prior, tau_prior, spec$p_cutoffs)
+      )
+      label <- spec$bias_indicator
+    }
+    stats::setNames(list(res$data), label)
   }
 
   out <- overlay_custom_data(out, spec$custom_data, spec$method)
@@ -683,9 +717,11 @@ robma_fit_bridge <- function(spec, code, stan_data,
   has_bias   <- !purrr::map_lgl(component_fits, ~ .x$is_bias_null)
   has_hetero <- !purrr::map_lgl(component_fits, ~ .x$is_hetero_null)
 
-  bf_effect <- compute_inclusion_bf(is_h1, post_probs, prior_weights, finite_mask)
-  bf_bias   <- compute_inclusion_bf(has_bias, post_probs, prior_weights, finite_mask)
-  bf_hetero <- compute_inclusion_bf(has_hetero, post_probs, prior_weights, finite_mask)
+  bf_effect     <- compute_inclusion_bf(is_h1, post_probs, prior_weights, finite_mask)
+  bf_bias       <- compute_inclusion_bf(has_bias, post_probs, prior_weights, finite_mask)
+  bf_hetero     <- compute_inclusion_bf(has_hetero, post_probs, prior_weights, finite_mask)
+  bf_per_mech   <- compute_per_mechanism_bfs(component_fits, post_probs,
+                                             prior_weights, finite_mask)
 
   cli::cli_alert_info("Computing model-averaged posterior...")
   n_total_draws <- iter_sampling * chains
@@ -716,7 +752,8 @@ robma_fit_bridge <- function(spec, code, stan_data,
     averaged_draws = averaged_mu,
     model_table    = model_table,
     inclusion_bf   = list(effect = bf_effect, bias = bf_bias,
-                          heterogeneity = bf_hetero),
+                          heterogeneity = bf_hetero,
+                          by_mechanism = bf_per_mech),
     posterior_probs = list(effect = sum(post_probs[is_h1]),
                            bias = sum(post_probs[has_bias]),
                            heterogeneity = sum(post_probs[has_hetero])),
@@ -784,7 +821,11 @@ robma_fit_ss <- function(spec, code, stan_data,
   inform <- if (quiet) \(...) invisible(NULL) else cli::cli_alert_info
   warn   <- if (quiet) \(...) invisible(NULL) else cli::cli_alert_warning
 
-  inform("RoBMA (spike-and-slab via log_mix): bias indicator = {spec$bias_indicator}")
+  if (isTRUE(spec$horseshoe)) {
+    inform("RoBMA (regularised horseshoe effect prior): bias indicator = bias_corrected")
+  } else {
+    inform("RoBMA (spike-and-slab via log_mix): bias indicator = {spec$bias_indicator}")
+  }
 
   if (spec$bias_indicator == "pet_peese") {
     warn(paste0(
@@ -822,7 +863,12 @@ robma_fit_ss <- function(spec, code, stan_data,
   mu_draws    <- as.vector(draws$mu)
   averaged_mu <- tibble::tibble(mu = mu_draws, model = "spike_slab_joint")
 
-  pip_effect <- mean(as.vector(draws$pip_effect))
+  use_horseshoe <- isTRUE(spec$horseshoe)
+  pip_effect <- if (use_horseshoe) {
+    mean(as.vector(draws$pip_effect_approx))
+  } else {
+    mean(as.vector(draws$pip_effect))
+  }
   pip_hetero <- mean(as.vector(draws$pip_hetero))
   pip_bias   <- mean(as.vector(draws$pip_bias))
 
@@ -845,8 +891,14 @@ robma_fit_ss <- function(spec, code, stan_data,
     ))
   }
 
+  model_label <- if (use_horseshoe) {
+    "Horseshoe (bias_corrected)"
+  } else {
+    paste0("Spike-and-slab (", spec$bias_indicator, ")")
+  }
+
   model_table <- tibble::tibble(
-    model = paste0("Spike-and-slab (", spec$bias_indicator, ")"),
+    model = model_label,
     log_ml = NA_real_, prior_weight = 1, post_prob = 1,
     null_effect = NA, has_bias = TRUE, has_heterogeneity = TRUE,
     pip_effect = pip_effect, pip_hetero = pip_hetero, pip_bias = pip_bias
@@ -938,6 +990,7 @@ robma_output <- function(spec, fit, effects) {
     stage          = "two_stage",
     method         = spec$method,
     bias_indicator = if (spec$method == "ss") spec$bias_indicator else NA_character_,
+    horseshoe      = isTRUE(spec$horseshoe),
     study_labels   = spec$study_labels,
     effect_label   = spec$effect_label,
     es             = spec$es,

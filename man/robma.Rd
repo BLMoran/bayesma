@@ -29,6 +29,7 @@ robma(
   b_prior = NULL,
   p_bias_prior = NULL,
   p_cutoffs = c(0.025, 0.05),
+  horseshoe = FALSE,
   parallel = FALSE,
   chains = 4,
   iter_warmup = 1000,
@@ -81,6 +82,12 @@ in \verb{[0.905, 1.105]}.}
 
 \item{p_cutoffs}{Numeric vector of one-sided p-value cutoffs for
 selection-weight models. Default \code{c(0.025, 0.05)}.}
+
+\item{horseshoe}{Logical. For \code{method = "ss"} and
+\code{bias_indicator = "bias_corrected"}, replace the discrete spike-and-slab
+prior on the effect with a regularised horseshoe (Piironen & Vehtari 2017).
+The approximate inclusion probability is stored as \code{pip_effect_approx}.
+Default \code{FALSE}.}
 
 \item{parallel}{Logical. Fit the bridgesampling grid in parallel.}
 

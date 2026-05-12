@@ -103,3 +103,70 @@ Studies rarely measure outcomes at identical time-points. The model handles this
 - Longitudinal models require that time is measured comparably across studies (same origin, same units).
 - The trajectory form must be specified. Model comparison between trajectory specifications is supported via `compare_models()`.
 - With $k < 10$ and heterogeneous time-points, both $\tau_u$ and $\tau_v$ are poorly identified.
+
+## Stan Code
+
+```stan
+data {
+  int<lower=1> N;
+  int<lower=1> K;
+  vector[N] y;
+  vector<lower=0>[N] se;
+  vector[N] time;
+  array[N] int<lower=1> study;
+}
+
+parameters {
+  real mu0;
+  real mu1;
+  real<lower=0> tau_u;
+  real<lower=0> tau_v;
+  vector[K] z_u;
+  vector[N] z_v;
+}
+
+transformed parameters {
+  vector[K] u = tau_u * z_u;
+  vector[N] v = tau_v * z_v;
+}
+
+model {
+  target += normal_lpdf(mu0   | 0, 1);
+  target += normal_lpdf(mu1   | 0, 0.5);
+  target += cauchy_lpdf(tau_u | 0, 0.5);
+  target += cauchy_lpdf(tau_v | 0, 0.5);
+  target += std_normal_lpdf(z_u);
+  target += std_normal_lpdf(z_v);
+
+  target += normal_lpdf(y | (mu0 + u[study]) + mu1 * time + v, se);
+}
+
+generated quantities {
+  real b_Intercept = mu0;
+  real b_time      = mu1;
+}
+```
+
+## Parameterisation
+
+- $u_i$ is a study-level random intercept (deviation from $\mu_0$ at $t = 0$).
+- $v_{it}$ is a study-by-time residual capturing deviations from the linear trajectory within studies.
+- For the exponential decay trajectory, an additional parameter $\lambda > 0$ is required with a $\text{Half-Normal}(0, 1)$ prior.
+- `b_time` reports the posterior for the rate of change $\mu_1$ per unit of the centred time variable.
+
+## Known Sampling Difficulties
+
+The residual term $v_{it}$ can be weakly identified when each study contributes only one or two time-points. In this case, fix $\tau_v = 0$ (drop the $v_{it}$ term) to improve mixing. The model then reduces to a random-intercept longitudinal meta-analysis.
+
+## How bayesma calls this model
+
+```r
+bayesma(
+  data,
+  model_type = "random_effect",
+  time_col   = "weeks",
+  trajectory = "linear"
+)
+```
+
+The `time` vector in the Stan data is constructed from `data[[time_col]]`, centred at the median observation time for interpretability.

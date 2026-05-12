@@ -84,3 +84,81 @@ bayesma_extract(fit, contrast = c("treatment_a", "treatment_b"))
 - The LKJ prior on $\Omega$ has limited influence when the number of multiarm studies is small ($< 5$). In this setting the within-study correlation is poorly estimated and the model reduces approximately to independent arm-level analyses.
 - Models with many treatments ($T > 4$) may be better handled by network meta-analysis frameworks (e.g., `gemtc`, `multinma`).
 - Multiarm models are computationally heavier than pairwise models due to the correlation matrix. Increase `adapt_delta` (default 0.95 for multiarm) if divergent transitions occur.
+
+## Stan Code
+
+```stan
+data {
+  int<lower=1> N;
+  int<lower=1> S;
+  int<lower=1> T;
+  array[N] int<lower=0> events;
+  array[N] int<lower=1> n;
+  array[N] int<lower=1> study;
+  array[N] int<lower=0> treatment;
+}
+
+parameters {
+  vector[S] gamma;
+  vector[T] theta;
+  vector<lower=0>[T] tau;
+  matrix[S, T] z;
+  cholesky_factor_corr[T] L_Omega;
+}
+
+transformed parameters {
+  matrix[S, T] epsilon = (diag_pre_multiply(tau, L_Omega) * z')';
+}
+
+model {
+  target += normal_lpdf(gamma   | 0, 10);
+  target += normal_lpdf(theta   | 0, 2.5);
+  target += student_t_lpdf(tau  | 3, 0, 2.5);
+  target += std_normal_lpdf(to_vector(z));
+  target += lkj_corr_cholesky_lpdf(L_Omega | 1);
+
+  {
+    vector[N] eta;
+    for (i in 1:N) {
+      eta[i] = gamma[study[i]];
+      if (treatment[i] > 0) {
+        eta[i] += theta[treatment[i]] + epsilon[study[i], treatment[i]];
+      }
+    }
+    target += binomial_logit_lpmf(events | n, eta);
+  }
+}
+
+generated quantities {
+  vector[T] b_treat = theta;
+  corr_matrix[T] Omega = multiply_lower_tri_self_transpose(L_Omega);
+}
+```
+
+## Parameterisation
+
+The Cholesky factorisation `L_Omega` of the correlation matrix is used instead of the full correlation matrix for efficiency. `multiply_lower_tri_self_transpose(L_Omega)` recovers $\Omega$ in the generated quantities block for reporting.
+
+The `treatment[i] = 0` case (control arm) contributes only the study baseline $\gamma_i$ to the linear predictor.
+
+## Identifiability
+
+The correlation matrix $\Omega$ is identified by between-study variation across multiarm studies. With few multiarm studies ($< 5$), $\Omega$ is poorly estimated. In this case, fix $\Omega = I$ (identity, implying independent arms) by removing the LKJ prior and setting `L_Omega = identity_matrix(T)`.
+
+## Known Sampling Difficulties
+
+The Cholesky parameterisation and non-centred parameterisation for the random effects matrix greatly improve sampling. Divergences are most common when $T$ is large ($> 3$) and multiarm studies are few. Increase `adapt_delta` to 0.99 if needed.
+
+## How bayesma calls this model
+
+Selected when `multiarm = TRUE` and `stage = "one_stage"`. The `rho_prior` argument sets the LKJ concentration:
+
+```r
+bayesma(
+  data,
+  model_type = "random_effect",
+  stage      = "one_stage",
+  multiarm   = TRUE,
+  rho_prior  = lkj(eta = 1)
+)
+```

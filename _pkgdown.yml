@@ -1,5 +1,8 @@
 url: https://blmoran.github.io/bayesma/
 
+search:
+  type: overlay
+
 template:
   bootstrap: 5
   bootswatch: cosmo
@@ -31,12 +34,15 @@ template:
 navbar:
   bg: primary
   type: dark
+  brand:
+    title: "bayesma"
+    href: "index.html"
   structure:
     left:
+      - getting-started
+      - workflow
       - models
       - bias-heterogeneity
-      - stan-code
-      - workflow
       - data-entry
       - reference
     right:
@@ -44,6 +50,10 @@ navbar:
       - github
       - bluesky
   components:
+    getting-started:
+      text: Getting Started
+      href: articles/workflow-diagram.html
+
     models:
       text: Models
       menu:
@@ -111,62 +121,8 @@ navbar:
         - text: Bias-Adjusted Models (Verde 2021)
           href: articles/bias-adjusted-verde.html
 
-    stan-code:
-      text: Stan Code
-      menu:
-        - text: Overview & Conventions
-          href: articles/stan-overview.html
-        - text: "---"
-        - text: Common-Effect Model
-          href: articles/stan-common-effect.html
-        - text: "---"
-        - text: Random-Effects Models
-        - text: Gaussian RE
-          href: articles/stan-re-gaussian.html
-        - text: Student-t RE
-          href: articles/stan-re-t.html
-        - text: Skew-Normal RE
-          href: articles/stan-re-skewnormal.html
-        - text: Mixture RE
-          href: articles/stan-re-mixture.html
-        - text: "---"
-        - text: Small-Sample Adjustments
-          href: articles/stan-small-sample.html
-        - text: Multiarm Model
-          href: articles/stan-multiarm.html
-        - text: Multivariate Model
-          href: articles/stan-multivariate.html
-        - text: Longitudinal Model
-          href: articles/stan-longitudinal.html
-        - text: Meta-Regression
-          href: articles/stan-meta-regression.html
-        - text: "---"
-        - text: Publication Bias Models
-        - text: PET-PEESE
-          href: articles/stan-pet-peese.html
-        - text: Vevea-Hedges Selection Model
-          href: articles/stan-vevea-hedges.html
-        - text: Copas Selection Model
-          href: articles/stan-copas.html
-        - text: BC-BNP Model
-          href: articles/stan-bc-bnp.html
-        - text: Mixture Model (Maier)
-          href: articles/stan-mixture-maier.html
-        - text: "---"
-        - text: Heterogeneity Models
-        - text: RE Mixture Model
-          href: articles/stan-re-mixture-model.html
-        - text: Robust Outlier Mixture
-          href: articles/stan-robust-outlier.html
-        - text: "---"
-        - text: Bias-Adjusted Models
-        - text: Verde (2021)
-          href: articles/stan-bias-adjusted-verde.html
-        - text: Jung & Aloe (2026)
-          href: articles/stan-bias-adjusted-jung.html
-
     workflow:
-      text: The Meta-Analysis Workflow
+      text: Meta-Analysis Workflow
       menu:
         - text: Overview & Workflow Diagram
           href: articles/workflow-diagram.html
@@ -270,30 +226,6 @@ articles:
       - risk-of-bias
       - bias-corrected-jung-verde
       - bias-adjusted-verde
-
-  - title: Stan Code
-    navbar: ~
-    contents:
-      - stan-overview
-      - stan-common-effect
-      - stan-re-gaussian
-      - stan-re-t
-      - stan-re-skewnormal
-      - stan-re-mixture
-      - stan-small-sample
-      - stan-multiarm
-      - stan-multivariate
-      - stan-longitudinal
-      - stan-meta-regression
-      - stan-pet-peese
-      - stan-vevea-hedges
-      - stan-copas
-      - stan-bc-bnp
-      - stan-mixture-maier
-      - stan-re-mixture-model
-      - stan-robust-outlier
-      - stan-bias-adjusted-verde
-      - stan-bias-adjusted-jung
 
   - title: Data Entry
     navbar: ~

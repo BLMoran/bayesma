@@ -141,3 +141,71 @@ averages over PET-PEESE and selection model assumptions.
 Stanley TD, Doucouliagos H (2014). Meta-regression approximations to
 reduce publication selection bias. *Research Synthesis Methods*, 5(1),
 60–78.
+
+## Stan Code
+
+``` stan
+data {
+  int<lower=1> N;
+  vector[N] y;
+  vector<lower=0>[N] se;
+}
+
+parameters {
+  real alpha;
+  real beta;
+  real<lower=0> tau;
+}
+
+model {
+  target += normal_lpdf(alpha | 0, 1);
+  target += normal_lpdf(beta  | 0, 1);
+  target += cauchy_lpdf(tau   | 0, 0.5);
+
+  target += normal_lpdf(y | alpha + beta * square(se),
+                           sqrt(square(se) + square(tau)));
+}
+
+generated quantities {
+  real b_Intercept = alpha;
+}
+```
+
+For the PET model, replace `square(se)` with `se` in both the mean and
+(if needed) a different specification.
+
+## Parameterisation
+
+- `alpha` is the bias-corrected pooled effect (effect at $`s_i = 0`$).
+- `beta` is the publication-bias slope: the rate at which effects grow
+  as standard error increases.
+- `tau` captures residual between-study heterogeneity not explained by
+  the precision-effect relationship.
+- `b_Intercept = alpha` is the estimand reported by `bayesma_output()`.
+
+## Identifiability
+
+PET-PEESE is identified when there is meaningful variation in $`s_i`$
+across studies. When all studies have similar precision, the slope
+$`\beta`$ is weakly identified and the intercept $`\alpha`$ is
+uncertain. This is a limitation of the method, not a model specification
+error.
+
+## Known Sampling Difficulties
+
+PET-PEESE is a linear regression model and samples efficiently. No
+divergences are expected. The only potential issue is when $`\tau`$ is
+near zero and the posterior becomes very flat; a slightly more
+informative prior on $`\tau`$ helps.
+
+## How bayesma calls this model
+
+``` r
+bayesma(data, model_type = "pet_peese", pet_peese_form = "peese")
+bayesma(data, model_type = "pet_peese", pet_peese_form = "pet")
+```
+
+The default is PEESE, which is preferred when the meta-analytic effect
+is expected to be non-zero. PET is preferred under the null or when
+testing whether there is any effect after adjusting for publication
+bias.

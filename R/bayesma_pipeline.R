@@ -1503,7 +1503,8 @@ generate_stan_code_pet_peese <- function(priors, predictor = c("inv_sqrt_n", "in
   p <- priors
   mu_tgt <- emit_prior_target(p$mu, "mu")
   sp <- p$selection %||% list()
-  if (is.null(sp$beta_bias)) sp$beta_bias <- normal(0, 5)
+  if (is.null(sp$beta_bias))
+    sp$beta_bias <- if (predictor == "inv_sqrt_n") normal(0, 1) else normal(0, 2)
   beta_tgt <- emit_prior_target(sp$beta_bias, "beta_bias")
 
   paste0(

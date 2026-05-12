@@ -127,3 +127,92 @@ fit_alpha10 <- bayesma(data, model_type = "bc_bnp", alpha_prior = gamma(1, 0.1))
 
 If the bias-corrected estimate is stable across these, the conclusion is
 robust to the non-parametric specification.
+
+## Stan Code
+
+``` stan
+data {
+  int<lower=1> N;
+  int<lower=1> H;             // truncation level for DP
+  vector[N] y;
+  vector<lower=0>[N] se;
+}
+
+parameters {
+  vector[H] mu_h;
+  vector<lower=0>[H] sigma_h;
+  vector<lower=0, upper=1>[H] v;
+  real<lower=0> alpha0;
+  real lambda0;
+  real lambda1;
+}
+
+transformed parameters {
+  simplex[H] weights;
+  {
+    real remaining = 1.0;
+    for (h in 1:(H - 1)) {
+      weights[h] = v[h] * remaining;
+      remaining -= weights[h];
+    }
+    weights[H] = remaining;
+  }
+}
+
+model {
+  target += gamma_lpdf(alpha0  | 1, 1);
+  target += normal_lpdf(lambda0 | 0, 1);
+  target += normal_lpdf(lambda1 | 0, 1);
+  target += normal_lpdf(mu_h    | 0, 1);
+  target += cauchy_lpdf(sigma_h | 0, 0.5);
+  target += beta_lpdf(v         | 1, alpha0);
+
+  for (i in 1:N) {
+    real sel_i = inv_logit(lambda0 + lambda1 / se[i]);
+    vector[H] log_liks;
+    for (h in 1:H) {
+      log_liks[h] = log(weights[h])
+                  + normal_lpdf(y[i] | mu_h[h], sqrt(square(se[i]) + square(sigma_h[h])))
+                  + log(sel_i);
+    }
+    target += log_sum_exp(log_liks);
+  }
+}
+
+generated quantities {
+  real b_Intercept = dot_product(weights, mu_h);
+}
+```
+
+## Parameterisation
+
+- The stick-breaking construction approximates the infinite Dirichlet
+  process with $`H`$ components. $`H = 10`$ is sufficient for most
+  meta-analytic data sets.
+- `b_Intercept` is the DP mixture mean: the expected true effect
+  averaged over the non-parametric component distribution.
+- The `log_sum_exp` in the likelihood marginalises over component
+  assignment, avoiding discrete sampling.
+
+## Known Sampling Difficulties
+
+The BC-BNP model is computationally expensive. With $`N = 30`$ studies
+and $`H = 10`$, expect roughly 5–10× longer sampling than the standard
+RE model. Use `parallel_chains = 4` and allow longer warmup
+(`iter_warmup = 2000`). Divergences near the stick-breaking boundaries
+are rare with the Beta(1, alpha0) prior but may occur when alpha0 is
+very small.
+
+## How bayesma calls this model
+
+``` r
+bayesma(
+  data,
+  model_type   = "bc_bnp",
+  alpha_prior  = gamma(1, 1),
+  p_bias_prior = beta(1, 1)
+)
+```
+
+The truncation level $`H`$ defaults to 10; larger values allow more
+distributional flexibility but increase computation.

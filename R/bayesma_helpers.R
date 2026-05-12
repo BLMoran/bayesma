@@ -263,6 +263,8 @@ emit_prior_target <- function(prior, par_name) {
                   "target += normal_lpdf({par_name} | {prior$mean}, {prior$sd});"),
                 half_normal = glue::glue(
                   "target += normal_lpdf({par_name} | {prior$mean}, {prior$sd});"),
+                cauchy = glue::glue(
+                  "target += cauchy_lpdf({par_name} | {prior$location}, {prior$scale});"),
                 half_cauchy = glue::glue(
                   "target += cauchy_lpdf({par_name} | {prior$location}, {prior$scale});"),
                 half_student_t = glue::glue(
@@ -828,13 +830,19 @@ fit_pet_peese <- function(yi, sei, S, study_labels, priors,
   mu_tgt <- emit_prior_target(p$mu, "mu")
 
   sp <- p$selection %||% list()
-  if (is.null(sp$beta_bias)) sp$beta_bias <- normal(0, 5)
-  beta_tgt <- emit_prior_target(sp$beta_bias, "beta_bias")
-
-  stan_data <- list(N = S, y = yi, se = sei,
-                    n_total = as.array(n_total))
 
   build_stan <- function(predictor) {
+    is_peese_pred <- predictor == "inv_n"
+    if (is.null(sp$beta_bias)) {
+      sp$beta_bias <<- if (!is.null(sp$distribution)) {
+        .bias_prior_to_bayesma(sp, is_peese_pred)
+      } else if (is_peese_pred) {
+        normal(0, 2)
+      } else {
+        normal(0, 1)
+      }
+    }
+    beta_tgt_local <- emit_prior_target(sp$beta_bias, "beta_bias")
     paste0(
       "data {
   int<lower=1> N;
@@ -856,7 +864,7 @@ parameters {
 }
 model {
   ", mu_tgt, "
-  ", beta_tgt, "
+  ", beta_tgt_local, "
   for (i in 1:N)
     target += normal_lpdf(y[i] | mu + beta_bias * ", predictor, "[i], se[i]);
 }

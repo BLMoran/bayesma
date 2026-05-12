@@ -209,3 +209,90 @@ Methods*, 28(1), 107–122.
 Bartoš F, Maier M, Wagenmakers EJ, Doucouliagos H, Stanley TD (2023).
 Robust Bayesian meta-analysis: Model-averaging across formulations of
 publication bias. *Psychological Methods*.
+
+## Stan Code
+
+``` stan
+data {
+  int<lower=1> N;
+  vector[N] y;
+  vector<lower=0>[N] se;
+  real<lower=1> C;  // outlier scale multiplier (default 10)
+}
+
+parameters {
+  real mu;
+  real<lower=0> tau;
+  real<lower=0, upper=1> pi_out;
+}
+
+transformed parameters {
+  real tau_out = C * tau;
+}
+
+model {
+  target += normal_lpdf(mu     | 0, 1);
+  target += cauchy_lpdf(tau    | 0, 0.5);
+  target += beta_lpdf(pi_out   | 1, 9);
+
+  for (i in 1:N) {
+    target += log_mix(
+      pi_out,
+      normal_lpdf(y[i] | mu, sqrt(square(tau_out) + square(se[i]))),
+      normal_lpdf(y[i] | mu, sqrt(square(tau)     + square(se[i])))
+    );
+  }
+}
+
+generated quantities {
+  real b_Intercept = mu;
+  real b_tau       = tau;
+  real b_pi_out    = pi_out;
+
+  // Posterior outlier probability for each study
+  vector[N] p_outlier;
+  for (i in 1:N) {
+    real lp_out = log(pi_out)      + normal_lpdf(y[i] | mu, sqrt(square(tau_out) + square(se[i])));
+    real lp_reg = log1m(pi_out)    + normal_lpdf(y[i] | mu, sqrt(square(tau)     + square(se[i])));
+    p_outlier[i] = exp(lp_out - log_sum_exp(lp_out, lp_reg));
+  }
+}
+```
+
+## Parameterisation
+
+The two components share the mean $`\mu`$ but have different scales:
+$`\tau`$ for typical studies and $`\tau_{\text{out}} = C \cdot \tau`$
+for outlier studies. The outlier component is much wider — it
+accommodates extreme effect sizes without pulling $`\mu`$ toward them.
+
+The Beta(1, 9) prior places prior expectation on $`\pi`$ at 0.10,
+reflecting the assumption that outliers are uncommon.
+
+The `generated quantities` block computes `p_outlier[i]` — the posterior
+probability that study $`i`$ belongs to the outlier component. These are
+extracted and reported by `bayesma_output()`.
+
+## Known Sampling Difficulties
+
+The mixture parameterisation is generally well-behaved because both
+components share the same mean $`\mu`$, reducing label-switching risk.
+Use `adapt_delta = 0.95` and inspect per-chain trace plots for `pi_out`
+and `tau`.
+
+## How bayesma calls this model
+
+``` r
+fit_outlier <- bayesma(
+  data,
+  model   = "robust_outlier",
+  C       = 10,
+  prior_pi_out = beta(1, 9)
+)
+
+summary(fit_outlier)
+```
+
+Studies with `p_outlier > 0.5` are flagged as probable outliers in the
+summary table via
+`bayesma_output(fit_outlier, type = "outlier_probabilities")`.

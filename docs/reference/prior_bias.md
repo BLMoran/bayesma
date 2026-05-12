@@ -22,9 +22,9 @@ prior_weight_function(
   sided = "one"
 )
 
-prior_pet(distribution = "cauchy", location = 0, scale = 1, prior_weight = 1)
+prior_pet(distribution = "normal", location = 0, scale = 1, prior_weight = 1)
 
-prior_peese(distribution = "cauchy", location = 0, scale = 5, prior_weight = 1)
+prior_peese(distribution = "normal", location = 0, scale = 2, prior_weight = 1)
 
 prior_copas(prior_weight = 1)
 

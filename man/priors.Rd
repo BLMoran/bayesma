@@ -4,6 +4,7 @@
 \alias{priors}
 \alias{normal}
 \alias{half_normal}
+\alias{cauchy}
 \alias{half_cauchy}
 \alias{half_student_t}
 \alias{exponential}
@@ -17,6 +18,8 @@
 normal(mean, sd)
 
 half_normal(mean, sd)
+
+cauchy(location, scale)
 
 half_cauchy(location, scale)
 

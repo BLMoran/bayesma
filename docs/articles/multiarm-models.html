@@ -40,6 +40,26 @@
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
+<li class="nav-item"><a class="nav-link" href="../articles/workflow-diagram.html">Getting Started</a></li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-meta-analysis-workflow" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Meta-Analysis Workflow</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-meta-analysis-workflow">
+<li><a class="dropdown-item" href="../articles/workflow-diagram.html">Overview &amp; Workflow Diagram</a></li>
+    <li><a class="dropdown-item" href="../articles/workflow-guide.html">Workflow Guide</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/inspect_sr.html">INSPECT-SR</a></li>
+    <li><a class="dropdown-item" href="../articles/primed.html">PRIMED</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/prior-predictive-checks.html">Prior Predictive Checks</a></li>
+    <li><a class="dropdown-item" href="../articles/convergence-diagnostics.html">Model Fitting &amp; Convergence Diagnostics</a></li>
+    <li><a class="dropdown-item" href="../articles/posterior-predictive-checks.html">Posterior Predictive Checks</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/sensitivity-analysis.html">Sensitivity Analysis</a></li>
+    <li><a class="dropdown-item" href="../articles/model-comparison-waic-loo.html">Model Comparison (WAIC / LOO)</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/reporting-checklist.html">Reporting Checklist</a></li>
+  </ul>
+</li>
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-models" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Models</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-models">
@@ -83,60 +103,6 @@
     <li><a class="dropdown-item" href="../articles/risk-of-bias.html">Risk of Bias Assessment</a></li>
     <li><a class="dropdown-item" href="../articles/bias-corrected-jung-verde.html">Bias-Adjusted Models (Jung &amp; Aloe 2026)</a></li>
     <li><a class="dropdown-item" href="../articles/bias-adjusted-verde.html">Bias-Adjusted Models (Verde 2021)</a></li>
-  </ul>
-</li>
-<li class="nav-item dropdown">
-  <button class="nav-link dropdown-toggle" type="button" id="dropdown-stan-code" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Stan Code</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-stan-code">
-<li><a class="dropdown-item" href="../articles/stan-overview.html">Overview &amp; Conventions</a></li>
-    <li><hr class="dropdown-divider"></li>
-    <li><a class="dropdown-item" href="../articles/stan-common-effect.html">Common-Effect Model</a></li>
-    <li><hr class="dropdown-divider"></li>
-    <li><h6 class="dropdown-header" data-toc-skip>Random-Effects Models</h6></li>
-    <li><a class="dropdown-item" href="../articles/stan-re-gaussian.html">Gaussian RE</a></li>
-    <li><a class="dropdown-item" href="../articles/stan-re-t.html">Student-t RE</a></li>
-    <li><a class="dropdown-item" href="../articles/stan-re-skewnormal.html">Skew-Normal RE</a></li>
-    <li><a class="dropdown-item" href="../articles/stan-re-mixture.html">Mixture RE</a></li>
-    <li><hr class="dropdown-divider"></li>
-    <li><a class="dropdown-item" href="../articles/stan-small-sample.html">Small-Sample Adjustments</a></li>
-    <li><a class="dropdown-item" href="../articles/stan-multiarm.html">Multiarm Model</a></li>
-    <li><a class="dropdown-item" href="../articles/stan-multivariate.html">Multivariate Model</a></li>
-    <li><a class="dropdown-item" href="../articles/stan-longitudinal.html">Longitudinal Model</a></li>
-    <li><a class="dropdown-item" href="../articles/stan-meta-regression.html">Meta-Regression</a></li>
-    <li><hr class="dropdown-divider"></li>
-    <li><h6 class="dropdown-header" data-toc-skip>Publication Bias Models</h6></li>
-    <li><a class="dropdown-item" href="../articles/stan-pet-peese.html">PET-PEESE</a></li>
-    <li><a class="dropdown-item" href="../articles/stan-vevea-hedges.html">Vevea-Hedges Selection Model</a></li>
-    <li><a class="dropdown-item" href="../articles/stan-copas.html">Copas Selection Model</a></li>
-    <li><a class="dropdown-item" href="../articles/stan-bc-bnp.html">BC-BNP Model</a></li>
-    <li><a class="dropdown-item" href="../articles/stan-mixture-maier.html">Mixture Model (Maier)</a></li>
-    <li><hr class="dropdown-divider"></li>
-    <li><h6 class="dropdown-header" data-toc-skip>Heterogeneity Models</h6></li>
-    <li><a class="dropdown-item" href="../articles/stan-re-mixture-model.html">RE Mixture Model</a></li>
-    <li><a class="dropdown-item" href="../articles/stan-robust-outlier.html">Robust Outlier Mixture</a></li>
-    <li><hr class="dropdown-divider"></li>
-    <li><h6 class="dropdown-header" data-toc-skip>Bias-Adjusted Models</h6></li>
-    <li><a class="dropdown-item" href="../articles/stan-bias-adjusted-verde.html">Verde (2021)</a></li>
-    <li><a class="dropdown-item" href="../articles/stan-bias-adjusted-jung.html">Jung &amp; Aloe (2026)</a></li>
-  </ul>
-</li>
-<li class="nav-item dropdown">
-  <button class="nav-link dropdown-toggle" type="button" id="dropdown-the-meta-analysis-workflow" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">The Meta-Analysis Workflow</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-the-meta-analysis-workflow">
-<li><a class="dropdown-item" href="../articles/workflow-diagram.html">Overview &amp; Workflow Diagram</a></li>
-    <li><a class="dropdown-item" href="../articles/workflow-guide.html">Workflow Guide</a></li>
-    <li><hr class="dropdown-divider"></li>
-    <li><a class="dropdown-item" href="../articles/inspect_sr.html">INSPECT-SR</a></li>
-    <li><a class="dropdown-item" href="../articles/primed.html">PRIMED</a></li>
-    <li><hr class="dropdown-divider"></li>
-    <li><a class="dropdown-item" href="../articles/prior-predictive-checks.html">Prior Predictive Checks</a></li>
-    <li><a class="dropdown-item" href="../articles/convergence-diagnostics.html">Model Fitting &amp; Convergence Diagnostics</a></li>
-    <li><a class="dropdown-item" href="../articles/posterior-predictive-checks.html">Posterior Predictive Checks</a></li>
-    <li><hr class="dropdown-divider"></li>
-    <li><a class="dropdown-item" href="../articles/sensitivity-analysis.html">Sensitivity Analysis</a></li>
-    <li><a class="dropdown-item" href="../articles/model-comparison-waic-loo.html">Model Comparison (WAIC / LOO)</a></li>
-    <li><hr class="dropdown-divider"></li>
-    <li><a class="dropdown-item" href="../articles/reporting-checklist.html">Reporting Checklist</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../articles/data-entry.html">Data Entry</a></li>
@@ -244,7 +210,75 @@ y_{ij} \sim \mathcal{N}(\gamma_i + \sum_t \theta_t \cdot \mathbb{1}[t_{ij} = t] 
 <li>The LKJ prior on <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>Ω</mi><annotation encoding="application/x-tex">\Omega</annotation></semantics></math> has limited influence when the number of multiarm studies is small (<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>&lt;</mo><mn>5</mn></mrow><annotation encoding="application/x-tex">&lt; 5</annotation></semantics></math>). In this setting the within-study correlation is poorly estimated and the model reduces approximately to independent arm-level analyses.</li>
 <li>Models with many treatments (<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>T</mi><mo>&gt;</mo><mn>4</mn></mrow><annotation encoding="application/x-tex">T &gt; 4</annotation></semantics></math>) may be better handled by network meta-analysis frameworks (e.g., <code>gemtc</code>, <code>multinma</code>).</li>
 <li>Multiarm models are computationally heavier than pairwise models due to the correlation matrix. Increase <code>adapt_delta</code> (default 0.95 for multiarm) if divergent transitions occur.</li>
-</ul></section><script id="quarto-html-after-body" type="application/javascript">
+</ul></section><section class="level2"><h2 id="stan-code">Stan Code<a class="anchor" aria-label="anchor" href="#stan-code"></a>
+</h2>
+<div class="sourceCode" id="cb3"><pre class="sourceCode stan"><code class="sourceCode stan"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">int</span>&lt;<span class="kw">lower</span>=<span class="dv">1</span>&gt; N;</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">int</span>&lt;<span class="kw">lower</span>=<span class="dv">1</span>&gt; S;</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">int</span>&lt;<span class="kw">lower</span>=<span class="dv">1</span>&gt; T;</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">array</span>[N] <span class="dt">int</span>&lt;<span class="kw">lower</span>=<span class="dv">0</span>&gt; events;</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">array</span>[N] <span class="dt">int</span>&lt;<span class="kw">lower</span>=<span class="dv">1</span>&gt; n;</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">array</span>[N] <span class="dt">int</span>&lt;<span class="kw">lower</span>=<span class="dv">1</span>&gt; study;</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">array</span>[N] <span class="dt">int</span>&lt;<span class="kw">lower</span>=<span class="dv">0</span>&gt; treatment;</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="kw">parameters</span> {</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>  <span class="dt">vector</span>[S] gamma;</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>  <span class="dt">vector</span>[T] theta;</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>  <span class="dt">vector</span>&lt;<span class="kw">lower</span>=<span class="dv">0</span>&gt;[T] tau;</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>  <span class="dt">matrix</span>[S, T] z;</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>  <span class="dt">cholesky_factor_corr</span>[T] L_Omega;</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a><span class="kw">transformed parameters</span> {</span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>  <span class="dt">matrix</span>[S, T] epsilon = (diag_pre_multiply(tau, L_Omega) * z')';</span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a><span class="kw">model</span> {</span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>  <span class="kw">target +=</span> normal_lpdf(gamma   | <span class="dv">0</span>, <span class="dv">10</span>);</span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>  <span class="kw">target +=</span> normal_lpdf(theta   | <span class="dv">0</span>, <span class="fl">2.5</span>);</span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>  <span class="kw">target +=</span> student_t_lpdf(tau  | <span class="dv">3</span>, <span class="dv">0</span>, <span class="fl">2.5</span>);</span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>  <span class="kw">target +=</span> std_normal_lpdf(to_vector(z));</span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>  <span class="kw">target +=</span> lkj_corr_cholesky_lpdf(L_Omega | <span class="dv">1</span>);</span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>  {</span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>    <span class="dt">vector</span>[N] eta;</span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span>:N) {</span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a>      eta[i] = gamma[study[i]];</span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a>      <span class="cf">if</span> (treatment[i] &gt; <span class="dv">0</span>) {</span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a>        eta[i] += theta[treatment[i]] + epsilon[study[i], treatment[i]];</span>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a>      }</span>
+<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a>    <span class="kw">target +=</span> binomial_logit_lpmf(events | n, eta);</span>
+<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a><span class="kw">generated quantities</span> {</span>
+<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a>  <span class="dt">vector</span>[T] b_treat = theta;</span>
+<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a>  <span class="dt">corr_matrix</span>[T] Omega = multiply_lower_tri_self_transpose(L_Omega);</span>
+<span id="cb3-45"><a href="#cb3-45" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+</section><section class="level2"><h2 id="parameterisation">Parameterisation<a class="anchor" aria-label="anchor" href="#parameterisation"></a>
+</h2>
+<p>The Cholesky factorisation <code>L_Omega</code> of the correlation matrix is used instead of the full correlation matrix for efficiency. <code>multiply_lower_tri_self_transpose(L_Omega)</code> recovers <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>Ω</mi><annotation encoding="application/x-tex">\Omega</annotation></semantics></math> in the generated quantities block for reporting.</p>
+<p>The <code>treatment[i] = 0</code> case (control arm) contributes only the study baseline <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>γ</mi><mi>i</mi></msub><annotation encoding="application/x-tex">\gamma_i</annotation></semantics></math> to the linear predictor.</p>
+</section><section class="level2"><h2 id="identifiability">Identifiability<a class="anchor" aria-label="anchor" href="#identifiability"></a>
+</h2>
+<p>The correlation matrix <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>Ω</mi><annotation encoding="application/x-tex">\Omega</annotation></semantics></math> is identified by between-study variation across multiarm studies. With few multiarm studies (<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>&lt;</mo><mn>5</mn></mrow><annotation encoding="application/x-tex">&lt; 5</annotation></semantics></math>), <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>Ω</mi><annotation encoding="application/x-tex">\Omega</annotation></semantics></math> is poorly estimated. In this case, fix <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Ω</mi><mo>=</mo><mi>I</mi></mrow><annotation encoding="application/x-tex">\Omega = I</annotation></semantics></math> (identity, implying independent arms) by removing the LKJ prior and setting <code>L_Omega = identity_matrix(T)</code>.</p>
+</section><section class="level2"><h2 id="known-sampling-difficulties">Known Sampling Difficulties<a class="anchor" aria-label="anchor" href="#known-sampling-difficulties"></a>
+</h2>
+<p>The Cholesky parameterisation and non-centred parameterisation for the random effects matrix greatly improve sampling. Divergences are most common when <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math> is large (<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>&gt;</mo><mn>3</mn></mrow><annotation encoding="application/x-tex">&gt; 3</annotation></semantics></math>) and multiarm studies are few. Increase <code>adapt_delta</code> to 0.99 if needed.</p>
+</section><section class="level2"><h2 id="how-bayesma-calls-this-model">How bayesma calls this model<a class="anchor" aria-label="anchor" href="#how-bayesma-calls-this-model"></a>
+</h2>
+<p>Selected when <code>multiarm = TRUE</code> and <code>stage = "one_stage"</code>. The <code>rho_prior</code> argument sets the LKJ concentration:</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/bayesma.html">bayesma</a></span><span class="op">(</span></span>
+<span>  <span class="va">data</span>,</span>
+<span>  model_type <span class="op">=</span> <span class="st">"random_effect"</span>,</span>
+<span>  stage      <span class="op">=</span> <span class="st">"one_stage"</span>,</span>
+<span>  multiarm   <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  rho_prior  <span class="op">=</span> <span class="fu"><a href="../reference/priors.html">lkj</a></span><span class="op">(</span>eta <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+</section><script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
       var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
       var mailtoRegex = new RegExp(/^mailto:/);

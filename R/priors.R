@@ -44,6 +44,13 @@ half_normal <- function(mean, sd) {
 
 #' @rdname priors
 #' @export
+cauchy <- function(location, scale) {
+  structure(list(family = "cauchy", location = location, scale = scale),
+            class = "bayesma_prior")
+}
+
+#' @rdname priors
+#' @export
 half_cauchy <- function(location, scale) {
   structure(list(family = "half_cauchy", location = location, scale = scale),
             class = "bayesma_prior")
@@ -105,6 +112,7 @@ format.bayesma_prior <- function(x, ...) {
   switch(x$family,
          normal             = glue::glue("N({x$mean}, {x$sd})"),
          half_normal        = glue::glue("HN({x$mean}, {x$sd})"),
+         cauchy             = glue::glue("Cauchy({x$location}, {x$scale})"),
          half_cauchy        = glue::glue("HC({x$location}, {x$scale})"),
          half_student_t     = glue::glue("t({x$df}, {x$location}, {x$scale})"),
          exponential        = glue::glue("Exp({x$rate})"),

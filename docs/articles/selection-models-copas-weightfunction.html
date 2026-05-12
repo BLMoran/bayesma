@@ -40,6 +40,26 @@
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
+<li class="nav-item"><a class="nav-link" href="../articles/workflow-diagram.html">Getting Started</a></li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-meta-analysis-workflow" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Meta-Analysis Workflow</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-meta-analysis-workflow">
+<li><a class="dropdown-item" href="../articles/workflow-diagram.html">Overview &amp; Workflow Diagram</a></li>
+    <li><a class="dropdown-item" href="../articles/workflow-guide.html">Workflow Guide</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/inspect_sr.html">INSPECT-SR</a></li>
+    <li><a class="dropdown-item" href="../articles/primed.html">PRIMED</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/prior-predictive-checks.html">Prior Predictive Checks</a></li>
+    <li><a class="dropdown-item" href="../articles/convergence-diagnostics.html">Model Fitting &amp; Convergence Diagnostics</a></li>
+    <li><a class="dropdown-item" href="../articles/posterior-predictive-checks.html">Posterior Predictive Checks</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/sensitivity-analysis.html">Sensitivity Analysis</a></li>
+    <li><a class="dropdown-item" href="../articles/model-comparison-waic-loo.html">Model Comparison (WAIC / LOO)</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/reporting-checklist.html">Reporting Checklist</a></li>
+  </ul>
+</li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-models" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Models</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-models">
@@ -83,60 +103,6 @@
     <li><a class="dropdown-item" href="../articles/risk-of-bias.html">Risk of Bias Assessment</a></li>
     <li><a class="dropdown-item" href="../articles/bias-corrected-jung-verde.html">Bias-Adjusted Models (Jung &amp; Aloe 2026)</a></li>
     <li><a class="dropdown-item" href="../articles/bias-adjusted-verde.html">Bias-Adjusted Models (Verde 2021)</a></li>
-  </ul>
-</li>
-<li class="nav-item dropdown">
-  <button class="nav-link dropdown-toggle" type="button" id="dropdown-stan-code" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Stan Code</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-stan-code">
-<li><a class="dropdown-item" href="../articles/stan-overview.html">Overview &amp; Conventions</a></li>
-    <li><hr class="dropdown-divider"></li>
-    <li><a class="dropdown-item" href="../articles/stan-common-effect.html">Common-Effect Model</a></li>
-    <li><hr class="dropdown-divider"></li>
-    <li><h6 class="dropdown-header" data-toc-skip>Random-Effects Models</h6></li>
-    <li><a class="dropdown-item" href="../articles/stan-re-gaussian.html">Gaussian RE</a></li>
-    <li><a class="dropdown-item" href="../articles/stan-re-t.html">Student-t RE</a></li>
-    <li><a class="dropdown-item" href="../articles/stan-re-skewnormal.html">Skew-Normal RE</a></li>
-    <li><a class="dropdown-item" href="../articles/stan-re-mixture.html">Mixture RE</a></li>
-    <li><hr class="dropdown-divider"></li>
-    <li><a class="dropdown-item" href="../articles/stan-small-sample.html">Small-Sample Adjustments</a></li>
-    <li><a class="dropdown-item" href="../articles/stan-multiarm.html">Multiarm Model</a></li>
-    <li><a class="dropdown-item" href="../articles/stan-multivariate.html">Multivariate Model</a></li>
-    <li><a class="dropdown-item" href="../articles/stan-longitudinal.html">Longitudinal Model</a></li>
-    <li><a class="dropdown-item" href="../articles/stan-meta-regression.html">Meta-Regression</a></li>
-    <li><hr class="dropdown-divider"></li>
-    <li><h6 class="dropdown-header" data-toc-skip>Publication Bias Models</h6></li>
-    <li><a class="dropdown-item" href="../articles/stan-pet-peese.html">PET-PEESE</a></li>
-    <li><a class="dropdown-item" href="../articles/stan-vevea-hedges.html">Vevea-Hedges Selection Model</a></li>
-    <li><a class="dropdown-item" href="../articles/stan-copas.html">Copas Selection Model</a></li>
-    <li><a class="dropdown-item" href="../articles/stan-bc-bnp.html">BC-BNP Model</a></li>
-    <li><a class="dropdown-item" href="../articles/stan-mixture-maier.html">Mixture Model (Maier)</a></li>
-    <li><hr class="dropdown-divider"></li>
-    <li><h6 class="dropdown-header" data-toc-skip>Heterogeneity Models</h6></li>
-    <li><a class="dropdown-item" href="../articles/stan-re-mixture-model.html">RE Mixture Model</a></li>
-    <li><a class="dropdown-item" href="../articles/stan-robust-outlier.html">Robust Outlier Mixture</a></li>
-    <li><hr class="dropdown-divider"></li>
-    <li><h6 class="dropdown-header" data-toc-skip>Bias-Adjusted Models</h6></li>
-    <li><a class="dropdown-item" href="../articles/stan-bias-adjusted-verde.html">Verde (2021)</a></li>
-    <li><a class="dropdown-item" href="../articles/stan-bias-adjusted-jung.html">Jung &amp; Aloe (2026)</a></li>
-  </ul>
-</li>
-<li class="nav-item dropdown">
-  <button class="nav-link dropdown-toggle" type="button" id="dropdown-the-meta-analysis-workflow" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">The Meta-Analysis Workflow</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-the-meta-analysis-workflow">
-<li><a class="dropdown-item" href="../articles/workflow-diagram.html">Overview &amp; Workflow Diagram</a></li>
-    <li><a class="dropdown-item" href="../articles/workflow-guide.html">Workflow Guide</a></li>
-    <li><hr class="dropdown-divider"></li>
-    <li><a class="dropdown-item" href="../articles/inspect_sr.html">INSPECT-SR</a></li>
-    <li><a class="dropdown-item" href="../articles/primed.html">PRIMED</a></li>
-    <li><hr class="dropdown-divider"></li>
-    <li><a class="dropdown-item" href="../articles/prior-predictive-checks.html">Prior Predictive Checks</a></li>
-    <li><a class="dropdown-item" href="../articles/convergence-diagnostics.html">Model Fitting &amp; Convergence Diagnostics</a></li>
-    <li><a class="dropdown-item" href="../articles/posterior-predictive-checks.html">Posterior Predictive Checks</a></li>
-    <li><hr class="dropdown-divider"></li>
-    <li><a class="dropdown-item" href="../articles/sensitivity-analysis.html">Sensitivity Analysis</a></li>
-    <li><a class="dropdown-item" href="../articles/model-comparison-waic-loo.html">Model Comparison (WAIC / LOO)</a></li>
-    <li><hr class="dropdown-divider"></li>
-    <li><a class="dropdown-item" href="../articles/reporting-checklist.html">Reporting Checklist</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../articles/data-entry.html">Data Entry</a></li>
@@ -341,6 +307,109 @@ p(\text{study observed} \mid p_i) = \omega_j, \quad p_i \in (a_{j-1},\; a_j]
 </h2>
 <p>Copas J, Shi JQ (2000). Meta-analysis, funnel plots and sensitivity analysis. <em>Biostatistics</em>, 1(3), 247–262.</p>
 <p>Vevea JL, Hedges LV (1995). A general linear model for estimating effect size in the presence of publication bias. <em>Psychometrika</em>, 60(3), 419–435.</p>
+</section><section class="level2"><h2 id="stan-code">Stan Code<a class="anchor" aria-label="anchor" href="#stan-code"></a>
+</h2>
+<section class="level3"><h3 id="vevea-hedges-weight-function-model">Vevea-Hedges weight-function model<a class="anchor" aria-label="anchor" href="#vevea-hedges-weight-function-model"></a>
+</h3>
+<div class="sourceCode" id="cb4"><pre class="sourceCode stan"><code class="sourceCode stan"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> {</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">int</span>&lt;<span class="kw">lower</span>=<span class="dv">1</span>&gt; N;</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">int</span>&lt;<span class="kw">lower</span>=<span class="dv">1</span>&gt; J;</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">vector</span>[N] y;</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">vector</span>&lt;<span class="kw">lower</span>=<span class="dv">0</span>&gt;[N] se;</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">array</span>[N] <span class="dt">int</span>&lt;<span class="kw">lower</span>=<span class="dv">1</span>&gt; bin;        <span class="co">// p-value bin for each study</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">matrix</span>[N, J] bin_probs;           <span class="co">// P(p in bin j | mu, tau) for each study</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="kw">parameters</span> {</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>  <span class="dt">real</span> mu;</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>  <span class="dt">real</span>&lt;<span class="kw">lower</span>=<span class="dv">0</span>&gt; tau;</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>  <span class="dt">simplex</span>[J] w_raw;</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a><span class="kw">transformed parameters</span> {</span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>  <span class="dt">vector</span>[J] w = w_raw;</span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>  w[<span class="dv">1</span>] = <span class="fl">1.0</span>;</span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a><span class="kw">model</span> {</span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>  <span class="kw">target +=</span> normal_lpdf(mu  | <span class="dv">0</span>, <span class="dv">1</span>);</span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>  <span class="kw">target +=</span> cauchy_lpdf(tau | <span class="dv">0</span>, <span class="fl">0.5</span>);</span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (j <span class="cf">in</span> <span class="dv">2</span>:J) {</span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>    <span class="kw">target +=</span> beta_lpdf(w[j] | <span class="dv">1</span>, <span class="dv">1</span>);</span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span>:N) {</span>
+<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a>    <span class="dt">real</span> denom = dot_product(w, bin_probs[i]);</span>
+<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a>    <span class="kw">target +=</span> log(w[bin[i]]) + normal_lpdf(y[i] | mu, sqrt(square(se[i]) + square(tau)))</span>
+<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a>            - log(denom);</span>
+<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-35"><a href="#cb4-35" aria-hidden="true" tabindex="-1"></a><span class="kw">generated quantities</span> {</span>
+<span id="cb4-36"><a href="#cb4-36" aria-hidden="true" tabindex="-1"></a>  <span class="dt">real</span> b_Intercept = mu;</span>
+<span id="cb4-37"><a href="#cb4-37" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+</section><section class="level3"><h3 id="copas-selection-model-1">Copas selection model<a class="anchor" aria-label="anchor" href="#copas-selection-model-1"></a>
+</h3>
+<div class="sourceCode" id="cb5"><pre class="sourceCode stan"><code class="sourceCode stan"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> {</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">int</span>&lt;<span class="kw">lower</span>=<span class="dv">1</span>&gt; N;</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">vector</span>[N] y;</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">vector</span>&lt;<span class="kw">lower</span>=<span class="dv">0</span>&gt;[N] se;</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="kw">parameters</span> {</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">real</span> mu;</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">real</span>&lt;<span class="kw">lower</span>=<span class="dv">0</span>&gt; tau;</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>  <span class="dt">real</span> gamma0;</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>  <span class="dt">real</span>&lt;<span class="kw">lower</span>=<span class="dv">0</span>&gt; gamma1;</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>  <span class="dt">real</span>&lt;<span class="kw">lower</span>=-<span class="dv">1</span>, <span class="kw">upper</span>=<span class="dv">1</span>&gt; rho;</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a><span class="kw">model</span> {</span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>  <span class="kw">target +=</span> normal_lpdf(mu     | <span class="dv">0</span>, <span class="dv">1</span>);</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>  <span class="kw">target +=</span> cauchy_lpdf(tau    | <span class="dv">0</span>, <span class="fl">0.5</span>);</span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>  <span class="kw">target +=</span> normal_lpdf(gamma0 | <span class="dv">0</span>, <span class="dv">1</span>);</span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>  <span class="kw">target +=</span> normal_lpdf(gamma1 | <span class="dv">0</span>, <span class="dv">1</span>);</span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>  <span class="kw">target +=</span> uniform_lpdf(rho   | -<span class="dv">1</span>, <span class="dv">1</span>);</span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span>:N) {</span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>    <span class="dt">real</span> sigma_i = sqrt(square(se[i]) + square(tau));</span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>    <span class="dt">real</span> z_sel   = gamma0 + gamma1 / se[i];</span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>    <span class="dt">real</span> z_adj   = (z_sel + rho * (y[i] - mu) / sigma_i) / sqrt(<span class="dv">1</span> - square(rho));</span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>    <span class="kw">target +=</span> normal_lpdf(y[i] | mu, sigma_i) + normal_lcdf(z_adj | <span class="dv">0</span>, <span class="dv">1</span>)</span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a>            - normal_lcdf(z_sel | <span class="dv">0</span>, <span class="dv">1</span>);</span>
+<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a><span class="kw">generated quantities</span> {</span>
+<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a>  <span class="dt">real</span> b_Intercept = mu;</span>
+<span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+</section></section><section class="level2"><h2 id="parameterisation">Parameterisation<a class="anchor" aria-label="anchor" href="#parameterisation"></a>
+</h2>
+<p><strong>Vevea-Hedges</strong>: The normalising denominator in the weighted likelihood ensures the model correctly accounts for the fact that only published studies are observed. The <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>w</mi><mi>j</mi></msub><annotation encoding="application/x-tex">w_j</annotation></semantics></math> parameterisation treats the first bin (most significant) as the reference with <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>w</mi><mn>1</mn></msub><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">w_1 = 1</annotation></semantics></math>. Weaker significance bins have <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>w</mi><mi>j</mi></msub><mo>≤</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">w_j \leq 1</annotation></semantics></math> by construction.</p>
+<p><strong>Copas</strong>: <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>γ</mi><mn>1</mn></msub><mo>&gt;</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\gamma_1 &gt; 0</annotation></semantics></math> enforces the direction constraint: larger studies (smaller <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>s</mi><mi>i</mi></msub><annotation encoding="application/x-tex">s_i</annotation></semantics></math>) are more likely to be published. <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ρ</mi><annotation encoding="application/x-tex">\rho</annotation></semantics></math> captures the relationship between effect magnitude and publication. Positive <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ρ</mi><annotation encoding="application/x-tex">\rho</annotation></semantics></math> means larger effects are more likely to be published (a common publication bias mechanism). The normalising denominator <code>normal_lcdf(z_sel | 0, 1)</code> corrects for the fact that only published studies are observed.</p>
+</section><section class="level2"><h2 id="known-sampling-difficulties">Known Sampling Difficulties<a class="anchor" aria-label="anchor" href="#known-sampling-difficulties"></a>
+</h2>
+<p><strong>Vevea-Hedges</strong>: The normalising denominator <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mo>∑</mo><mi>j</mi></msub><msub><mi>w</mi><mi>j</mi></msub><mi>P</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>…</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\sum_j w_j P(\ldots)</annotation></semantics></math> depends on both <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>μ</mi><annotation encoding="application/x-tex">\mu</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>τ</mi><annotation encoding="application/x-tex">\tau</annotation></semantics></math>, creating a complex likelihood surface. With many bins and small <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>, the <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>w</mi><mi>j</mi></msub><annotation encoding="application/x-tex">w_j</annotation></semantics></math> posterior is multimodal. Increasing <code>adapt_delta</code> to 0.99 and using <code>iter_warmup = 2000</code> is recommended.</p>
+<p><strong>Copas</strong>: The Copas likelihood is non-convex and can have multiple local modes in the <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="true" form="prefix">(</mo><mi>μ</mi><mo>,</mo><mi>ρ</mi><mo stretchy="true" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(\mu, \rho)</annotation></semantics></math> space. Use at least 4 chains, inspect all traces, and run with <code>adapt_delta = 0.99</code>. The Copas model is not identified without prior information on either <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>γ</mi><mn>0</mn></msub><annotation encoding="application/x-tex">\gamma_0</annotation></semantics></math> or <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ρ</mi><annotation encoding="application/x-tex">\rho</annotation></semantics></math>; <strong>bayesma</strong> provides a sensitivity plot over a grid of <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>γ</mi><mn>0</mn></msub><mo>,</mo><msub><mi>γ</mi><mn>1</mn></msub><mo stretchy="true" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(\gamma_0, \gamma_1)</annotation></semantics></math> values via <code>sensitivity_plot(fit_copas, type = "copas_grid")</code>.</p>
+</section><section class="level2"><h2 id="how-bayesma-calls-these-models">How bayesma calls these models<a class="anchor" aria-label="anchor" href="#how-bayesma-calls-these-models"></a>
+</h2>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Vevea-Hedges</span></span>
+<span><span class="fu"><a href="../reference/bayesma.html">bayesma</a></span><span class="op">(</span></span>
+<span>  <span class="va">data</span>,</span>
+<span>  model_type       <span class="op">=</span> <span class="st">"selection_weight"</span>,</span>
+<span>  p_cutoffs        <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.025</span>, <span class="fl">0.05</span>, <span class="fl">0.10</span>, <span class="fl">0.25</span>, <span class="fl">0.50</span>, <span class="fl">1.0</span><span class="op">)</span>,</span>
+<span>  selection_priors <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>w2 <span class="op">=</span> <span class="fu"><a href="../reference/priors.html">beta</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span>, w3 <span class="op">=</span> <span class="fu"><a href="../reference/priors.html">beta</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Copas</span></span>
+<span><span class="fu"><a href="../reference/bayesma.html">bayesma</a></span><span class="op">(</span></span>
+<span>  <span class="va">data</span>,</span>
+<span>  model_type <span class="op">=</span> <span class="st">"selection_copas"</span>,</span>
+<span>  gamma_prior <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>gamma0 <span class="op">=</span> <span class="fu"><a href="../reference/priors.html">normal</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span>, gamma1 <span class="op">=</span> <span class="fu"><a href="../reference/priors.html">half_normal</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p><code>bin_probs</code> for the Vevea-Hedges model is computed internally by <code>bayesma_stan_data()</code> using the normal CDF evaluated at the bin boundaries.</p>
 </section><script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
       var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);

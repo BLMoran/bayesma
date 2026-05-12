@@ -80,3 +80,69 @@ When outcomes are weakly correlated and fully observed, separate univariate anal
 
 - The between-study correlation $\Omega$ is estimated from between-study variation. With few studies ($k < 10$) or many outcomes ($P > 3$), $\Omega$ is poorly identified and posterior estimates depend heavily on the LKJ prior.
 - Robust heterogeneity models (Student-$t$ RE, skew-normal RE) for the multivariate case are computationally demanding and not currently supported in all model-type combinations.
+
+## Stan Code
+
+```stan
+data {
+  int<lower=1> K;
+  int<lower=1> P;
+  array[K] vector[P] y;
+  array[K] matrix[P, P] S;  // within-study covariance matrices
+}
+
+parameters {
+  vector[P] mu;
+  vector<lower=0>[P] tau;
+  matrix[K, P] z;
+  cholesky_factor_corr[P] L_Omega;
+}
+
+transformed parameters {
+  matrix[K, P] u = (diag_pre_multiply(tau, L_Omega) * z')';
+}
+
+model {
+  target += normal_lpdf(mu       | 0, 1);
+  target += cauchy_lpdf(tau      | 0, 0.5);
+  target += std_normal_lpdf(to_vector(z));
+  target += lkj_corr_cholesky_lpdf(L_Omega | 1);
+
+  for (i in 1:K) {
+    matrix[P, P] Sigma_total = S[i] + quad_form_diag(
+      multiply_lower_tri_self_transpose(L_Omega), tau
+    );
+    target += multi_normal_lpdf(y[i] | mu + u[i]', Sigma_total);
+  }
+}
+
+generated quantities {
+  vector[P] b_Intercept = mu;
+  corr_matrix[P] Omega  = multiply_lower_tri_self_transpose(L_Omega);
+}
+```
+
+## Parameterisation
+
+The total covariance for study $i$ is $\mathbf{S}_i + \boldsymbol{\Sigma}$: within-study uncertainty plus between-study heterogeneity. This is constructed in the model block using `quad_form_diag`.
+
+`b_Intercept` is a vector of length $P$; the first element is the primary outcome's pooled effect.
+
+## Known Sampling Difficulties
+
+The multivariate model can be slow when $P > 3$ due to the $P \times P$ matrix operations in the likelihood loop. For large $P$, consider a sequential modelling strategy or fixing $\Omega$ to the identity matrix.
+
+## How bayesma calls this model
+
+Fitted via `bayesma_mv()`:
+
+```r
+bayesma_mv(
+  data,
+  outcomes   = c("lnOR_primary", "lnOR_secondary"),
+  se_cols    = c("se_primary", "se_secondary"),
+  rho_within = 0.5
+)
+```
+
+`rho_within` is used to construct the within-study covariance matrices $\mathbf{S}_i$. When `rho_within = NULL`, a Riley et al. (2008) marginalisation over $\rho_\text{within}$ is used.

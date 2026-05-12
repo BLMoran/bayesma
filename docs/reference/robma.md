@@ -33,6 +33,7 @@ robma(
   b_prior = NULL,
   p_bias_prior = NULL,
   p_cutoffs = c(0.025, 0.05),
+  horseshoe = FALSE,
   parallel = FALSE,
   chains = 4,
   iter_warmup = 1000,
@@ -115,6 +116,14 @@ robma(
 
   Numeric vector of one-sided p-value cutoffs for selection-weight
   models. Default `c(0.025, 0.05)`.
+
+- horseshoe:
+
+  Logical. For `method = "ss"` and `bias_indicator = "bias_corrected"`,
+  replace the discrete spike-and-slab prior on the effect with a
+  regularised horseshoe (Piironen & Vehtari 2017). The approximate
+  inclusion probability is stored as `pip_effect_approx`. Default
+  `FALSE`.
 
 - parallel:
 

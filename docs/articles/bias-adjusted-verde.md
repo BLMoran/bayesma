@@ -125,3 +125,75 @@ schemes is recommended.
   underestimate).
 - The relationship between $`\rho_i`$ and bias is linear. Non-linear
   relationships require an extended model.
+
+## Stan Code
+
+``` stan
+data {
+  int<lower=1> N;
+  int<lower=1> K;
+  vector[N] y;
+  vector<lower=0>[N] se;
+  vector<lower=0, upper=1>[N] rho;
+  array[N] int<lower=1> study;
+}
+
+parameters {
+  real mu;
+  real<lower=0> tau;
+  real xi;
+  real<lower=0> sigma_b;
+  vector[K] z_theta;
+  vector[N] z_b;
+}
+
+transformed parameters {
+  vector[K] u_theta = tau * z_theta;
+  vector[N] b       = rho .* xi + sigma_b * z_b;
+}
+
+model {
+  target += normal_lpdf(mu      | 0, 1);
+  target += cauchy_lpdf(tau     | 0, 0.5);
+  target += normal_lpdf(xi      | 0, 0.5);
+  target += normal_lpdf(sigma_b | 0, 0.5);
+  target += std_normal_lpdf(z_theta);
+  target += std_normal_lpdf(z_b);
+
+  target += normal_lpdf(y | mu + u_theta[study] + b, se);
+}
+
+generated quantities {
+  real b_Intercept = mu;
+  real b_xi        = xi;
+}
+```
+
+## Parameterisation
+
+- `rho .* xi` is element-wise multiplication:
+  `b_i = rho_i * xi + sigma_b * z_b[i]`.
+- `b_Intercept = mu` is the bias-adjusted pooled effect (effect when all
+  RoB scores equal zero).
+- `b_xi` quantifies the mean bias per unit of the RoB score.
+- Both `z_theta` (study-level true effects) and `z_b` (study-level
+  biases) use the non-centred parameterisation for efficient sampling.
+
+## Known Sampling Difficulties
+
+The model has two overlapping random-effect structures (`z_theta` and
+`z_b`), which can create a funnel geometry when $`\tau`$ and
+$`\sigma_b`$ are both small. Increasing `adapt_delta` to 0.99 is
+recommended. Inspection of $`\hat{R}`$ for both variance components is
+essential.
+
+## How bayesma calls this model
+
+``` r
+bayesma(
+  data,
+  model_type  = "bias_corrected",
+  bias_source = "verde_2021",
+  rho_col     = "rob_composite_score"
+)
+```

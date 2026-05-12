@@ -37,29 +37,9 @@ articles:
   selection-models-copas-weightfunction: selection-models-copas-weightfunction.html
   sensitivity-analysis: sensitivity-analysis.html
   small-sample-adjustments: small-sample-adjustments.html
-  stan-bc-bnp: stan-bc-bnp.html
-  stan-bias-adjusted-jung: stan-bias-adjusted-jung.html
-  stan-bias-adjusted-verde: stan-bias-adjusted-verde.html
-  stan-common-effect: stan-common-effect.html
-  stan-copas: stan-copas.html
-  stan-longitudinal: stan-longitudinal.html
-  stan-meta-regression: stan-meta-regression.html
-  stan-mixture-maier: stan-mixture-maier.html
-  stan-multiarm: stan-multiarm.html
-  stan-multivariate: stan-multivariate.html
-  stan-overview: stan-overview.html
-  stan-pet-peese: stan-pet-peese.html
-  stan-re-gaussian: stan-re-gaussian.html
-  stan-re-mixture-model: stan-re-mixture-model.html
-  stan-re-mixture: stan-re-mixture.html
-  stan-re-skewnormal: stan-re-skewnormal.html
-  stan-re-t: stan-re-t.html
-  stan-robust-outlier: stan-robust-outlier.html
-  stan-small-sample: stan-small-sample.html
-  stan-vevea-hedges: stan-vevea-hedges.html
   workflow-diagram: workflow-diagram.html
   workflow-guide: workflow-guide.html
-last_built: 2026-05-04T13:21Z
+last_built: 2026-05-12T08:33Z
 urls:
   reference: https://blmoran.github.io/bayesma/reference
   article: https://blmoran.github.io/bayesma/articles

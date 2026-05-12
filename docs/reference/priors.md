@@ -14,6 +14,8 @@ normal(mean, sd)
 
 half_normal(mean, sd)
 
+cauchy(location, scale)
+
 half_cauchy(location, scale)
 
 half_student_t(df, location, scale)

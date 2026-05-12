@@ -464,6 +464,7 @@ Functions for specifying prior distributions.
 
 - [`normal()`](https://blmoran.github.io/bayesma/reference/priors.md)
   [`half_normal()`](https://blmoran.github.io/bayesma/reference/priors.md)
+  [`cauchy()`](https://blmoran.github.io/bayesma/reference/priors.md)
   [`half_cauchy()`](https://blmoran.github.io/bayesma/reference/priors.md)
   [`half_student_t()`](https://blmoran.github.io/bayesma/reference/priors.md)
   [`exponential()`](https://blmoran.github.io/bayesma/reference/priors.md)

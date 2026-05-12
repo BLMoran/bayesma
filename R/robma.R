@@ -31,6 +31,11 @@
 #' @param p_bias_prior Prior on the bias inclusion probability.
 #' @param p_cutoffs Numeric vector of one-sided p-value cutoffs for
 #'   selection-weight models. Default `c(0.025, 0.05)`.
+#' @param horseshoe Logical. For `method = "ss"` and
+#'   `bias_indicator = "bias_corrected"`, replace the discrete spike-and-slab
+#'   prior on the effect with a regularised horseshoe (Piironen & Vehtari 2017).
+#'   The approximate inclusion probability is stored as `pip_effect_approx`.
+#'   Default `FALSE`.
 #' @param parallel Logical. Fit the bridgesampling grid in parallel.
 #' @param chains,iter_warmup,iter_sampling,adapt_delta,seed MCMC settings.
 #' @param quiet Logical. Suppress per-step progress messages.
@@ -62,6 +67,7 @@ robma <- function(
     bias_indicator = c("bias_corrected", "pet_peese", "selection_weight"),
     null_range = NULL,
     b_prior = NULL, p_bias_prior = NULL, p_cutoffs = c(0.025, 0.05),
+    horseshoe = FALSE,
     parallel = FALSE, chains = 4, iter_warmup = 1000,
     iter_sampling = 1000, adapt_delta = 0.95, seed = 1234,
     quiet = FALSE,
@@ -91,6 +97,7 @@ robma <- function(
     b_prior                   = b_prior,
     p_bias_prior              = p_bias_prior,
     p_cutoffs                 = p_cutoffs,
+    horseshoe                 = horseshoe,
     parallel                  = parallel,
     chains                    = chains,
     iter_warmup               = iter_warmup,
@@ -132,6 +139,9 @@ print.bayesma_robma <- function(x, ...) {
   if (method == "bridge") {
     cli::cli_alert_info(
       "{x$meta$n_models} component models fitted via bridge sampling")
+  } else if (isTRUE(x$meta$horseshoe)) {
+    cli::cli_alert_info(
+      "Regularised horseshoe joint model (bias indicator: bias_corrected)")
   } else {
     bi <- x$meta$bias_indicator %||% "bias_corrected"
     cli::cli_alert_info(
@@ -217,6 +227,20 @@ print.bayesma_robma <- function(x, ...) {
   cli::cli_text("  Effect (H1 vs H0):       BF = {format_bf(bf$effect)}")
   cli::cli_text("  Publication bias:        BF = {format_bf(bf$bias)}")
   cli::cli_text("  Heterogeneity:           BF = {format_bf(bf$heterogeneity)}")
+  mech_bfs <- bf$by_mechanism
+  if (!is.null(mech_bfs)) {
+    present <- purrr::keep(mech_bfs, ~ !is.na(.x))
+    if (length(present) > 0) {
+      mech_labels <- c(weight_function = "Weight function",
+                       pet = "PET", peese = "PEESE",
+                       copas = "Copas", jung = "Jung")
+      cli::cli_text("  --- by bias mechanism ---")
+      purrr::iwalk(present, function(val, nm) {
+        lbl <- mech_labels[[nm]] %||% nm
+        cli::cli_text("    {lbl}:              BF = {format_bf(val)}")
+      })
+    }
+  }
 
   # ---- Component Models (bridge only) ----
   if (method == "bridge") {
@@ -282,6 +306,20 @@ summary.bayesma_robma <- function(object, ...) {
   cli::cli_text("  Effect BF10:             {format_bf(bf$effect)}")
   cli::cli_text("  Bias BF:                 {format_bf(bf$bias)}")
   cli::cli_text("  Heterogeneity BF:        {format_bf(bf$heterogeneity)}")
+  mech_bfs <- bf$by_mechanism
+  if (!is.null(mech_bfs)) {
+    present <- purrr::keep(mech_bfs, ~ !is.na(.x))
+    if (length(present) > 0) {
+      mech_labels <- c(weight_function = "Weight function",
+                       pet = "PET", peese = "PEESE",
+                       copas = "Copas", jung = "Jung")
+      cli::cli_text("  --- by bias mechanism ---")
+      purrr::iwalk(present, function(val, nm) {
+        lbl <- mech_labels[[nm]] %||% nm
+        cli::cli_text("    {lbl}:              BF = {format_bf(val)}")
+      })
+    }
+  }
 
   # ---- Direction / null range ----
   nrp <- object$meta$null_range_probs
@@ -448,8 +486,8 @@ build_model_spec <- function(spec, es, S, n_c, n_i, likelihood) {
 
   result <- switch(
     bias_type,
-    pet = spec_component_pet_peese(es, S, n_c, n_i, pr, has_re),
-    peese = spec_component_pet_peese(es, S, n_c, n_i, pr, has_re),
+    pet   = spec_component_pet_peese(es, S, n_c, n_i, pr, has_re, is_peese = FALSE),
+    peese = spec_component_pet_peese(es, S, n_c, n_i, pr, has_re, is_peese = TRUE),
     weight_function = {
       p_cuts <- sort(spec$bias_prior$parameters$steps %||% c(0.025, 0.05))
       if (has_re) {
@@ -753,12 +791,37 @@ robma_bridge <- function(
 # Spec builders: H1 effect components (return stan_code + stan_data only)
 # ============================================================================
 
+# Convert a bias_prior $parameters list (distribution/location/scale) into a
+# bayesma_prior object suitable for emit_prior_target().
+.bias_prior_to_bayesma <- function(sp, is_peese = FALSE) {
+  dist  <- tolower(sp$distribution %||% "normal")
+  loc   <- sp$location %||% 0
+  scale <- sp$scale %||% (if (is_peese) 2 else 1)
+  if (dist == "cauchy") cauchy(loc, scale) else normal(loc, scale)
+}
+
 
 # ---- H1 / PET-PEESE (FE or RE based on has_re) ----
-spec_component_pet_peese <- function(es, S, n_c, n_i, priors, has_re) {
-  mu_tgt   <- emit_prior_target(priors$mu, "mu")
-  sp       <- priors$selection %||% list()
-  if (is.null(sp$beta_bias)) sp$beta_bias <- normal(0, 5)
+spec_component_pet_peese <- function(es, S, n_c, n_i, priors, has_re,
+                                     is_peese = FALSE) {
+  predictor <- if (is_peese) "inv_n" else "inv_sqrt_n"
+  td_line   <- if (is_peese) {
+    "inv_n[i] = 1.0 / n_total[i];"
+  } else {
+    "inv_sqrt_n[i] = 1.0 / sqrt(n_total[i]);"
+  }
+
+  mu_tgt <- emit_prior_target(priors$mu, "mu")
+  sp     <- priors$selection %||% list()
+  if (is.null(sp$beta_bias)) {
+    sp$beta_bias <- if (!is.null(sp$distribution)) {
+      .bias_prior_to_bayesma(sp, is_peese)
+    } else if (is_peese) {
+      normal(0, 2)
+    } else {
+      normal(0, 1)
+    }
+  }
   beta_tgt <- emit_prior_target(sp$beta_bias, "beta_bias")
 
   if (has_re) {
@@ -773,9 +836,9 @@ data {{
   vector<lower=0>[N] n_total;
 }}
 transformed data {{
-  vector[N] inv_sqrt_n;
+  vector[N] {predictor};
   for (i in 1:N)
-    inv_sqrt_n[i] = 1.0 / sqrt(n_total[i]);
+    {td_line}
 }}
 parameters {{
   real mu;
@@ -788,7 +851,7 @@ model {{
   {beta_tgt}
   for (i in 1:N) {{
     real sigma_i = sqrt(square(tau) + square(se[i]));
-    target += normal_lpdf(y[i] | mu + beta_bias * inv_sqrt_n[i], sigma_i);
+    target += normal_lpdf(y[i] | mu + beta_bias * {predictor}[i], sigma_i);
   }}
 }}
 generated quantities {{
@@ -805,9 +868,9 @@ data {{
   vector<lower=0>[N] n_total;
 }}
 transformed data {{
-  vector[N] inv_sqrt_n;
+  vector[N] {predictor};
   for (i in 1:N)
-    inv_sqrt_n[i] = 1.0 / sqrt(n_total[i]);
+    {td_line}
 }}
 parameters {{
   real mu;
@@ -817,7 +880,7 @@ model {{
   {mu_tgt}
   {beta_tgt}
   for (i in 1:N)
-    target += normal_lpdf(y[i] | mu + beta_bias * inv_sqrt_n[i], se[i]);
+    target += normal_lpdf(y[i] | mu + beta_bias * {predictor}[i], se[i]);
 }}
 generated quantities {{
   real pooled = mu;
@@ -1161,7 +1224,7 @@ parameters {
 model {
   target += student_t_lpdf(tau | 3, 0, 2.5)
           - student_t_lccdf(0 | 3, 0, 2.5);
-  target += normal_lpdf(beta_bias | 0, 5);
+  target += normal_lpdf(beta_bias | 0, 1);
   for (i in 1:N) {
     real sigma_i = sqrt(square(tau) + square(se[i]));
     target += normal_lpdf(y[i] | beta_bias * inv_sqrt_n[i], sigma_i);
@@ -1188,7 +1251,7 @@ parameters {
   real beta_bias;
 }
 model {
-  target += normal_lpdf(beta_bias | 0, 5);
+  target += normal_lpdf(beta_bias | 0, 1);
   for (i in 1:N)
     target += normal_lpdf(y[i] | beta_bias * inv_sqrt_n[i], se[i]);
 }
@@ -1226,7 +1289,7 @@ parameters {
 model {
   target += student_t_lpdf(tau | 3, 0, 2.5)
           - student_t_lccdf(0 | 3, 0, 2.5);
-  target += normal_lpdf(beta_bias | 0, 5);
+  target += normal_lpdf(beta_bias | 0, 2);
   for (i in 1:N) {
     real sigma_i = sqrt(square(tau) + square(se[i]));
     target += normal_lpdf(y[i] | beta_bias * inv_n[i], sigma_i);
@@ -1253,7 +1316,7 @@ parameters {
   real beta_bias;
 }
 model {
-  target += normal_lpdf(beta_bias | 0, 5);
+  target += normal_lpdf(beta_bias | 0, 2);
   for (i in 1:N)
     target += normal_lpdf(y[i] | beta_bias * inv_n[i], se[i]);
 }
@@ -1903,4 +1966,139 @@ generated quantities {{
     data = list(
       N = S, y = es$yi, se = es$sei,
       K = K, p_cutoffs = sort(p_cutoffs)))
+}
+
+
+# ============================================================================
+# Horseshoe spike-and-slab (regularised horseshoe; Piironen & Vehtari 2017)
+#
+# Replaces the beta(1,1) pip_effect / log_mix trick with a global-local
+# shrinkage prior on mu. The effect is present when lambda is large relative
+# to tau_global; it is shrunk to near-zero otherwise.
+#
+# Approximate PIP: E[1 - kappa] where kappa = 1 / (1 + lambda^2 * tau_global^2)
+# This is stored in generated quantities as pip_effect_approx.
+#
+# The heterogeneity and bias components use the same log_mix structure as the
+# standard SS model (Jung formulation), only the effect shrinkage changes.
+# ============================================================================
+
+ss_stan_horseshoe <- function(es, S, mu_prior, tau_prior,
+                              b_prior, p_bias_prior,
+                              tau0 = NULL) {
+  tau_tgt  <- emit_prior_target(tau_prior, "tau_raw")
+  tau_bnds <- emit_prior_bounds(tau_prior, default_lower = 0)
+  b_bnds   <- emit_prior_bounds(b_prior, default_lower = 0)
+  b_tgt    <- emit_prior_target(b_prior, "B_raw")
+  pb_tgt   <- emit_prior_target(p_bias_prior, "p_bias")
+
+  # Default tau0: scale of global shrinkage prior.
+  # Piironen & Vehtari recommend tau0 = p0 / (D - p0) * sigma / sqrt(N) where
+  # p0 is the prior expected number of non-zero signals and D is the number of
+  # parameters. For meta-analysis with a single effect and S studies, tau0 = 1
+  # (diffuse) is a reasonable starting point.
+  if (is.null(tau0)) tau0 <- 1.0
+
+  code <- glue::glue("
+data {{
+  int<lower=1> N;
+  vector[N] y;
+  vector<lower=0>[N] se;
+}}
+parameters {{
+  // Horseshoe shrinkage for the effect
+  real<lower=0> tau_global;
+  real<lower=0> lambda_eff;
+  real z_eff;
+  // Heterogeneity (standard SS)
+  real<lower=0, upper=1> pip_hetero;
+  real<lower=0, upper=1> pip_bias;
+  real{tau_bnds} tau_raw;
+  real{b_bnds} B_raw;
+  real<lower=0, upper=1> p_bias;
+}}
+transformed parameters {{
+  real mu_raw = z_eff * lambda_eff * tau_global;
+  real kappa  = 1.0 / (1.0 + square(lambda_eff * tau_global));
+}}
+model {{
+  // Horseshoe priors on effect
+  target += cauchy_lpdf(tau_global | 0, {tau0})
+          - cauchy_lccdf(0 | 0, {tau0});
+  target += cauchy_lpdf(lambda_eff | 0, 1)
+          - cauchy_lccdf(0 | 0, 1);
+  target += normal_lpdf(z_eff | 0, 1);
+
+  target += beta_lpdf(pip_hetero | 1, 1);
+  target += beta_lpdf(pip_bias   | 1, 1);
+  {tau_tgt}
+  {b_tgt}
+  {pb_tgt}
+
+  for (i in 1:N) {{
+    real s_h1 = sqrt(square(tau_raw) + square(se[i]));
+    real s_h0 = se[i];
+
+    real ll_e1_h1_b1;
+    {{
+      real lp_u = log1m(p_bias) + normal_lpdf(y[i] | mu_raw, s_h1);
+      real lp_b = log(p_bias + 1e-15) + normal_lpdf(y[i] | mu_raw + B_raw, s_h1);
+      ll_e1_h1_b1 = log_sum_exp(lp_u, lp_b);
+    }}
+    real ll_e1_h1_b0 = normal_lpdf(y[i] | mu_raw, s_h1);
+
+    real ll_e1_h0_b1;
+    {{
+      real lp_u = log1m(p_bias) + normal_lpdf(y[i] | mu_raw, s_h0);
+      real lp_b = log(p_bias + 1e-15) + normal_lpdf(y[i] | mu_raw + B_raw, s_h0);
+      ll_e1_h0_b1 = log_sum_exp(lp_u, lp_b);
+    }}
+    real ll_e1_h0_b0 = normal_lpdf(y[i] | mu_raw, s_h0);
+
+    real ll_e0_h1_b1;
+    {{
+      real lp_u = log1m(p_bias) + normal_lpdf(y[i] | 0.0, s_h1);
+      real lp_b = log(p_bias + 1e-15) + normal_lpdf(y[i] | B_raw, s_h1);
+      ll_e0_h1_b1 = log_sum_exp(lp_u, lp_b);
+    }}
+    real ll_e0_h1_b0 = normal_lpdf(y[i] | 0.0, s_h1);
+
+    real ll_e0_h0_b1;
+    {{
+      real lp_u = log1m(p_bias) + normal_lpdf(y[i] | 0.0, s_h0);
+      real lp_b = log(p_bias + 1e-15) + normal_lpdf(y[i] | B_raw, s_h0);
+      ll_e0_h0_b1 = log_sum_exp(lp_u, lp_b);
+    }}
+    real ll_e0_h0_b0 = normal_lpdf(y[i] | 0.0, s_h0);
+
+    // For horseshoe, the 'effective' mixture uses kappa as a continuous weight:
+    //   soft effect = (1 - kappa) * mu_raw (pulled toward zero by kappa)
+    real soft_eff = (1.0 - kappa) * mu_raw;
+
+    real ll_eff_h1_b1;
+    {{
+      real lp_u = log1m(p_bias) + normal_lpdf(y[i] | soft_eff, s_h1);
+      real lp_b = log(p_bias + 1e-15) + normal_lpdf(y[i] | soft_eff + B_raw, s_h1);
+      ll_eff_h1_b1 = log_sum_exp(lp_u, lp_b);
+    }}
+    real ll_eff_h1_b0 = normal_lpdf(y[i] | soft_eff, s_h1);
+    real ll_eff_h0_b1;
+    {{
+      real lp_u = log1m(p_bias) + normal_lpdf(y[i] | soft_eff, s_h0);
+      real lp_b = log(p_bias + 1e-15) + normal_lpdf(y[i] | soft_eff + B_raw, s_h0);
+      ll_eff_h0_b1 = log_sum_exp(lp_u, lp_b);
+    }}
+    real ll_eff_h0_b0 = normal_lpdf(y[i] | soft_eff, s_h0);
+
+    real ll_h1 = log_mix(pip_bias, ll_eff_h1_b1, ll_eff_h1_b0);
+    real ll_h0 = log_mix(pip_bias, ll_eff_h0_b1, ll_eff_h0_b0);
+    target += log_mix(pip_hetero, ll_h1, ll_h0);
+  }}
+}}
+generated quantities {{
+  real mu          = mu_raw;
+  real pip_effect_approx = 1.0 - kappa;
+}}")
+
+  list(code = code, data = list(N = S, y = es$yi, se = es$sei))
 }

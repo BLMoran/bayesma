@@ -40,6 +40,26 @@
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
+<li class="nav-item"><a class="nav-link" href="../articles/workflow-diagram.html">Getting Started</a></li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-meta-analysis-workflow" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Meta-Analysis Workflow</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-meta-analysis-workflow">
+<li><a class="dropdown-item" href="../articles/workflow-diagram.html">Overview &amp; Workflow Diagram</a></li>
+    <li><a class="dropdown-item" href="../articles/workflow-guide.html">Workflow Guide</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/inspect_sr.html">INSPECT-SR</a></li>
+    <li><a class="dropdown-item" href="../articles/primed.html">PRIMED</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/prior-predictive-checks.html">Prior Predictive Checks</a></li>
+    <li><a class="dropdown-item" href="../articles/convergence-diagnostics.html">Model Fitting &amp; Convergence Diagnostics</a></li>
+    <li><a class="dropdown-item" href="../articles/posterior-predictive-checks.html">Posterior Predictive Checks</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/sensitivity-analysis.html">Sensitivity Analysis</a></li>
+    <li><a class="dropdown-item" href="../articles/model-comparison-waic-loo.html">Model Comparison (WAIC / LOO)</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/reporting-checklist.html">Reporting Checklist</a></li>
+  </ul>
+</li>
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-models" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Models</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-models">
@@ -83,60 +103,6 @@
     <li><a class="dropdown-item" href="../articles/risk-of-bias.html">Risk of Bias Assessment</a></li>
     <li><a class="dropdown-item" href="../articles/bias-corrected-jung-verde.html">Bias-Adjusted Models (Jung &amp; Aloe 2026)</a></li>
     <li><a class="dropdown-item" href="../articles/bias-adjusted-verde.html">Bias-Adjusted Models (Verde 2021)</a></li>
-  </ul>
-</li>
-<li class="nav-item dropdown">
-  <button class="nav-link dropdown-toggle" type="button" id="dropdown-stan-code" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Stan Code</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-stan-code">
-<li><a class="dropdown-item" href="../articles/stan-overview.html">Overview &amp; Conventions</a></li>
-    <li><hr class="dropdown-divider"></li>
-    <li><a class="dropdown-item" href="../articles/stan-common-effect.html">Common-Effect Model</a></li>
-    <li><hr class="dropdown-divider"></li>
-    <li><h6 class="dropdown-header" data-toc-skip>Random-Effects Models</h6></li>
-    <li><a class="dropdown-item" href="../articles/stan-re-gaussian.html">Gaussian RE</a></li>
-    <li><a class="dropdown-item" href="../articles/stan-re-t.html">Student-t RE</a></li>
-    <li><a class="dropdown-item" href="../articles/stan-re-skewnormal.html">Skew-Normal RE</a></li>
-    <li><a class="dropdown-item" href="../articles/stan-re-mixture.html">Mixture RE</a></li>
-    <li><hr class="dropdown-divider"></li>
-    <li><a class="dropdown-item" href="../articles/stan-small-sample.html">Small-Sample Adjustments</a></li>
-    <li><a class="dropdown-item" href="../articles/stan-multiarm.html">Multiarm Model</a></li>
-    <li><a class="dropdown-item" href="../articles/stan-multivariate.html">Multivariate Model</a></li>
-    <li><a class="dropdown-item" href="../articles/stan-longitudinal.html">Longitudinal Model</a></li>
-    <li><a class="dropdown-item" href="../articles/stan-meta-regression.html">Meta-Regression</a></li>
-    <li><hr class="dropdown-divider"></li>
-    <li><h6 class="dropdown-header" data-toc-skip>Publication Bias Models</h6></li>
-    <li><a class="dropdown-item" href="../articles/stan-pet-peese.html">PET-PEESE</a></li>
-    <li><a class="dropdown-item" href="../articles/stan-vevea-hedges.html">Vevea-Hedges Selection Model</a></li>
-    <li><a class="dropdown-item" href="../articles/stan-copas.html">Copas Selection Model</a></li>
-    <li><a class="dropdown-item" href="../articles/stan-bc-bnp.html">BC-BNP Model</a></li>
-    <li><a class="dropdown-item" href="../articles/stan-mixture-maier.html">Mixture Model (Maier)</a></li>
-    <li><hr class="dropdown-divider"></li>
-    <li><h6 class="dropdown-header" data-toc-skip>Heterogeneity Models</h6></li>
-    <li><a class="dropdown-item" href="../articles/stan-re-mixture-model.html">RE Mixture Model</a></li>
-    <li><a class="dropdown-item" href="../articles/stan-robust-outlier.html">Robust Outlier Mixture</a></li>
-    <li><hr class="dropdown-divider"></li>
-    <li><h6 class="dropdown-header" data-toc-skip>Bias-Adjusted Models</h6></li>
-    <li><a class="dropdown-item" href="../articles/stan-bias-adjusted-verde.html">Verde (2021)</a></li>
-    <li><a class="dropdown-item" href="../articles/stan-bias-adjusted-jung.html">Jung &amp; Aloe (2026)</a></li>
-  </ul>
-</li>
-<li class="nav-item dropdown">
-  <button class="nav-link dropdown-toggle" type="button" id="dropdown-the-meta-analysis-workflow" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">The Meta-Analysis Workflow</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-the-meta-analysis-workflow">
-<li><a class="dropdown-item" href="../articles/workflow-diagram.html">Overview &amp; Workflow Diagram</a></li>
-    <li><a class="dropdown-item" href="../articles/workflow-guide.html">Workflow Guide</a></li>
-    <li><hr class="dropdown-divider"></li>
-    <li><a class="dropdown-item" href="../articles/inspect_sr.html">INSPECT-SR</a></li>
-    <li><a class="dropdown-item" href="../articles/primed.html">PRIMED</a></li>
-    <li><hr class="dropdown-divider"></li>
-    <li><a class="dropdown-item" href="../articles/prior-predictive-checks.html">Prior Predictive Checks</a></li>
-    <li><a class="dropdown-item" href="../articles/convergence-diagnostics.html">Model Fitting &amp; Convergence Diagnostics</a></li>
-    <li><a class="dropdown-item" href="../articles/posterior-predictive-checks.html">Posterior Predictive Checks</a></li>
-    <li><hr class="dropdown-divider"></li>
-    <li><a class="dropdown-item" href="../articles/sensitivity-analysis.html">Sensitivity Analysis</a></li>
-    <li><a class="dropdown-item" href="../articles/model-comparison-waic-loo.html">Model Comparison (WAIC / LOO)</a></li>
-    <li><hr class="dropdown-divider"></li>
-    <li><a class="dropdown-item" href="../articles/reporting-checklist.html">Reporting Checklist</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../articles/data-entry.html">Data Entry</a></li>
@@ -265,7 +231,74 @@ y_i \mid \theta_i \sim \mathcal{N}(\theta_i,\, s_i^2)
 <strong>Confounding.</strong> Study-level moderators may be correlated. Interpret individual <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>β</mi><mi>j</mi></msub><annotation encoding="application/x-tex">\beta_j</annotation></semantics></math> estimates cautiously when moderators share variance.</li>
 <li>
 <strong>Missing data.</strong> Studies with missing moderator values are dropped by default. Imputation or sensitivity analysis is needed when missingness is substantial.</li>
-</ul></section><script id="quarto-html-after-body" type="application/javascript">
+</ul></section><section class="level2"><h2 id="stan-code">Stan Code<a class="anchor" aria-label="anchor" href="#stan-code"></a>
+</h2>
+<div class="sourceCode" id="cb5"><pre class="sourceCode stan"><code class="sourceCode stan"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> {</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">int</span>&lt;<span class="kw">lower</span>=<span class="dv">1</span>&gt; N;</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">int</span>&lt;<span class="kw">lower</span>=<span class="dv">1</span>&gt; K;</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">int</span>&lt;<span class="kw">lower</span>=<span class="dv">1</span>&gt; P;</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">vector</span>[N] y;</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">vector</span>&lt;<span class="kw">lower</span>=<span class="dv">0</span>&gt;[N] se;</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">matrix</span>[N, P] X;</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">array</span>[N] <span class="dt">int</span>&lt;<span class="kw">lower</span>=<span class="dv">1</span>&gt; study;</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="kw">parameters</span> {</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>  <span class="dt">real</span> mu;</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>  <span class="dt">vector</span>[P] beta;</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>  <span class="dt">real</span>&lt;<span class="kw">lower</span>=<span class="dv">0</span>&gt; tau;</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>  <span class="dt">vector</span>[K] z;</span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a><span class="kw">transformed parameters</span> {</span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>  <span class="dt">vector</span>[K] u = tau * z;</span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a><span class="kw">model</span> {</span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>  <span class="kw">target +=</span> normal_lpdf(mu   | <span class="dv">0</span>, <span class="dv">1</span>);</span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>  <span class="kw">target +=</span> normal_lpdf(beta | <span class="dv">0</span>, <span class="fl">0.5</span>);</span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>  <span class="kw">target +=</span> cauchy_lpdf(tau  | <span class="dv">0</span>, <span class="fl">0.5</span>);</span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>  <span class="kw">target +=</span> std_normal_lpdf(z);</span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a>  <span class="kw">target +=</span> normal_lpdf(y | mu + X * beta + u[study], se);</span>
+<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a><span class="kw">generated quantities</span> {</span>
+<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a>  <span class="dt">real</span> b_Intercept = mu;</span>
+<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a>  <span class="dt">vector</span>[P] b      = beta;</span>
+<span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+</section><section class="level2"><h2 id="parameterisation">Parameterisation<a class="anchor" aria-label="anchor" href="#parameterisation"></a>
+</h2>
+<p><code>mu</code> is the intercept: the expected effect when all continuous moderators are at their centred values (typically mean) and categorical moderators are at their reference level. This interpretation depends on centring; always use <code>center = TRUE</code> for interpretable intercepts.</p>
+<p><code>tau</code> is the residual between-study SD unexplained by the moderators. When <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>τ</mi><annotation encoding="application/x-tex">\tau</annotation></semantics></math> is substantially smaller than the <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>τ</mi><annotation encoding="application/x-tex">\tau</annotation></semantics></math> from the intercept-only model, the moderators account for a meaningful proportion of heterogeneity.</p>
+</section><section class="level2"><h2 id="known-sampling-difficulties">Known Sampling Difficulties<a class="anchor" aria-label="anchor" href="#known-sampling-difficulties"></a>
+</h2>
+<p>Meta-regression posteriors are well-behaved when the moderators are uncorrelated and the sample size is adequate. Problems arise when:</p>
+<ul>
+<li>Moderators are highly collinear (VIF &gt; 5): the joint posterior for <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>𝛃</mi><annotation encoding="application/x-tex">\boldsymbol{\beta}</annotation></semantics></math> is elongated and mixing is slow.</li>
+<li>The design matrix is nearly rank-deficient: Stan will warn of numerical issues in the matrix operations.</li>
+<li>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>P</mi><annotation encoding="application/x-tex">P</annotation></semantics></math> is large relative to <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>: <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>τ</mi><annotation encoding="application/x-tex">\tau</annotation></semantics></math> is overparameterised and divergences may occur.</li>
+</ul></section><section class="level2"><h2 id="how-bayesma-calls-this-model">How bayesma calls this model<a class="anchor" aria-label="anchor" href="#how-bayesma-calls-this-model"></a>
+</h2>
+<p><code><a href="../reference/meta_reg.html">meta_reg()</a></code> constructs the design matrix <code>X</code> from the user’s formula:</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">fit_mr</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/meta_reg.html">meta_reg</a></span><span class="op">(</span></span>
+<span>  <span class="va">data</span>,</span>
+<span>  formula <span class="op">=</span> <span class="op">~</span> <span class="va">duration</span> <span class="op">+</span> <span class="va">mean_age</span>,</span>
+<span>  center  <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  scale   <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p><code>X</code> has columns for each term in the formula after model matrix expansion (dummy coding for factors, polynomial expansion for <code><a href="https://rdrr.io/r/stats/poly.html" class="external-link">poly()</a></code> terms). Centring and scaling are applied before passing to Stan.</p>
+<p>Per-coefficient priors can be overridden:</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/meta_reg.html">meta_reg</a></span><span class="op">(</span></span>
+<span>  <span class="va">data</span>,</span>
+<span>  formula      <span class="op">=</span> <span class="op">~</span> <span class="va">duration</span> <span class="op">+</span> <span class="va">mean_age</span>,</span>
+<span>  beta_prior   <span class="op">=</span> <span class="fu"><a href="../reference/priors.html">normal</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0.5</span><span class="op">)</span>,</span>
+<span>  beta_priors  <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>duration <span class="op">=</span> <span class="fu"><a href="../reference/priors.html">normal</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0.2</span><span class="op">)</span>, mean_age <span class="op">=</span> <span class="fu"><a href="../reference/priors.html">normal</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+</section><script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
       var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
       var mailtoRegex = new RegExp(/^mailto:/);

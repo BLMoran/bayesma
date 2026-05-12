@@ -23,7 +23,25 @@ modelling assumptions."><meta property="og:image" content="https://blmoran.githu
     </button>
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
-      <ul class="navbar-nav me-auto"><li class="nav-item dropdown">
+      <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../articles/workflow-diagram.html">Getting Started</a></li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-meta-analysis-workflow" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Meta-Analysis Workflow</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-meta-analysis-workflow"><li><a class="dropdown-item" href="../articles/workflow-diagram.html">Overview &amp; Workflow Diagram</a></li>
+    <li><a class="dropdown-item" href="../articles/workflow-guide.html">Workflow Guide</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/inspect_sr.html">INSPECT-SR</a></li>
+    <li><a class="dropdown-item" href="../articles/primed.html">PRIMED</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/prior-predictive-checks.html">Prior Predictive Checks</a></li>
+    <li><a class="dropdown-item" href="../articles/convergence-diagnostics.html">Model Fitting &amp; Convergence Diagnostics</a></li>
+    <li><a class="dropdown-item" href="../articles/posterior-predictive-checks.html">Posterior Predictive Checks</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/sensitivity-analysis.html">Sensitivity Analysis</a></li>
+    <li><a class="dropdown-item" href="../articles/model-comparison-waic-loo.html">Model Comparison (WAIC / LOO)</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/reporting-checklist.html">Reporting Checklist</a></li>
+  </ul></li>
+<li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-models" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Models</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-models"><li><h6 class="dropdown-header" data-toc-skip>Model Basics</h6></li>
     <li><a class="dropdown-item" href="../articles/one-stage-two-stage-binary-jackson.html">One-Stage vs Two-Stage Models</a></li>
@@ -63,56 +81,6 @@ modelling assumptions."><meta property="og:image" content="https://blmoran.githu
     <li><a class="dropdown-item" href="../articles/risk-of-bias.html">Risk of Bias Assessment</a></li>
     <li><a class="dropdown-item" href="../articles/bias-corrected-jung-verde.html">Bias-Adjusted Models (Jung &amp; Aloe 2026)</a></li>
     <li><a class="dropdown-item" href="../articles/bias-adjusted-verde.html">Bias-Adjusted Models (Verde 2021)</a></li>
-  </ul></li>
-<li class="nav-item dropdown">
-  <button class="nav-link dropdown-toggle" type="button" id="dropdown-stan-code" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Stan Code</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-stan-code"><li><a class="dropdown-item" href="../articles/stan-overview.html">Overview &amp; Conventions</a></li>
-    <li><hr class="dropdown-divider"></li>
-    <li><a class="dropdown-item" href="../articles/stan-common-effect.html">Common-Effect Model</a></li>
-    <li><hr class="dropdown-divider"></li>
-    <li><h6 class="dropdown-header" data-toc-skip>Random-Effects Models</h6></li>
-    <li><a class="dropdown-item" href="../articles/stan-re-gaussian.html">Gaussian RE</a></li>
-    <li><a class="dropdown-item" href="../articles/stan-re-t.html">Student-t RE</a></li>
-    <li><a class="dropdown-item" href="../articles/stan-re-skewnormal.html">Skew-Normal RE</a></li>
-    <li><a class="dropdown-item" href="../articles/stan-re-mixture.html">Mixture RE</a></li>
-    <li><hr class="dropdown-divider"></li>
-    <li><a class="dropdown-item" href="../articles/stan-small-sample.html">Small-Sample Adjustments</a></li>
-    <li><a class="dropdown-item" href="../articles/stan-multiarm.html">Multiarm Model</a></li>
-    <li><a class="dropdown-item" href="../articles/stan-multivariate.html">Multivariate Model</a></li>
-    <li><a class="dropdown-item" href="../articles/stan-longitudinal.html">Longitudinal Model</a></li>
-    <li><a class="dropdown-item" href="../articles/stan-meta-regression.html">Meta-Regression</a></li>
-    <li><hr class="dropdown-divider"></li>
-    <li><h6 class="dropdown-header" data-toc-skip>Publication Bias Models</h6></li>
-    <li><a class="dropdown-item" href="../articles/stan-pet-peese.html">PET-PEESE</a></li>
-    <li><a class="dropdown-item" href="../articles/stan-vevea-hedges.html">Vevea-Hedges Selection Model</a></li>
-    <li><a class="dropdown-item" href="../articles/stan-copas.html">Copas Selection Model</a></li>
-    <li><a class="dropdown-item" href="../articles/stan-bc-bnp.html">BC-BNP Model</a></li>
-    <li><a class="dropdown-item" href="../articles/stan-mixture-maier.html">Mixture Model (Maier)</a></li>
-    <li><hr class="dropdown-divider"></li>
-    <li><h6 class="dropdown-header" data-toc-skip>Heterogeneity Models</h6></li>
-    <li><a class="dropdown-item" href="../articles/stan-re-mixture-model.html">RE Mixture Model</a></li>
-    <li><a class="dropdown-item" href="../articles/stan-robust-outlier.html">Robust Outlier Mixture</a></li>
-    <li><hr class="dropdown-divider"></li>
-    <li><h6 class="dropdown-header" data-toc-skip>Bias-Adjusted Models</h6></li>
-    <li><a class="dropdown-item" href="../articles/stan-bias-adjusted-verde.html">Verde (2021)</a></li>
-    <li><a class="dropdown-item" href="../articles/stan-bias-adjusted-jung.html">Jung &amp; Aloe (2026)</a></li>
-  </ul></li>
-<li class="nav-item dropdown">
-  <button class="nav-link dropdown-toggle" type="button" id="dropdown-the-meta-analysis-workflow" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">The Meta-Analysis Workflow</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-the-meta-analysis-workflow"><li><a class="dropdown-item" href="../articles/workflow-diagram.html">Overview &amp; Workflow Diagram</a></li>
-    <li><a class="dropdown-item" href="../articles/workflow-guide.html">Workflow Guide</a></li>
-    <li><hr class="dropdown-divider"></li>
-    <li><a class="dropdown-item" href="../articles/inspect_sr.html">INSPECT-SR</a></li>
-    <li><a class="dropdown-item" href="../articles/primed.html">PRIMED</a></li>
-    <li><hr class="dropdown-divider"></li>
-    <li><a class="dropdown-item" href="../articles/prior-predictive-checks.html">Prior Predictive Checks</a></li>
-    <li><a class="dropdown-item" href="../articles/convergence-diagnostics.html">Model Fitting &amp; Convergence Diagnostics</a></li>
-    <li><a class="dropdown-item" href="../articles/posterior-predictive-checks.html">Posterior Predictive Checks</a></li>
-    <li><hr class="dropdown-divider"></li>
-    <li><a class="dropdown-item" href="../articles/sensitivity-analysis.html">Sensitivity Analysis</a></li>
-    <li><a class="dropdown-item" href="../articles/model-comparison-waic-loo.html">Model Comparison (WAIC / LOO)</a></li>
-    <li><hr class="dropdown-divider"></li>
-    <li><a class="dropdown-item" href="../articles/reporting-checklist.html">Reporting Checklist</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../articles/data-entry.html">Data Entry</a></li>
 <li class="active nav-item dropdown">
